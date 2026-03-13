@@ -1,0 +1,104 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
+import {
+  LayoutDashboard,
+  PlusCircle,
+  FileSpreadsheet,
+  LogOut,
+  Upload,
+} from "lucide-react";
+
+const navItems = [
+  { href: "/", label: "Dashboard", icon: LayoutDashboard, adminOnly: false },
+  { href: "/carga", label: "Cargar Error", icon: PlusCircle, adminOnly: true },
+  { href: "/importar", label: "Importar Empleados", icon: Upload, adminOnly: true },
+];
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
+
+  if (!session) return null;
+
+  return (
+    <aside className="fixed top-0 left-0 h-full w-64 bg-slate-900 text-white flex flex-col z-40 shadow-2xl">
+      {/* Logo SJG */}
+      <div className="px-5 py-6 border-b border-slate-700/50 flex items-center justify-center">
+        <img
+          src="/logo-sjg.png"
+          alt="SJG Montajes Industriales"
+          className="w-full max-w-[180px] object-contain"
+          style={{ filter: "brightness(0) invert(1)" }}
+        />
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">
+          Menú
+        </p>
+        {navItems.map(({ href, label, icon: Icon, adminOnly }) => {
+          if (adminOnly && !isAdmin) return null;
+
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                active
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <Icon className="w-4 h-4 flex-shrink-0" />
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* GDAI Credit */}
+      <div className="px-4 py-4 border-t border-slate-700/50">
+        <a
+          href="https://www.godreamai.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex flex-col items-center justify-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity"
+          title="Desarrollado por GDAI"
+        >
+          <span className="text-[10px] text-slate-400 tracking-wide uppercase font-semibold">Desarrollado por</span>
+          <img src="/logo-gdai.png" alt="GDAI" className="h-[22px] object-contain" style={{ filter: "brightness(0) invert(1)" }} />
+        </a>
+      </div>
+
+      {/* User info + Logout */}
+      <div className="px-3 py-4 border-t border-slate-700/50">
+        <div className="flex items-center gap-3 px-3 py-2 mb-2 rounded-lg bg-slate-800">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white uppercase flex-shrink-0">
+            {(session.user?.name || session.user?.email || "U")[0]}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-white truncate">
+              {session.user?.name || "Usuario"}
+            </p>
+            <p className="text-xs text-slate-400 truncate">
+              {session.user?.email || "RRHH"}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-red-400 transition-all"
+        >
+          <LogOut className="w-4 h-4" />
+          Cerrar sesión
+        </button>
+      </div>
+    </aside>
+  );
+}
