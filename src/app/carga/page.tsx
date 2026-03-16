@@ -5,15 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { Save, AlertCircle, CheckCircle2, Loader2, Search, X } from "lucide-react";
 
-const MOTIVOS = [
-  "OT Inexistente",
-  "Saldo hrs insuficiente",
-  "Par de fichada incompleto",
-  "Omisión",
-  "Otro",
-];
-
-const CONTRATOS = ["6700302926", "6700248017"];
+import { toast } from "sonner";
+import { ErrorCarga, MOTIVOS, CONTRATOS } from "@/types";
 
 type Empleado = {
   nombre_apellido: string;
@@ -225,15 +218,19 @@ export default function CargaPage() {
       if (error.message.includes("contrato")) {
         const { contrato: _c, ...withoutContrato } = errorToSave;
         const { error: err2 } = await supabase.from("error_carga").insert([withoutContrato]);
-        if (err2) { setSubmitStatus({ type: "error", message: "Error al guardar el registro." }); setLoading(false); return; }
+        if (err2) { 
+          toast.error("Error al guardar el registro."); 
+          setLoading(false); 
+          return; 
+        }
       } else {
-        setSubmitStatus({ type: "error", message: "Error al guardar el registro." });
+        toast.error("Error al guardar el registro.");
         setLoading(false);
         return;
       }
     }
 
-    setSubmitStatus({ type: "success", message: "✅ Registro guardado correctamente." });
+    toast.success("✅ Registro guardado correctamente.");
     setLoading(false);
     // Reset
     setSelectedEmpleado(null);
@@ -264,19 +261,6 @@ export default function CargaPage() {
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-        {submitStatus.type === "success" && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 p-4 rounded-xl flex items-center gap-3 font-medium text-sm">
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-            {submitStatus.message}
-          </div>
-        )}
-        {submitStatus.type === "error" && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-center gap-3 font-medium text-sm">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            {submitStatus.message}
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
 
           {/* Employee search */}

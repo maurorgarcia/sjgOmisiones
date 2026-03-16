@@ -18,29 +18,8 @@ import {
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-type ErrorCarga = {
-  id: number;
-  fecha: string;
-  dia_semana: string;
-  legajo: string;
-  nombre_apellido: string;
-  motivo_error: string;
-  ot: string | null;
-  sector: string;
-  horario: string | null;
-  notas: string | null;
-  resuelto: boolean;
-};
-
-const MOTIVO_COLORS: Record<string, string> = {
-  "OT Inexistente": "bg-orange-100 text-orange-800 border-orange-200",
-  "Saldo hrs insuficiente": "bg-red-100 text-red-800 border-red-200",
-  "Par de fichada incompleto": "bg-yellow-100 text-yellow-800 border-yellow-200",
-  "Omisión": "bg-purple-100 text-purple-800 border-purple-200",
-  "Otro": "bg-slate-100 text-slate-700 border-slate-200",
-};
-
-const PAGE_SIZE = 50;
+import { toast } from "sonner";
+import { ErrorCarga, MOTIVO_COLORS, PAGE_SIZE } from "@/types";
 
 function getMotivoBadge(motivo: string) {
   const classes = MOTIVO_COLORS[motivo] ?? "bg-slate-100 text-slate-700 border-slate-200";
@@ -164,7 +143,7 @@ export default function ReportePage() {
       });
       const res = await fetch(`/api/exportar?${params}`);
       if (!res.ok) {
-        alert("No hay datos o hubo un error al exportar.");
+        toast.error("No hay datos o hubo un error al exportar.");
         return;
       }
       const blob = await res.blob();
@@ -176,8 +155,9 @@ export default function ReportePage() {
       document.body.appendChild(a);
       a.click();
       a.remove();
+      toast.success("Excel generado correctamente.");
     } catch {
-      alert("Ocurrió un error al descargar el archivo.");
+      toast.error("Ocurrió un error al descargar el archivo.");
     }
   };
 

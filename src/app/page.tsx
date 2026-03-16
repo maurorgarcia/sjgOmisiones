@@ -26,41 +26,9 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useSession } from "next-auth/react";
 
-type ErrorCarga = {
-  id: number;
-  fecha: string;
-  dia_semana: string;
-  legajo: string;
-  nombre_apellido: string;
-  motivo_error: string;
-  ot: string | null;
-  sector: string;
-  horario: string | null;
-  notas: string | null;
-  resuelto: boolean;
-  horas_normales?: number | null;
-  hs_normales_insa?: boolean;
-  hs_normales_polu?: boolean;
-  hs_normales_noct?: boolean;
-  horas_50?: number | null;
-  hs_50_insa?: boolean;
-  hs_50_polu?: boolean;
-  hs_50_noct?: boolean;
-  horas_100?: number | null;
-  hs_100_insa?: boolean;
-  hs_100_polu?: boolean;
-  hs_100_noct?: boolean;
-};
+import { toast } from "sonner";
+import { ErrorCarga, MOTIVO_COLORS, PAGE_SIZE } from "@/types";
 
-const MOTIVO_COLORS: Record<string, string> = {
-  "OT Inexistente": "bg-orange-100 text-orange-800 border-orange-200",
-  "Saldo hrs insuficiente": "bg-red-100 text-red-800 border-red-200",
-  "Par de fichada incompleto": "bg-yellow-100 text-yellow-800 border-yellow-200",
-  "Omisión": "bg-purple-100 text-purple-800 border-purple-200",
-  "Otro": "bg-slate-100 text-slate-700 border-slate-200",
-};
-
-const PAGE_SIZE = 50;
 
 function getMotivoBadge(motivo: string) {
   const classes = MOTIVO_COLORS[motivo] ?? "bg-slate-100 text-slate-700 border-slate-200";
@@ -126,6 +94,7 @@ export default function Dashboard() {
     if (!confirm(`¿Estás seguro de que deseas eliminar ${selectedIds.length} registros permanentemente?`)) return;
     await supabase.from("error_carga").delete().in("id", selectedIds);
     setSelectedIds([]);
+    toast.success("Registros eliminados correctamente.");
     fetchErrores();
   };
 
@@ -196,7 +165,12 @@ export default function Dashboard() {
       .from("error_carga")
       .update({ resuelto: !currentStatus })
       .eq("id", id);
-    if (!error) fetchErrores();
+    if (!error) {
+       toast.success(currentStatus ? "Registro reabierto." : "Registro resuelto.");
+       fetchErrores();
+    } else {
+       toast.error("Error al actualizar el estado.");
+    }
   };
 
   const openEdit = (err: ErrorCarga) => {
@@ -218,11 +192,17 @@ export default function Dashboard() {
     }).eq("id", editingError.id);
     setEditLoading(false);
     setEditingError(null);
+    toast.success("Registro actualizado correctamente.");
     fetchErrores();
   };
 
   const confirmDelete = async (id: number) => {
-    await supabase.from("error_carga").delete().eq("id", id);
+    const { error } = await supabase.from("error_carga").delete().eq("id", id);
+    if (!error) {
+      toast.success("Registro eliminado.");
+    } else {
+      toast.error("Error al eliminar.");
+    }
     setDeletingId(null);
     fetchErrores();
   };
@@ -268,7 +248,10 @@ export default function Dashboard() {
         ...(filtroSector.trim() && { sector: filtroSector.trim() }),
       });
       const res = await fetch(`/api/exportar?${params}`);
-      if (!res.ok) { alert("No hay datos o hubo un error al exportar."); return; }
+      if (!res.ok) { 
+        toast.error("No hay datos o hubo un error al exportar."); 
+        return; 
+      }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -279,7 +262,7 @@ export default function Dashboard() {
       a.click();
       a.remove();
     } catch (err) {
-      alert("Ocurrió un error al descargar el archivo.");
+      toast.error("Ocurrió un error al descargar el archivo.");
     }
   };
 
@@ -299,9 +282,9 @@ export default function Dashboard() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al enviar el correo");
-      alert("✅ Correo enviado exitosamente a los responsables.");
+      toast.success("✅ Correo enviado exitosamente a los responsables.");
     } catch (err: any) {
-      alert(`❌ Error: ${err.message}`);
+      toast.error(`❌ Error: ${err.message}`);
     } finally {
       setSending(false);
     }
