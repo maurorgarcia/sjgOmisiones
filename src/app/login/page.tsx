@@ -5,9 +5,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, User, Loader2, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Lock, User, Loader2, ShieldCheck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import logoSjg from "../../../public/logo-sjg.png";
-import logoGdai from "../../../public/logo-gdai.png";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -71,8 +71,10 @@ export default function LoginPage() {
             transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
           >
             <Image 
-              src={logoSjg} 
+              src="/logo-sjg.png" 
               alt="SJG Logo" 
+              width={200}
+              height={56}
               className="h-14 w-auto object-contain"
               priority
             />
@@ -182,7 +184,7 @@ export default function LoginPage() {
           </p>
           <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0">
             <span className="text-[9px] font-bold uppercase tracking-tighter">Powered by</span>
-            <Image src={logoGdai} alt="GDAI" className="h-4 w-auto object-contain" />
+            <Image src="/logo-gdai.png" alt="GDAI" width={60} height={16} className="h-4 w-auto object-contain" />
           </div>
         </div>
       </motion.div>
