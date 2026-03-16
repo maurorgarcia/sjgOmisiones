@@ -13,6 +13,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "SJG Omisiones | Sistema de Gestión RRHH",
   description: "Sistema interno de gestión de omisiones y errores de fichaje - SJG Montajes",
+  icons: {
+    icon: "/logo-sjg.png",
+  },
 };
 
 export default function RootLayout({

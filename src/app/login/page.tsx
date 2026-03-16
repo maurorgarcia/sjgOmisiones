@@ -71,9 +71,9 @@ export default function LoginPage() {
             <Image 
               src="/logo-sjg.png" 
               alt="SJG Logo" 
-              width={200}
-              height={60}
-              className="h-14 w-auto object-contain"
+              width={280}
+              height={84}
+              className="h-20 w-auto object-contain"
               priority
             />
           </motion.div>
@@ -185,9 +185,9 @@ export default function LoginPage() {
             <Image 
               src="/logo-gdai.png" 
               alt="GDAI" 
-              width={80} 
-              height={22} 
-              className="h-4 w-auto object-contain" 
+              width={120} 
+              height={32} 
+              className="h-6 w-auto object-contain" 
             />
           </div>
         </div>
