@@ -10,7 +10,8 @@ import {
   ChevronRight, 
   CheckCircle2, 
   X,
-  Eye
+  Eye,
+  ClipboardList
 } from "lucide-react";
 
 interface Step {
@@ -39,6 +40,11 @@ const steps: Step[] = [
     title: "Exportación Directa",
     description: "Podés descargar los reportes en formato Excel siempre que lo necesites para tu gestión externa.",
     icon: Download
+  },
+  {
+    title: "Sección Faltantes",
+    description: "Nueva sección dedicada exclusivamente a registrar personal que no figura en el sistema.",
+    icon: ClipboardList
   }
 ];
 

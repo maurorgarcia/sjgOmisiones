@@ -10,6 +10,8 @@ import {
   LogOut,
   Upload,
   Maximize2,
+  Users2,
+  ClipboardList,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -17,6 +19,15 @@ const navItems = [
   { href: "/", label: "Gestión Administrativa", icon: LayoutDashboard, adminOnly: true },
   { href: "/reporte", label: "Vista de Reporte", icon: FileSpreadsheet, adminOnly: false },
   { href: "/carga", label: "Cargar Error", icon: PlusCircle, adminOnly: true },
+];
+
+const faltantesItems = [
+  { href: "/faltantes", label: "Gestión Faltantes", icon: ClipboardList, adminOnly: true },
+  { href: "/faltantes/reporte", label: "Reporte Faltantes", icon: Users2, adminOnly: false },
+  { href: "/faltantes/carga", label: "Cargar Faltante", icon: PlusCircle, adminOnly: true },
+];
+
+const adminItems = [
   { href: "/importar", label: "Importar Empleados", icon: Upload, adminOnly: true },
 ];
 
@@ -42,41 +53,26 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">
-          Menú
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] px-3 mb-2">
+          Gestión Errores
         </p>
-        {navItems.map(({ href, label, icon: Icon, adminOnly }) => {
-          if (adminOnly && !isAdmin) return null;
+        <div className="space-y-1 mb-6">
+          {navItems.map((item) => <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />)}
+        </div>
 
-          const active = pathname === href;
-          const isCarga = href === "/carga";
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] px-3 mb-2">
+          Sección Faltantes
+        </p>
+        <div className="space-y-1 mb-6">
+          {faltantesItems.map((item) => <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />)}
+        </div>
 
-          return (
-            <div key={href} className="group relative">
-              <Link
-                href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  active
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
-                }`}
-              >
-                <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
-                {label}
-              </Link>
-              
-              {isCarga && isAdmin && (
-                <button
-                  onClick={() => window.open("/carga/mini", "MiniCarga", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded-md transition-all opacity-0 group-hover:opacity-100"
-                  title="Abrir en ventana flotante"
-                >
-                  <Maximize2 className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-          );
-        })}
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] px-3 mb-2">
+          Sistema
+        </p>
+        <div className="space-y-1">
+          {adminItems.map((item) => <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />)}
+        </div>
       </nav>
 
       {/* GDAI Credit */}
@@ -117,5 +113,39 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
+  );
+}
+
+function NavItem({ item, isAdmin, pathname }: { item: any; isAdmin: boolean; pathname: string }) {
+  const { href, label, icon: Icon, adminOnly } = item;
+  if (adminOnly && !isAdmin) return null;
+
+  const active = pathname === href;
+  const isCarga = href === "/carga";
+
+  return (
+    <div className="group relative">
+      <Link
+        href={href}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+          active
+            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
+            : "text-slate-400 hover:bg-slate-800/50 hover:text-white"
+        }`}
+      >
+        <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-white' : 'text-slate-400 opacity-60'}`} />
+        {label}
+      </Link>
+      
+      {isCarga && isAdmin && (
+        <button
+          onClick={() => window.open("/carga/mini", "MiniCarga", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded-md transition-all opacity-0 group-hover:opacity-100"
+          title="Abrir en ventana flotante"
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
   );
 }

@@ -43,4 +43,25 @@ export const MOTIVO_COLORS: Record<string, string> = {
 
 export const CONTRATOS = ["6700302926", "6700248017"];
 
+export type Faltante = {
+  id: number;
+  fecha: string;
+  contrato: string;
+  nombre_apellido: string;
+  sector: string | null;
+  motivo: string | null;
+  created_at?: string;
+};
+
+export const SECTORES_FALTANTES = [
+  "Coordinacion",
+  "Pañol/Logistica",
+  "Puesto Fijo",
+];
+
+export const MOTIVOS_FALTANTES = [
+  "Falta cargar",
+  "Falta parte",
+];
+
 export const PAGE_SIZE = 50;
