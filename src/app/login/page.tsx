@@ -5,6 +5,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, User, Loader2, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import logoSjg from "../../../public/logo-sjg.png";
+import logoGdai from "../../../public/logo-gdai.png";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,36 +43,40 @@ export default function LoginPage() {
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(at_0%_0%,rgba(99,102,241,0.08)_0,transparent_50%),radial-gradient(at_100%_0%,rgba(168,85,247,0.05)_0,transparent_50%)]" />
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 4, repeat: Infinity, repeatType: "reverse" }}
-          className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px]" 
+          className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px]"
         />
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 1.2 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 5, repeat: Infinity, repeatType: "reverse" }}
-          className="absolute -bottom-40 -left-40 w-[600px] h-[600px] bg-violet-500/10 rounded-full blur-[120px]" 
+          className="absolute -bottom-40 -left-40 w-[600px] h-[600px] bg-violet-500/10 rounded-full blur-[120px]"
         />
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-[440px] relative z-10"
       >
         {/* Branding */}
-        <div className="mb-8 text-center">
-          <motion.img 
+        <div className="mb-8 text-center flex justify-center">
+          <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
-            src="/logo-sjg.png" 
-            alt="SJG Logo" 
-            className="h-14 mx-auto mb-6 object-contain"
-          />
+          >
+            <Image 
+              src={logoSjg} 
+              alt="SJG Logo" 
+              className="h-14 w-auto object-contain"
+              priority
+            />
+          </motion.div>
         </div>
 
         {/* Card */}
@@ -87,7 +94,7 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <AnimatePresence>
                 {error && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
@@ -175,7 +182,7 @@ export default function LoginPage() {
           </p>
           <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0">
             <span className="text-[9px] font-bold uppercase tracking-tighter">Powered by</span>
-            <img src="/logo-gdai.png" alt="GDAI" className="h-4" />
+            <Image src={logoGdai} alt="GDAI" className="h-4 w-auto object-contain" />
           </div>
         </div>
       </motion.div>

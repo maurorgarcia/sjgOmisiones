@@ -10,6 +10,9 @@ import {
   LogOut,
   Upload,
 } from "lucide-react";
+import Image from "next/image";
+import logoSjg from "../../public/logo-sjg.png";
+import logoGdai from "../../public/logo-gdai.png";
 
 const navItems = [
   { href: "/", label: "Gestión Administrativa", icon: LayoutDashboard, adminOnly: true },
@@ -29,11 +32,10 @@ export function Sidebar() {
     <aside className="fixed top-0 left-0 h-full w-64 bg-slate-900 text-white flex flex-col z-40 shadow-2xl">
       {/* Logo SJG */}
       <div className="px-5 py-6 border-b border-slate-700/50 flex items-center justify-center">
-        <img
-          src="/logo-sjg.png"
+        <Image
+          src={logoSjg}
           alt="SJG Montajes Industriales"
-          className="w-full max-w-[180px] object-contain"
-          style={{ filter: "brightness(0) invert(1)" }}
+          className="w-full max-w-[180px] object-contain invert brightness-0"
         />
       </div>
 
@@ -73,7 +75,7 @@ export function Sidebar() {
           title="Desarrollado por GDAI"
         >
           <span className="text-[10px] text-slate-400 tracking-wide uppercase font-semibold">Desarrollado por</span>
-          <img src="/logo-gdai.png" alt="GDAI" className="h-[22px] object-contain" style={{ filter: "brightness(0) invert(1)" }} />
+          <Image src={logoGdai} alt="GDAI" className="h-[22px] w-auto object-contain invert brightness-0" />
         </a>
       </div>
 
