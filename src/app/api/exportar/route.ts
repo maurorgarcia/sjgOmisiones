@@ -7,6 +7,8 @@ export async function GET(request: Request) {
   const filter = searchParams.get("filter") || "pendientes";
   const motivo = searchParams.get("motivo") || "todos";
   const fecha = searchParams.get("fecha");
+  const fechaHasta = searchParams.get("fechaHasta");
+  const sector = searchParams.get("sector");
 
   try {
     let query = supabase
@@ -14,24 +16,19 @@ export async function GET(request: Request) {
       .select("*")
       .order("fecha", { ascending: false });
 
-    // Filter by date
     if (fecha) {
       const startIso = `${fecha}T00:00:00.000Z`;
-      const endIso = `${fecha}T23:59:59.999Z`;
-      
-      query = query.gte('fecha', startIso).lte('fecha', endIso);
+      const endIso = fechaHasta
+        ? `${fechaHasta}T23:59:59.999Z`
+        : `${fecha}T23:59:59.999Z`;
+      query = query.gte("fecha", startIso).lte("fecha", endIso);
     }
 
-    // Only download pending errors by default for the daily report, or all if requested
-    if (filter === "pendientes") {
-      query = query.eq("resuelto", false);
-    } else if (filter === "resueltos") {
-      query = query.eq("resuelto", true);
-    }
+    if (filter === "pendientes") query = query.eq("resuelto", false);
+    else if (filter === "resueltos") query = query.eq("resuelto", true);
 
-    if (motivo !== "todos") {
-      query = query.eq("motivo_error", motivo);
-    }
+    if (motivo !== "todos") query = query.eq("motivo_error", motivo);
+    if (sector?.trim()) query = query.ilike("sector", `%${sector.trim()}%`);
 
     const { data, error } = await query;
 
@@ -45,10 +42,11 @@ export async function GET(request: Request) {
     }
 
     const buffer = await generateExcelBuffer(data);
-    
-    // YYYY-MM-DD
+
     const dateStr = fecha || new Date().toISOString().split("T")[0];
-    const filename = `Omisiones_${dateStr}.xlsx`;
+    const filename = fechaHasta
+      ? `Omisiones_${dateStr}_a_${fechaHasta}.xlsx`
+      : `Omisiones_${dateStr}.xlsx`;
 
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,

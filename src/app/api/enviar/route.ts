@@ -9,24 +9,26 @@ export async function POST(request: Request) {
     const filtro = body.filter || "pendientes";
     const filtroMotivo = body.filterMotivo || "todos";
     const fecha = body.fecha;
+    const fechaHasta = body.fechaHasta;
+    const sector = body.sector;
 
-    // 1. Obtener datos
     let query = supabase
       .from("error_carga")
       .select("*")
       .order("fecha", { ascending: false });
 
-    // Filter by date
     if (fecha) {
       const startIso = `${fecha}T00:00:00.000Z`;
-      const endIso = `${fecha}T23:59:59.999Z`;
-      
-      query = query.gte('fecha', startIso).lte('fecha', endIso);
+      const endIso = fechaHasta
+        ? `${fechaHasta}T23:59:59.999Z`
+        : `${fecha}T23:59:59.999Z`;
+      query = query.gte("fecha", startIso).lte("fecha", endIso);
     }
 
     if (filtro === "pendientes") query = query.eq("resuelto", false);
     if (filtro === "resueltos") query = query.eq("resuelto", true);
     if (filtroMotivo !== "todos") query = query.eq("motivo_error", filtroMotivo);
+    if (sector?.trim()) query = query.ilike("sector", `%${sector.trim()}%`);
 
     const { data, error } = await query;
 
@@ -38,12 +40,15 @@ export async function POST(request: Request) {
     // 2. Generar Excel
     const buffer = await generateExcelBuffer(data);
     
-    // 3. Preparar metadatos del correo
     const dateStr = fecha
-      ? new Date(fecha + "T12:00:00").toLocaleDateString("es-AR")
+      ? fechaHasta
+        ? `${new Date(fecha + "T12:00:00").toLocaleDateString("es-AR")} a ${new Date(fechaHasta + "T12:00:00").toLocaleDateString("es-AR")}`
+        : new Date(fecha + "T12:00:00").toLocaleDateString("es-AR")
       : new Date().toLocaleDateString("es-AR");
     const dateSlug = fecha || new Date().toISOString().split("T")[0];
-    const filename = `Omisiones_${dateSlug}.xlsx`;
+    const filename = fechaHasta
+      ? `Omisiones_${dateSlug}_a_${fechaHasta}.xlsx`
+      : `Omisiones_${dateSlug}.xlsx`;
     const motivoLabel = filtroMotivo !== "todos" ? ` · Motivo: ${filtroMotivo}` : "";
 
     const htmlBody = `

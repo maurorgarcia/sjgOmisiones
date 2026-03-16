@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SJG Omisiones
 
-## Getting Started
+Sistema de gestión de omisiones y errores de carga de fichaje para RRHH. Permite cargar errores manualmente, filtrar por estado/motivo/fecha, exportar a Excel y enviar reportes por correo.
 
-First, run the development server:
+## Requisitos
+
+- Node.js 18+
+- Cuenta Supabase (base de datos)
+- Servidor SMTP para envío de correos
+
+## Instalación
+
+```bash
+npm install
+```
+
+Crear archivo `.env.local` en la raíz (ver variables en `.env.example`).
+
+## Variables de entorno
+
+| Variable | Descripción |
+|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clave anónima (pública) de Supabase |
+| `NEXTAUTH_SECRET` | Secreto para sesiones NextAuth (generar con `openssl rand -base64 32`) |
+| `NEXTAUTH_URL` | URL de la app (ej. `http://localhost:3000` en dev) |
+| `SMTP_HOST` | Servidor SMTP |
+| `SMTP_PORT` | Puerto (ej. 587) |
+| `SMTP_USER` / `SMTP_PASS` | Credenciales SMTP |
+| `SMTP_FROM` | Remitente del correo (opcional) |
+| `CORREOS_DESTINO` | Destinatarios del reporte (separados por coma) |
+
+## Desarrollo
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` — Servidor de desarrollo
+- `npm run build` — Build para producción
+- `npm run start` — Servidor de producción
+- `npm run lint` — Linter
 
-## Learn More
+## Estructura principal
 
-To learn more about Next.js, take a look at the following resources:
+- `src/app/` — Páginas (dashboard, carga, importar, login) y rutas API
+- `src/components/` — Sidebar, Navbar, AppShell
+- `src/lib/` — Supabase, Excel, email, constantes
+- `src/types/` — Tipos TypeScript compartidos
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Roles
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **admin**: Puede cargar errores, importar empleados, editar/eliminar registros y enviar reportes.
+- **viewer**: Solo puede ver la bandeja, filtrar, descargar Excel y marcar como resuelto/pendiente.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*Desarrollado por GDAI*

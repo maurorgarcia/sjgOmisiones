@@ -17,6 +17,9 @@ import {
   Trash2,
   Pencil,
   X,
+  Search,
+  Building2,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -57,6 +60,8 @@ const MOTIVO_COLORS: Record<string, string> = {
   "Otro": "bg-slate-100 text-slate-700 border-slate-200",
 };
 
+const PAGE_SIZE = 50;
+
 function getMotivoBadge(motivo: string) {
   const classes = MOTIVO_COLORS[motivo] ?? "bg-slate-100 text-slate-700 border-slate-200";
   return (
@@ -72,19 +77,28 @@ export default function Dashboard() {
 
   const [errores, setErrores] = useState<ErrorCarga[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [sending, setSending] = useState(false);
   const [filtro, setFiltro] = useState<"todos" | "pendientes" | "resueltos">("pendientes");
   const [filtroMotivo, setFiltroMotivo] = useState<string>("todos");
+  const [filtroSector, setFiltroSector] = useState<string>("");
   const [fechaFiltro, setFechaFiltro] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [fechaHasta, setFechaHasta] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Restore all filter state from sessionStorage on mount
   useEffect(() => {
     const savedDate = sessionStorage.getItem("sjg_working_date");
     const savedFiltro = sessionStorage.getItem("sjg_filtro") as "todos" | "pendientes" | "resueltos" | null;
     const savedMotivo = sessionStorage.getItem("sjg_filtro_motivo");
+    const savedSector = sessionStorage.getItem("sjg_filtro_sector");
+    const savedHasta = sessionStorage.getItem("sjg_fecha_hasta");
     if (savedDate) setFechaFiltro(savedDate);
     if (savedFiltro) setFiltro(savedFiltro);
     if (savedMotivo) setFiltroMotivo(savedMotivo);
+    if (savedSector) setFiltroSector(savedSector);
+    if (savedHasta) setFechaHasta(savedHasta);
   }, []);
 
   // Edit modal
@@ -100,7 +114,7 @@ export default function Dashboard() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) setSelectedIds(errores.map(err => err.id));
+    if (e.target.checked) setSelectedIds(filteredErrores.map((err) => err.id));
     else setSelectedIds([]);
   };
 
@@ -117,10 +131,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchErrores();
-  }, [filtro, filtroMotivo, fechaFiltro]);
+  }, [filtro, filtroMotivo, filtroSector, fechaFiltro, fechaHasta]);
 
-  const fetchErrores = async () => {
-    setLoading(true);
+  function buildQuery() {
     let query = supabase
       .from("error_carga")
       .select("*")
@@ -128,19 +141,55 @@ export default function Dashboard() {
 
     if (fechaFiltro) {
       const startIso = `${fechaFiltro}T00:00:00.000Z`;
-      const endIso = `${fechaFiltro}T23:59:59.999Z`;
+      const endIso = fechaHasta
+        ? `${fechaHasta}T23:59:59.999Z`
+        : `${fechaFiltro}T23:59:59.999Z`;
       query = query.gte("fecha", startIso).lte("fecha", endIso);
     }
-
     if (filtro === "pendientes") query = query.eq("resuelto", false);
     if (filtro === "resueltos") query = query.eq("resuelto", true);
     if (filtroMotivo !== "todos") query = query.eq("motivo_error", filtroMotivo);
+    if (filtroSector.trim()) query = query.ilike("sector", `%${filtroSector.trim()}%`);
+    return query;
+  }
 
+  const fetchErrores = async () => {
+    setLoading(true);
+    const query = buildQuery().range(0, PAGE_SIZE - 1);
     const { data, error } = await query;
-    if (data) setErrores(data);
+    if (data) {
+      setErrores(data);
+      setHasMore(data.length === PAGE_SIZE);
+    }
     if (error) console.error(error);
     setLoading(false);
   };
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const from = errores.length;
+    const query = buildQuery().range(from, from + PAGE_SIZE - 1);
+    const { data, error } = await query;
+    if (data) {
+      setErrores((prev) => [...prev, ...data]);
+      setHasMore(data.length === PAGE_SIZE);
+    }
+    if (error) console.error(error);
+    setLoadingMore(false);
+  };
+
+  // Búsqueda en tabla (client-side)
+  const filteredErrores = searchQuery.trim()
+    ? errores.filter((e) => {
+        const q = searchQuery.trim().toLowerCase();
+        return (
+          e.nombre_apellido.toLowerCase().includes(q) ||
+          e.legajo.includes(searchQuery.trim()) ||
+          (e.ot && e.ot.includes(searchQuery.trim()))
+        );
+      })
+    : errores;
 
   const toggleResuelto = async (id: number, currentStatus: boolean) => {
     const { error } = await supabase
@@ -180,7 +229,14 @@ export default function Dashboard() {
 
   const handleDownload = async () => {
     try {
-      const res = await fetch(`/api/exportar?filter=${filtro}&motivo=${filtroMotivo}&fecha=${fechaFiltro}`);
+      const params = new URLSearchParams({
+        filter: filtro,
+        motivo: filtroMotivo,
+        ...(fechaFiltro && { fecha: fechaFiltro }),
+        ...(fechaHasta && { fechaHasta }),
+        ...(filtroSector.trim() && { sector: filtroSector.trim() }),
+      });
+      const res = await fetch(`/api/exportar?${params}`);
       if (!res.ok) { alert("No hay datos o hubo un error al exportar."); return; }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -202,7 +258,13 @@ export default function Dashboard() {
       const res = await fetch("/api/enviar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filter: filtro, filterMotivo: filtroMotivo, fecha: fechaFiltro }),
+        body: JSON.stringify({
+          filter: filtro,
+          filterMotivo: filtroMotivo,
+          fecha: fechaFiltro,
+          fechaHasta: fechaHasta || undefined,
+          sector: filtroSector.trim() || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al enviar el correo");
@@ -214,14 +276,16 @@ export default function Dashboard() {
     }
   };
 
-  // KPI stats
-  const total = errores.length;
-  const pendientes = errores.filter((e) => !e.resuelto).length;
-  const resueltos = errores.filter((e) => e.resuelto).length;
+  // KPI stats (sobre los datos visibles después de búsqueda)
+  const total = filteredErrores.length;
+  const pendientes = filteredErrores.filter((e) => !e.resuelto).length;
+  const resueltos = filteredErrores.filter((e) => e.resuelto).length;
   const pct = total > 0 ? Math.round((resueltos / total) * 100) : 0;
 
   const dateLabel = fechaFiltro
-    ? format(new Date(fechaFiltro + "T12:00:00"), "EEEE d 'de' MMMM", { locale: es })
+    ? fechaHasta
+      ? `${format(new Date(fechaFiltro + "T12:00:00"), "d/M/yyyy", { locale: es })} – ${format(new Date(fechaHasta + "T12:00:00"), "d/M/yyyy", { locale: es })}`
+      : format(new Date(fechaFiltro + "T12:00:00"), "EEEE d 'de' MMMM", { locale: es })
     : "Todos los registros";
 
   return (
@@ -359,6 +423,20 @@ export default function Dashboard() {
             ))}
           </select>
 
+          <div className="relative flex-grow sm:flex-grow-0 min-w-[140px]">
+            <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={filtroSector}
+              onChange={(e) => {
+                setFiltroSector(e.target.value);
+                sessionStorage.setItem("sjg_filtro_sector", e.target.value);
+              }}
+              placeholder="Sector..."
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
+            />
+          </div>
+
           <div className="relative flex-grow sm:flex-grow-0">
             <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
@@ -367,24 +445,38 @@ export default function Dashboard() {
               onChange={(e) => {
                 const newDate = e.target.value;
                 setFechaFiltro(newDate);
-                if (newDate) {
-                  sessionStorage.setItem("sjg_working_date", newDate);
-                  // If picking a past date, switch to 'todos' automatically
-                  const today = new Date().toISOString().split("T")[0];
-                  if (newDate !== today) {
-                    setFiltro("todos");
-                    sessionStorage.setItem("sjg_filtro", "todos");
-                  }
+                if (newDate) sessionStorage.setItem("sjg_working_date", newDate);
+                const today = new Date().toISOString().split("T")[0];
+                if (newDate !== today) {
+                  setFiltro("todos");
+                  sessionStorage.setItem("sjg_filtro", "todos");
                 }
               }}
               className="w-full sm:w-auto pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
             />
           </div>
+          <div className="flex items-center gap-1.5 flex-grow sm:flex-grow-0">
+            <span className="text-xs text-slate-500 hidden sm:inline">a</span>
+            <input
+              type="date"
+              value={fechaHasta}
+              onChange={(e) => {
+                const v = e.target.value;
+                setFechaHasta(v);
+                if (v) sessionStorage.setItem("sjg_fecha_hasta", v);
+                else sessionStorage.removeItem("sjg_fecha_hasta");
+              }}
+              className="w-full sm:w-auto pl-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
+              title="Hasta (opcional, para rango)"
+            />
+          </div>
           <button
             onClick={() => {
               setFechaFiltro("");
+              setFechaHasta("");
               setFiltro("todos");
               sessionStorage.removeItem("sjg_working_date");
+              sessionStorage.removeItem("sjg_fecha_hasta");
               sessionStorage.setItem("sjg_filtro", "todos");
             }}
             className="text-xs text-blue-600 hover:text-blue-800 font-semibold whitespace-nowrap px-2"
@@ -393,6 +485,25 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* Búsqueda en tabla */}
+      {!loading && errores.length > 0 && (
+        <div className="flex items-center gap-2">
+          <Search className="w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Buscar por nombre, legajo o OT..."
+            className="flex-1 max-w-xs border border-slate-200 rounded-xl pl-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
+          />
+          {searchQuery.trim() && (
+            <span className="text-xs text-slate-500">
+              Mostrando {filteredErrores.length} de {errores.length}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -405,7 +516,7 @@ export default function Dashboard() {
                     <input 
                       type="checkbox" 
                       onChange={handleSelectAll} 
-                      checked={errores.length > 0 && selectedIds.length === errores.length} 
+                      checked={filteredErrores.length > 0 && selectedIds.length === filteredErrores.length} 
                       className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" 
                     />
                   </th>
@@ -421,29 +532,37 @@ export default function Dashboard() {
             <tbody className="divide-y divide-slate-50">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center">
+                  <td colSpan={7} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-3 text-slate-400">
                       <Loader2 className="w-6 h-6 animate-spin" />
                       <span className="text-sm">Cargando datos...</span>
                     </div>
                   </td>
                 </tr>
-              ) : errores.length === 0 ? (
+              ) : filteredErrores.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center">
+                  <td colSpan={7} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <div className="bg-slate-100 p-4 rounded-full">
                         <CheckCheck className="w-7 h-7 text-slate-400" />
                       </div>
-                      <p className="font-semibold text-slate-700 mt-1">No hay errores para mostrar</p>
+                      <p className="font-semibold text-slate-700 mt-1">
+                        {errores.length === 0
+                          ? "No hay errores para mostrar"
+                          : "Ningún registro coincide con la búsqueda"}
+                      </p>
                       <p className="text-xs text-slate-400">
-                        {filtro === "pendientes" ? "¡Todo al día! No hay nada pendiente." : "No se encontraron registros con este filtro."}
+                        {errores.length === 0
+                          ? filtro === "pendientes"
+                            ? "¡Todo al día! No hay nada pendiente."
+                            : "No se encontraron registros con este filtro."
+                          : `Hay ${errores.length} registro(s) con los filtros de fecha/motivo/sector. Probá otro término.`}
                       </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                errores.map((err) => (
+                filteredErrores.map((err) => (
                   <tr
                     key={err.id}
                     className={`hover:bg-slate-50/80 transition-colors ${err.resuelto ? "opacity-60" : ""} ${selectedIds.includes(err.id) ? "bg-blue-50/50" : ""}`}
@@ -541,6 +660,23 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
+        {!loading && hasMore && errores.length > 0 && !searchQuery.trim() && (
+          <div className="border-t border-slate-100 py-4 flex justify-center">
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition disabled:opacity-50"
+            >
+              {loadingMore ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+              {loadingMore ? "Cargando…" : "Cargar más"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Delete confirm modal */}

@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard, adminOnly: false },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard, adminOnly: true },
+  { href: "/reporte", label: "Reporte", icon: FileSpreadsheet, adminOnly: false },
   { href: "/carga", label: "Cargar Error", icon: PlusCircle, adminOnly: true },
   { href: "/importar", label: "Importar Empleados", icon: Upload, adminOnly: true },
 ];
