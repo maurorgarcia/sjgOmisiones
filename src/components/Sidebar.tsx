@@ -52,11 +52,11 @@ export function Sidebar() {
               href={href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 active
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
                   : "text-slate-400 hover:bg-slate-800 hover:text-white"
               }`}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
+              <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
               {label}
             </Link>
           );

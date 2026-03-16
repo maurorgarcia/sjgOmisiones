@@ -25,10 +25,12 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useSession } from "next-auth/react";
-
 import { toast } from "sonner";
 import { ErrorCarga, MOTIVO_COLORS, PAGE_SIZE } from "@/types";
 import { StatsCharts } from "@/components/StatsCharts";
+import { Modal } from "@/components/Modal";
+import { Skeleton, TableSkeleton, CardSkeleton } from "@/components/Skeleton";
+import { motion, AnimatePresence } from "framer-motion";
 
 
 function getMotivoBadge(motivo: string) {
@@ -80,6 +82,7 @@ export default function Dashboard() {
 
   // Delete confirm and Bulk Selection
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,10 +95,10 @@ export default function Dashboard() {
   };
 
   const confirmBulkDelete = async () => {
-    if (!confirm(`¿Estás seguro de que deseas eliminar ${selectedIds.length} registros permanentemente?`)) return;
     await supabase.from("error_carga").delete().in("id", selectedIds);
     setSelectedIds([]);
-    toast.success("Registros eliminados correctamente.");
+    setIsBulkDeleting(false);
+    toast.success(`${selectedIds.length} registros eliminados correctamente.`);
     fetchErrores();
   };
 
@@ -319,7 +322,6 @@ export default function Dashboard() {
             className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm disabled:opacity-50"
           >
             <ExternalLink className="w-4 h-4" />
-            Descargar
           </button>
 
           {/* Admin-only actions */}
@@ -327,7 +329,7 @@ export default function Dashboard() {
             <>
               {selectedIds.length > 0 && (
                 <button
-                  onClick={confirmBulkDelete}
+                  onClick={() => setIsBulkDeleting(true)}
                   className="inline-flex items-center gap-2 rounded-xl bg-red-50 text-red-600 px-4 py-2.5 border border-red-200 text-sm font-semibold hover:bg-red-100 transition shadow-sm"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -336,7 +338,7 @@ export default function Dashboard() {
               )}
               <Link
                 href="/carga"
-                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition shadow-sm shadow-blue-500/20"
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition shadow-sm shadow-indigo-500/20 active:scale-95"
               >
                 <PlusCircle className="w-4 h-4" />
                 Nuevo Registro
@@ -344,7 +346,7 @@ export default function Dashboard() {
               <button
                 onClick={handleSendEmail}
                 disabled={sending || loading}
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition shadow-sm shadow-emerald-500/20 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition shadow-sm shadow-emerald-500/20 disabled:opacity-50 active:scale-95"
               >
                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Enviar Reporte
@@ -403,7 +405,15 @@ export default function Dashboard() {
       </div>
 
       {/* Charts Section */}
-      {!loading && errores.length > 0 && <StatsCharts data={errores} />}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Skeleton className="h-[280px]" />
+          <Skeleton className="h-[280px]" />
+          <Skeleton className="h-[280px]" />
+        </div>
+      ) : (
+        errores.length > 0 && <StatsCharts data={errores} />
+      )}
 
       {/* Filters */}
       <div className="bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -415,9 +425,9 @@ export default function Dashboard() {
                 setFiltro(f);
                 sessionStorage.setItem("sjg_filtro", f);
               }}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap active:scale-95 ${
                 filtro === f
-                  ? "bg-white text-slate-900 shadow-sm"
+                  ? "bg-white text-indigo-700 shadow-sm"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
@@ -470,7 +480,7 @@ export default function Dashboard() {
                   sessionStorage.setItem("sjg_filtro", "todos");
                 }
               }}
-              className="w-full sm:w-auto pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
+              className="w-full sm:w-auto pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white"
             />
           </div>
           <div className="flex items-center gap-1.5 flex-grow sm:flex-grow-0">
@@ -484,7 +494,7 @@ export default function Dashboard() {
                 if (v) sessionStorage.setItem("sjg_fecha_hasta", v);
                 else sessionStorage.removeItem("sjg_fecha_hasta");
               }}
-              className="w-full sm:w-auto pl-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
+              className="w-full sm:w-auto pl-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white"
               title="Hasta (opcional, para rango)"
             />
           </div>
@@ -497,7 +507,7 @@ export default function Dashboard() {
               sessionStorage.removeItem("sjg_fecha_hasta");
               sessionStorage.setItem("sjg_filtro", "todos");
             }}
-            className="text-xs text-blue-600 hover:text-blue-800 font-semibold whitespace-nowrap px-2"
+            className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold whitespace-nowrap px-2"
           >
             Ver Histórico
           </button>
@@ -513,7 +523,7 @@ export default function Dashboard() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por nombre, legajo o OT..."
-            className="flex-1 max-w-xs border border-slate-200 rounded-xl pl-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
+            className="flex-1 max-w-xs border border-slate-200 rounded-xl pl-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white"
           />
           {searchQuery.trim() && (
             <span className="text-xs text-slate-500">
@@ -535,7 +545,7 @@ export default function Dashboard() {
                       type="checkbox" 
                       onChange={handleSelectAll} 
                       checked={filteredErrores.length > 0 && selectedIds.length === filteredErrores.length} 
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" 
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
                     />
                   </th>
                 )}
@@ -550,11 +560,8 @@ export default function Dashboard() {
             <tbody className="divide-y divide-slate-50">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center">
-                    <div className="flex flex-col items-center gap-3 text-slate-400">
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                      <span className="text-sm">Cargando datos...</span>
-                    </div>
+                  <td colSpan={7} className="py-12">
+                     <TableSkeleton rows={8} />
                   </td>
                 </tr>
               ) : filteredErrores.length === 0 ? (
@@ -591,7 +598,7 @@ export default function Dashboard() {
                           type="checkbox" 
                           onChange={() => handleSelectOne(err.id)} 
                           checked={selectedIds.includes(err.id)} 
-                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" 
+                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
                         />
                       </td>
                     )}
@@ -646,7 +653,7 @@ export default function Dashboard() {
                         {/* Always visible: Resolver/Reabrir */}
                         <button
                           onClick={() => toggleResuelto(err.id, err.resuelto)}
-                          className={`text-sm font-semibold transition-colors ${err.resuelto ? "text-slate-400 hover:text-slate-700" : "text-blue-600 hover:text-blue-800"}`}
+                          className={`text-sm font-semibold transition-colors ${err.resuelto ? "text-slate-400 hover:text-slate-700" : "text-indigo-600 hover:text-indigo-800"}`}
                         >
                           {err.resuelto ? "Reabrir" : "Resolver"}
                         </button>
@@ -697,28 +704,27 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Delete confirm modal */}
-      {deletingId !== null && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="bg-red-100 p-2 rounded-xl"><Trash2 className="w-5 h-5 text-red-600" /></div>
-              <h3 className="font-bold text-slate-900">¿Eliminar registro?</h3>
-            </div>
-            <p className="text-sm text-slate-500 mb-5">Esta acción no se puede deshacer. El registro será eliminado permanentemente.</p>
-            <div className="flex gap-3 justify-end">
-              <button onClick={() => setDeletingId(null)}
-                className="px-5 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
-                Cancelar
-              </button>
-              <button onClick={() => confirmDelete(deletingId)}
-                className="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition shadow-sm">
-                Eliminar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delete Single Modal */}
+      <Modal
+        isOpen={deletingId !== null}
+        onClose={() => setDeletingId(null)}
+        title="¿Eliminar registro?"
+        description="Esta acción no se puede deshacer. El registro seleccionado será eliminado permanentemente de la base de datos."
+        type="danger"
+        confirmLabel="Eliminar Registro"
+        onConfirm={() => deletingId && confirmDelete(deletingId)}
+      />
+
+      {/* Bulk Delete Modal */}
+      <Modal
+        isOpen={isBulkDeleting}
+        onClose={() => setIsBulkDeleting(false)}
+        title={`¿Eliminar ${selectedIds.length} registros?`}
+        description="Has seleccionado múltiples registros para eliminar. Esta operación es permanente y afectará a todos los elementos seleccionados."
+        type="danger"
+        confirmLabel={`Eliminar ${selectedIds.length} elementos`}
+        onConfirm={confirmBulkDelete}
+      />
 
       {/* Edit modal */}
       {editingError && (
@@ -768,7 +774,7 @@ export default function Dashboard() {
                 Cancelar
               </button>
               <button onClick={saveEdit} disabled={editLoading}
-                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition shadow-sm disabled:opacity-50">
+                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition shadow-sm disabled:opacity-50 active:scale-95">
                 {editLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 Guardar cambios
               </button>

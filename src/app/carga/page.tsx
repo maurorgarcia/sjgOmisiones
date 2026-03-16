@@ -27,18 +27,18 @@ function HourInputRow({ label, val, setVal, mods, setMods }: { label: string, va
         <input 
           type="number" step="0.5" min="0" 
           value={val} onChange={(e) => setVal(e.target.value)} 
-          className="w-full border rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none text-sm border-slate-200" 
+          className="w-full border rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none text-sm border-slate-200" 
           placeholder="Ej: 4.5" 
         />
       </div>
       <div className="flex items-center gap-4 w-full sm:w-2/3 mt-2 sm:mt-0 pt-2 sm:pt-0 sm:border-l sm:pl-4 border-slate-200">
         {(["insa", "polu", "noct"] as const).map(m => (
-          <label key={m} className="flex items-center gap-1.5 text-xs text-slate-600 font-medium cursor-pointer uppercase hover:text-blue-600 transition">
+          <label key={m} className="flex items-center gap-1.5 text-xs text-slate-600 font-medium cursor-pointer uppercase hover:text-indigo-600 transition">
             <input 
               type="checkbox" 
               checked={mods[m]} 
               onChange={(e) => setMods({...mods, [m]: e.target.checked})} 
-              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
             />
             {m}
           </label>
@@ -276,7 +276,7 @@ export default function CargaPage() {
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                className={`w-full border rounded-xl pl-10 pr-10 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm ${errors.empleado ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                className={`w-full border rounded-xl pl-10 pr-10 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm ${errors.empleado ? "border-red-400 bg-red-50" : "border-slate-300"}`}
                 placeholder="Buscar por nombre o legajo..."
                 autoComplete="off"
               />
@@ -296,7 +296,7 @@ export default function CargaPage() {
               <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
                 {suggestions.map((emp) => (
                   <button key={emp.legajo} type="button" onClick={() => selectEmpleado(emp)}
-                    className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-slate-50 last:border-0">
+                    className="w-full text-left px-4 py-3 hover:bg-indigo-50 transition-colors border-b border-slate-50 last:border-0">
                     <div className="font-semibold text-slate-800 text-sm">{emp.nombre_apellido}</div>
                     <div className="text-xs text-slate-400 mt-0.5">Leg: {emp.legajo} · {emp.contrato}{emp.categoria ? ` · ${emp.categoria}` : ""}</div>
                   </button>
@@ -311,14 +311,14 @@ export default function CargaPage() {
                   type="text"
                   value={legajoManual}
                   onChange={(e) => setLegajoManual(e.target.value)}
-                  className={`w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-blue-500 ${errors.legajo ? "border-red-400" : "border-slate-300"}`}
+                  className={`w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-indigo-500 ${errors.legajo ? "border-red-400" : "border-slate-300"}`}
                   placeholder="Ej: 60019454"
                 />
               </div>
             )}
 
             {selectedEmpleado && (
-              <div className="mt-2 inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg px-3 py-1.5 text-xs font-medium">
+              <div className="mt-2 inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg px-3 py-1.5 text-xs font-medium">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 {selectedEmpleado.nombre_apellido} · Leg. {selectedEmpleado.legajo}
               </div>
@@ -339,7 +339,7 @@ export default function CargaPage() {
                   setFecha(e.target.value);
                   if (e.target.value) sessionStorage.setItem("sjg_working_date", e.target.value);
                 }}
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-sm"
+                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white text-sm"
               />
             </div>
           </div>
@@ -353,7 +353,7 @@ export default function CargaPage() {
                 required
                 value={contrato}
                 onChange={(e) => { setContrato(e.target.value); setErrors((err) => ({ ...err, contrato: "" })); }}
-                className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-sm ${errors.contrato ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white text-sm ${errors.contrato ? "border-red-400 bg-red-50" : "border-slate-300"}`}
               >
                 <option value="">Seleccionar contrato...</option>
                 {CONTRATOS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -369,7 +369,7 @@ export default function CargaPage() {
                 required
                 value={motivo}
                 onChange={(e) => { setMotivo(e.target.value); setErrors((err) => ({ ...err, motivo: "", ot: "" })); }}
-                className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white text-sm ${errors.motivo ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white text-sm ${errors.motivo ? "border-red-400 bg-red-50" : "border-slate-300"}`}
               >
                 <option value="">Seleccione un motivo...</option>
                 {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -388,7 +388,7 @@ export default function CargaPage() {
                 type="text"
                 value={sector}
                 onChange={(e) => { setSector(e.target.value); setErrors((err) => ({ ...err, sector: "" })); }}
-                className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm ${errors.sector ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm ${errors.sector ? "border-red-400 bg-red-50" : "border-slate-300"}`}
                 placeholder="Ej: Planta A, Mantenimiento..."
                 list="sectores-comunes"
               />
@@ -411,7 +411,7 @@ export default function CargaPage() {
                 value={ot}
                 onChange={(e) => { setOt(e.target.value.replace(/\D/g, "").slice(0, 10)); setErrors((err) => ({ ...err, ot: "" })); }}
                 disabled={motivo === "OT Inexistente"}
-                className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm disabled:bg-slate-50 disabled:text-slate-400 ${errors.ot ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm disabled:bg-slate-50 disabled:text-slate-400 ${errors.ot ? "border-red-400 bg-red-50" : "border-slate-300"}`}
                 placeholder={motivo === "OT Inexistente" ? "No aplica" : "Ej: 0012300456"}
                 maxLength={10}
               />
@@ -432,7 +432,7 @@ export default function CargaPage() {
                   type="time"
                   value={horarioDesde}
                   onChange={(e) => { setHorarioDesde(e.target.value); setErrors((err) => ({ ...err, horarioDesde: "" })); }}
-                  className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm ${errors.horarioDesde ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                  className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm ${errors.horarioDesde ? "border-red-400 bg-red-50" : "border-slate-300"}`}
                 />
                 {errors.horarioDesde && <p className="text-red-500 text-xs mt-1">{errors.horarioDesde}</p>}
               </div>
@@ -442,7 +442,7 @@ export default function CargaPage() {
                   type="time"
                   value={horarioHasta}
                   onChange={(e) => { setHorarioHasta(e.target.value); setErrors((err) => ({ ...err, horarioHasta: "" })); }}
-                  className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm ${errors.horarioHasta ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                  className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm ${errors.horarioHasta ? "border-red-400 bg-red-50" : "border-slate-300"}`}
                 />
                 {errors.horarioHasta && <p className="text-red-500 text-xs mt-1">{errors.horarioHasta}</p>}
               </div>
@@ -470,7 +470,7 @@ export default function CargaPage() {
               value={notas}
               onChange={(e) => setNotas(e.target.value)}
               rows={3}
-              className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none text-sm"
+              className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition resize-none text-sm"
               placeholder="Algún comentario sobre el error..."
             />
           </div>
@@ -481,7 +481,7 @@ export default function CargaPage() {
               Cancelar
             </button>
             <button type="submit" disabled={loading}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-sm shadow-blue-500/20 transition-all disabled:opacity-50 text-sm">
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold shadow-sm shadow-indigo-500/20 transition-all disabled:opacity-50 text-sm active:scale-95">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {loading ? "Guardando..." : "Guardar Registro"}
             </button>

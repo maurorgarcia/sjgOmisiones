@@ -21,6 +21,7 @@ import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import { ErrorCarga, MOTIVO_COLORS, PAGE_SIZE } from "@/types";
 import { StatsCharts } from "@/components/StatsCharts";
+import { Skeleton, TableSkeleton } from "@/components/Skeleton";
 
 function getMotivoBadge(motivo: string) {
   const classes = MOTIVO_COLORS[motivo] ?? "bg-slate-100 text-slate-700 border-slate-200";
@@ -238,7 +239,15 @@ export default function ReportePage() {
       </div>
 
       {/* Visual Analytics */}
-      {!loading && errores.length > 0 && <StatsCharts data={errores} />}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Skeleton className="h-[280px]" />
+          <Skeleton className="h-[280px]" />
+          <Skeleton className="h-[280px]" />
+        </div>
+      ) : (
+        errores.length > 0 && <StatsCharts data={errores} />
+      )}
 
       <div className="bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-full md:w-auto overflow-x-auto">
@@ -246,8 +255,8 @@ export default function ReportePage() {
             <button
               key={f}
               onClick={() => setFiltro(f)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                filtro === f ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap active:scale-95 ${
+                filtro === f ? "bg-white text-indigo-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
               }`}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}

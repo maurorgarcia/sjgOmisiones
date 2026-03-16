@@ -15,24 +15,24 @@ export function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <span className="font-bold text-xl text-blue-600">
-                Omisiones
+              <span className="font-bold text-xl text-indigo-600">
+                SJG Omisiones
               </span>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link
                 href="/"
-                className="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium gap-2"
+                className="border-transparent text-slate-500 hover:border-indigo-300 hover:text-indigo-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium gap-2"
               >
                 <Home className="w-4 h-4" />
-                Dashboard
+                Gestión
               </Link>
               <Link
                 href="/carga"
-                className="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium gap-2"
+                className="border-transparent text-slate-500 hover:border-indigo-300 hover:text-indigo-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium gap-2"
               >
                 <PlusCircle className="w-4 h-4" />
-                Cargar Error
+                Cargar
               </Link>
             </div>
           </div>
