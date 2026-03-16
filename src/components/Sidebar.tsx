@@ -9,6 +9,7 @@ import {
   FileSpreadsheet,
   LogOut,
   Upload,
+  Maximize2,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -48,19 +49,32 @@ export function Sidebar() {
           if (adminOnly && !isAdmin) return null;
 
           const active = pathname === href;
+          const isCarga = href === "/carga";
+
           return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                active
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
-              {label}
-            </Link>
+            <div key={href} className="group relative">
+              <Link
+                href={href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  active
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
+                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                }`}
+              >
+                <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
+                {label}
+              </Link>
+              
+              {isCarga && isAdmin && (
+                <button
+                  onClick={() => window.open("/carga/mini", "MiniCarga", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                  title="Abrir en ventana flotante"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           );
         })}
       </nav>

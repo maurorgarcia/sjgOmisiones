@@ -8,8 +8,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const isLoginPage = pathname === "/login";
+  const isMiniMode = pathname.startsWith("/carga/mini");
 
-  if (isLoginPage || !session) {
+  if (isLoginPage || !session || isMiniMode) {
     return <>{children}</>;
   }
 

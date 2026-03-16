@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { Save, AlertCircle, CheckCircle2, Loader2, Search, X } from "lucide-react";
+import { Save, AlertCircle, CheckCircle2, Loader2, Search, X, Maximize2 } from "lucide-react";
 
 import { toast } from "sonner";
 import { ErrorCarga, MOTIVOS, CONTRATOS } from "@/types";
@@ -255,9 +255,19 @@ export default function CargaPage() {
 
   return (
     <div className="max-w-2xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Cargar Omisión / Error</h1>
-        <p className="text-slate-500 text-sm mt-1">Registre un nuevo error arrojado por el sistema web de RRHH.</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Cargar Omisión / Error</h1>
+          <p className="text-slate-500 text-sm mt-1">Registre un nuevo error arrojado por el sistema web de RRHH.</p>
+        </div>
+        <button
+          onClick={() => window.open("/carga/mini", "MiniCarga", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-indigo-100 bg-indigo-50 text-indigo-600 text-xs font-bold hover:bg-indigo-100 transition-all active:scale-95"
+          title="Abrir como ventana flotante para multitarea"
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+          <span>MODO VENTANA</span>
+        </button>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
