@@ -121,11 +121,11 @@ export default function ReportePage() {
         { event: "INSERT", schema: "public", table: "error_carga" },
         (payload) => {
           const newRow = payload.new as ErrorCarga;
-          
+
           const isPendiente = !newRow.resuelto;
-          const matchesStatus = 
-            filtro === "todos" || 
-            (filtro === "pendientes" && isPendiente) || 
+          const matchesStatus =
+            filtro === "todos" ||
+            (filtro === "pendientes" && isPendiente) ||
             (filtro === "resueltos" && !isPendiente);
 
           if (matchesStatus) {
@@ -142,13 +142,13 @@ export default function ReportePage() {
 
   const filteredErrores = searchQuery.trim()
     ? errores.filter((e) => {
-        const q = searchQuery.trim().toLowerCase();
-        return (
-          e.nombre_apellido.toLowerCase().includes(q) ||
-          e.legajo.includes(searchQuery.trim()) ||
-          (e.ot && e.ot.includes(searchQuery.trim()))
-        );
-      })
+      const q = searchQuery.trim().toLowerCase();
+      return (
+        e.nombre_apellido.toLowerCase().includes(q) ||
+        e.legajo.includes(searchQuery.trim()) ||
+        (e.ot && e.ot.includes(searchQuery.trim()))
+      );
+    })
     : errores;
 
   const handleDownload = async () => {
@@ -272,9 +272,8 @@ export default function ReportePage() {
             <button
               key={f}
               onClick={() => setFiltro(f)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap active:scale-95 ${
-                filtro === f ? "bg-white text-indigo-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
-              }`}
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap active:scale-95 ${filtro === f ? "bg-white text-indigo-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                }`}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </button>

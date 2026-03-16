@@ -1,30 +1,87 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { Save, Loader2, ArrowLeft, UserPlus, Calendar, Building2, FileText, Hash } from "lucide-react";
+import { Save, Loader2, ArrowLeft, UserPlus, Calendar, Building2, FileText, Hash, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { CONTRATOS, SECTORES_FALTANTES, MOTIVOS_FALTANTES } from "@/types";
+
+type Empleado = {
+  nombre_apellido: string;
+  legajo: string;
+  contrato: string;
+};
 
 export default function CargaFaltantePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+  // Autocomplete
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<Empleado[]>([]);
+  const [selectedEmpleado, setSelectedEmpleado] = useState<Empleado | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
   // Form fields
   const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0]);
   const [contrato, setContrato] = useState("");
-  const [nombre, setNombre] = useState("");
   const [sector, setSector] = useState("");
   const [motivo, setMotivo] = useState("");
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    if (selectedEmpleado) setSelectedEmpleado(null);
+    
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    
+    if (!val.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    setSearchLoading(true);
+    searchTimer.current = setTimeout(async () => {
+      const { data } = await supabase
+        .from("empleados")
+        .select("nombre_apellido, legajo, contrato")
+        .or(`nombre_apellido.ilike.%${val}%,legajo.ilike.%${val}%`)
+        .limit(10);
+      setSuggestions(data || []);
+      setShowSuggestions(true);
+      setSearchLoading(false);
+    }, 300);
+  };
+
+  const selectEmpleado = (emp: Empleado) => {
+    setSelectedEmpleado(emp);
+    setSearchQuery(emp.nombre_apellido);
+    setContrato(emp.contrato);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setErrors(e => ({ ...e, nombre: "" }));
+  };
+
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!fecha) newErrors.fecha = "Requerido";
     if (!contrato) newErrors.contrato = "Requerido";
-    if (!nombre.trim()) newErrors.nombre = "Requerido";
+    if (!searchQuery.trim()) newErrors.nombre = "Requerido";
     if (!sector.trim()) newErrors.sector = "Requerido";
     if (!motivo.trim()) newErrors.motivo = "Requerido";
     
@@ -41,26 +98,40 @@ export default function CargaFaltantePage() {
     // Adjust date to noon to avoid timezone shifts in DB
     const fechaISO = `${fecha}T12:00:00.000Z`;
 
-    const { error } = await supabase.from("faltantes").insert([
-      {
-        fecha: fechaISO,
-        contrato,
-        nombre_apellido: nombre.trim(),
-        sector: sector.trim() || null,
-        motivo: motivo.trim() || null,
-      },
-    ]);
+    const entryToSave = {
+      fecha: fechaISO,
+      contrato,
+      nombre_apellido: searchQuery.trim(),
+      sector: sector.trim() || null,
+      motivo: motivo.trim() || null,
+    };
+
+    const { error } = await supabase.from("faltantes").insert([entryToSave]);
 
     if (error) {
-      console.error(error);
-      toast.error("Error al guardar el faltante. Verifique si la tabla existe.");
-    } else {
-      toast.success("✅ Faltante registrado correctamente.");
-      setNombre("");
-      setSector("");
-      setMotivo("");
-      setErrors({});
+      // Retry without contrato if column doesn't exist yet (parity with main carga)
+      if (error.message.includes("contrato")) {
+        const { contrato: _c, ...withoutContrato } = entryToSave;
+        const { error: err2 } = await supabase.from("faltantes").insert([withoutContrato]);
+        if (err2) {
+          toast.error("Error al guardar.");
+          setLoading(false);
+          return;
+        }
+      } else {
+        toast.error("Error al guardar.");
+        setLoading(false);
+        return;
+      }
     }
+
+    toast.success("✅ Registro guardado correctamente.");
+    // Reset
+    setSearchQuery("");
+    setSelectedEmpleado(null);
+    setSector("");
+    setMotivo("");
+    setErrors({});
     setLoading(false);
   };
 
@@ -96,6 +167,56 @@ export default function CargaFaltantePage() {
               />
             </div>
 
+            {/* Búsqueda de Empleado (nombre_apellido) */}
+            <div className="space-y-1.5 relative" ref={searchRef}>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                <Search className="w-3.5 h-3.5" /> Empleado
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+                  placeholder="Buscar por nombre o legajo..."
+                  className={`w-full bg-slate-50 border rounded-2xl px-4 py-3.5 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all pr-10 ${errors.nombre ? "border-red-300" : "border-slate-200"}`}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => { setSearchQuery(""); setSelectedEmpleado(null); setSuggestions([]); }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Suggestions dropdown */}
+              {showSuggestions && (
+                <div className="absolute z-50 left-0 right-0 top-[105%] bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="max-h-[220px] overflow-y-auto">
+                    {suggestions.map((emp) => (
+                      <button
+                        key={emp.legajo}
+                        type="button"
+                        onClick={() => selectEmpleado(emp)}
+                        className="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-center justify-between group border-b border-slate-50 last:border-0"
+                      >
+                        <div>
+                          <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{emp.nombre_apellido}</p>
+                          <p className="text-xs text-slate-500 font-medium">Legajo: {emp.legajo}</p>
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase bg-slate-100 px-2 py-1 rounded-lg">
+                          {emp.contrato}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Contrato */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
@@ -109,20 +230,6 @@ export default function CargaFaltantePage() {
                 <option value="">Seleccione contrato...</option>
                 {CONTRATOS.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-            </div>
-
-            {/* Nombre */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                <UserPlus className="w-3.5 h-3.5" /> Apellido y Nombre
-              </label>
-              <input
-                type="text"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                placeholder="Ej: Roncaglia Lucas"
-                className={`w-full bg-slate-50 border rounded-2xl px-4 py-3.5 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all ${errors.nombre ? "border-red-300" : "border-slate-200"}`}
-              />
             </div>
 
             {/* Sector */}
