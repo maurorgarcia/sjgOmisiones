@@ -218,9 +218,15 @@ export default function ReportePage() {
   return (
     <div className="space-y-6 max-w-7xl">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Reporte de Errores</h1>
-          <p className="text-slate-500 text-sm mt-0.5 capitalize">{dateLabel}</p>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+            <div className="absolute inset-0 w-2.5 h-2.5 bg-blue-500 rounded-full animate-ping opacity-30" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Reporte de Errores</h1>
+            <p className="text-slate-500 text-sm mt-0.5 capitalize">{dateLabel}</p>
+          </div>
         </div>
         <button
           onClick={handleDownload}
@@ -391,7 +397,7 @@ export default function ReportePage() {
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-100">
+            <thead className="text-[10px] text-slate-400 uppercase bg-slate-50/50 border-b border-slate-100 tracking-[0.15em] font-bold">
               <tr>
                 <th className="px-5 py-3.5 font-semibold">
                   <button onClick={() => handleSort('resuelto')} className="flex items-center gap-1 hover:text-indigo-600 transition-colors uppercase tracking-wider">

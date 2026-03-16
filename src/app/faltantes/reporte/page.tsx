@@ -118,9 +118,15 @@ export default function FaltantesReporte() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 font-display">Reporte de Faltantes</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Listado histórico de personal sin registros cargados.</p>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-2.5 h-2.5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+            <div className="absolute inset-0 w-2.5 h-2.5 bg-indigo-500 rounded-full animate-ping opacity-30" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 font-display tracking-tight">Reporte de Faltantes</h1>
+            <p className="text-slate-500 text-sm mt-0.5">Listado histórico de personal sin registros cargados.</p>
+          </div>
         </div>
         <button
           onClick={handleExport}
@@ -192,19 +198,9 @@ export default function FaltantesReporte() {
           <table className="w-full text-sm text-left">
             <thead className="text-[10px] text-slate-400 uppercase tracking-[0.15em] bg-slate-50/50 border-b border-slate-100 font-bold">
               <tr>
-                <th className="px-6 py-4">
-                  <button onClick={() => handleSort('fecha')} className="flex items-center gap-1.5 hover:text-indigo-600 transition-colors">
-                    Fecha
-                    {sortConfig?.key === 'fecha' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
-                  </button>
-                </th>
+                <th className="px-6 py-4">Fecha</th>
                 <th className="px-6 py-4">Contrato</th>
-                <th className="px-6 py-4">
-                  <button onClick={() => handleSort('nombre_apellido')} className="flex items-center gap-1.5 hover:text-indigo-600 transition-colors">
-                    Empleado
-                    {sortConfig?.key === 'nombre_apellido' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
-                  </button>
-                </th>
+                <th className="px-6 py-4 whitespace-nowrap">Empleado</th>
                 <th className="px-6 py-4">Sector</th>
                 <th className="px-6 py-4">Motivo</th>
               </tr>

@@ -365,9 +365,15 @@ export default function Dashboard() {
     <div className="space-y-6 max-w-7xl">
       {/* Page header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Gestión de Omisiones</h1>
-          <p className="text-slate-500 text-sm mt-0.5 capitalize">{dateLabel}</p>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+            <div className="absolute inset-0 w-2.5 h-2.5 bg-green-500 rounded-full animate-ping opacity-30" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Gestión de Omisiones</h1>
+            <p className="text-slate-500 text-sm mt-0.5 capitalize">{dateLabel}</p>
+          </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Descargar: available to all users (admin + viewer) */}
@@ -592,7 +598,7 @@ export default function Dashboard() {
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-100">
+            <thead className="text-[10px] text-slate-400 uppercase bg-slate-50/50 border-b border-slate-100 tracking-[0.15em] font-bold">
               <tr>
                 {isAdmin && (
                   <th className="px-5 py-3.5 w-12 text-center">
@@ -628,8 +634,8 @@ export default function Dashboard() {
                     {sortConfig?.key === 'motivo_error' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
-                <th className="px-5 py-3.5 font-semibold">OT / Sector</th>
-                <th className="px-5 py-3.5 font-semibold text-right">Acción</th>
+                <th className="px-5 py-4 font-bold text-slate-400">OT / Sector</th>
+                <th className="px-5 py-4 font-bold text-right text-slate-400">Acción</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">

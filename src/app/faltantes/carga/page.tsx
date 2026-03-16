@@ -289,10 +289,13 @@ export default function CargaFaltantePage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base transition-all shadow-[0_12px_24px_-8px_rgba(79,70,229,0.4)] disabled:opacity-70 disabled:cursor-not-allowed group"
+            className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base transition-all shadow-[0_12px_24px_-8px_rgba(79,70,221,0.4)] disabled:opacity-70 disabled:cursor-not-allowed group active:scale-[0.98]"
           >
             {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Guardando...</span>
+              </>
             ) : (
               <>
                 <span>Guardar Registro</span>

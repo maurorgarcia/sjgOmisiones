@@ -141,9 +141,15 @@ export default function FaltantesDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 font-display">Gestión de Faltantes</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Control independiente de personal faltante en registros.</p>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-2.5 h-2.5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+            <div className="absolute inset-0 w-2.5 h-2.5 bg-indigo-500 rounded-full animate-ping opacity-30" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 font-display tracking-tight">Gestión de Faltantes</h1>
+            <p className="text-slate-500 text-sm mt-0.5">Control independiente de personal faltante en registros.</p>
+          </div>
         </div>
         <Link
           href="/faltantes/carga"

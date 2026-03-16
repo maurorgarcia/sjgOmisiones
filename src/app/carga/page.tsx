@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { Save, AlertCircle, CheckCircle2, Loader2, Search, X, Maximize2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { toast } from "sonner";
 import { ErrorCarga, MOTIVOS, CONTRATOS } from "@/types";
@@ -343,16 +344,24 @@ export default function CargaPage() {
             )}
 
             {selectedEmpleados.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {selectedEmpleados.map((emp) => (
-                  <div key={emp.legajo} className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg px-3 py-1.5 text-xs font-semibold animate-in fade-in slide-in-from-top-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    {emp.nombre_apellido}
-                    <button type="button" onClick={() => removeEmpleado(emp.legajo)} className="ml-1 hover:text-red-500 transition-colors">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
+              <div className="mt-4 flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                <AnimatePresence>
+                  {selectedEmpleados.map((emp) => (
+                    <motion.div 
+                      key={emp.legajo} 
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="inline-flex items-center gap-2 bg-indigo-50/80 border border-indigo-100 text-indigo-600 rounded-xl px-3 py-2 text-xs font-bold shadow-sm"
+                    >
+                      <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" />
+                      {emp.nombre_apellido}
+                      <button type="button" onClick={() => removeEmpleado(emp.legajo)} className="ml-1 hover:text-red-500 hover:bg-red-50 p-0.5 rounded-md transition-all">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             )}
           </div>
@@ -507,15 +516,27 @@ export default function CargaPage() {
             />
           </div>
 
-          <div className="pt-2 flex justify-end gap-3">
+          <div className="pt-4 flex justify-end gap-3">
             <button type="button" onClick={() => router.push("/")}
-              className="px-6 py-3 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
+              className="px-6 py-3.5 rounded-2xl border border-slate-200 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all active:scale-[0.98]">
               Cancelar
             </button>
-            <button type="submit" disabled={loading}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold shadow-sm shadow-indigo-500/20 transition-all disabled:opacity-50 text-sm active:scale-95">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {loading ? "Guardando..." : "Guardar Registro"}
+            <button
+              type="submit"
+              disabled={loading}
+              className="min-w-[180px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-8 rounded-2xl shadow-xl shadow-indigo-500/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98] text-sm"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Guardando {selectedEmpleados.length > 1 ? `(${selectedEmpleados.length})` : ""}</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Guardar {selectedEmpleados.length > 1 ? `(${selectedEmpleados.length})` : "Registro"}</span>
+                </>
+              )}
             </button>
           </div>
         </form>

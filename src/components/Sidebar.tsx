@@ -14,6 +14,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 
 const navItems = [
   { href: "/", label: "Gestión Administrativa", icon: LayoutDashboard, adminOnly: true },
@@ -39,7 +40,7 @@ export function Sidebar() {
   if (!session) return null;
 
   return (
-    <aside className="fixed top-0 left-0 h-full w-64 bg-slate-900 text-white flex flex-col z-40 shadow-2xl">
+    <aside className="fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white flex flex-col z-40 shadow-[4px_0_24px_rgba(0,0,0,0.3)] border-r border-slate-800/50">
       {/* Logo SJG */}
       <div className="px-5 py-6 border-b border-slate-700/50 flex items-center justify-center">
         <Image
@@ -127,22 +128,32 @@ function NavItem({ item, isAdmin, pathname }: { item: any; isAdmin: boolean; pat
     <div className="group relative">
       <Link
         href={href}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 relative group/link ${
           active
-            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
-            : "text-slate-400 hover:bg-slate-800/50 hover:text-white"
+            ? "bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]"
+            : "text-slate-400 hover:bg-slate-800/80 hover:text-white"
         }`}
       >
-        <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-white' : 'text-slate-400 opacity-60'}`} />
-        {label}
+        <div className={`absolute inset-0 rounded-xl transition-opacity duration-500 opacity-0 group-hover/link:opacity-100 bg-gradient-to-r from-indigo-500/10 to-transparent pointer-events-none`} />
+        <Icon className={`w-4 h-4 flex-shrink-0 relative z-10 ${active ? 'text-white' : 'text-slate-400 group-hover/link:text-indigo-400 group-hover/link:scale-110 transition-all'}`} />
+        <span className="relative z-10">{label}</span>
+        {active && (
+          <motion.div 
+            layoutId="activeNav"
+            className="absolute left-0 w-1 h-5 bg-white rounded-r-full shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+            initial={false}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          />
+        )}
       </Link>
       
       {isCarga && isAdmin && (
         <button
           onClick={() => window.open("/carga/mini", "MiniCarga", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded-md transition-all opacity-0 group-hover:opacity-100"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-md transition-all opacity-0 group-hover:opacity-100 flex items-center gap-1"
           title="Abrir en ventana flotante"
         >
+          <div className="h-3 w-[1px] bg-slate-700 mr-1" />
           <Maximize2 className="w-3.5 h-3.5" />
         </button>
       )}
