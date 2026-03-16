@@ -82,8 +82,13 @@ export default function CargaFaltantePage() {
     if (!fecha) newErrors.fecha = "Requerido";
     if (!contrato) newErrors.contrato = "Requerido";
     if (!searchQuery.trim()) newErrors.nombre = "Requerido";
-    if (!sector.trim()) newErrors.sector = "Requerido";
-    if (!motivo.trim()) newErrors.motivo = "Requerido";
+    
+    // Only error if BOTH are missing, if that's the intention, 
+    // but the user said "can be sector or motivo", implying they are individually optional.
+    if (!sector.trim() && !motivo.trim()) {
+      toast.error("Debe ingresar al menos un Sector o un Motivo.");
+      return false;
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
