@@ -63,11 +63,20 @@ export default function LoginPage() {
       >
         {/* Branding */}
         <div className="mb-8 text-center flex justify-center">
-          <img 
-            src="/logo-sjg.png" 
-            alt="SJG Logo" 
-            className="h-14 w-auto object-contain"
-          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
+          >
+            <Image 
+              src="/logo-sjg.png" 
+              alt="SJG Logo" 
+              width={200}
+              height={60}
+              className="h-14 w-auto object-contain"
+              priority
+            />
+          </motion.div>
         </div>
 
         {/* Card */}
@@ -173,9 +182,11 @@ export default function LoginPage() {
           </p>
           <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0">
             <span className="text-[9px] font-bold uppercase tracking-tighter">Powered by</span>
-            <img 
+            <Image 
               src="/logo-gdai.png" 
               alt="GDAI" 
+              width={80} 
+              height={22} 
               className="h-4 w-auto object-contain" 
             />
           </div>

@@ -51,26 +51,42 @@ export default function Dashboard() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [sending, setSending] = useState(false);
-  const [filtro, setFiltro] = useState<"todos" | "pendientes" | "resueltos">("pendientes");
-  const [filtroMotivo, setFiltroMotivo] = useState<string>("todos");
-  const [filtroSector, setFiltroSector] = useState<string>("");
-  const [fechaFiltro, setFechaFiltro] = useState<string>(new Date().toISOString().split("T")[0]);
-  const [fechaHasta, setFechaHasta] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState("");
 
-  // Restore all filter state from sessionStorage on mount
-  useEffect(() => {
-    const savedDate = sessionStorage.getItem("sjg_working_date");
-    const savedFiltro = sessionStorage.getItem("sjg_filtro") as "todos" | "pendientes" | "resueltos" | null;
-    const savedMotivo = sessionStorage.getItem("sjg_filtro_motivo");
-    const savedSector = sessionStorage.getItem("sjg_filtro_sector");
-    const savedHasta = sessionStorage.getItem("sjg_fecha_hasta");
-    if (savedDate) setFechaFiltro(savedDate);
-    if (savedFiltro) setFiltro(savedFiltro);
-    if (savedMotivo) setFiltroMotivo(savedMotivo);
-    if (savedSector) setFiltroSector(savedSector);
-    if (savedHasta) setFechaHasta(savedHasta);
-  }, []);
+  // Helper to get today's local date in YYYY-MM-DD
+  const getTodayLocal = () => {
+    const d = new Date();
+    const offset = d.getTimezoneOffset();
+    const localDate = new Date(d.getTime() - (offset * 60 * 1000));
+    return localDate.toISOString().split("T")[0];
+  };
+
+  const [filtro, setFiltro] = useState<"todos" | "pendientes" | "resueltos">(() => {
+    if (typeof window === "undefined") return "pendientes";
+    const saved = sessionStorage.getItem("sjg_filtro");
+    return (saved === "todos" || saved === "pendientes" || saved === "resueltos") ? saved : "pendientes";
+  });
+
+  const [filtroMotivo, setFiltroMotivo] = useState<string>(() => {
+    if (typeof window === "undefined") return "todos";
+    return sessionStorage.getItem("sjg_filtro_motivo") || "todos";
+  });
+
+  const [filtroSector, setFiltroSector] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return sessionStorage.getItem("sjg_filtro_sector") || "";
+  });
+
+  const [fechaFiltro, setFechaFiltro] = useState<string>(() => {
+    if (typeof window === "undefined") return getTodayLocal();
+    return sessionStorage.getItem("sjg_working_date") || getTodayLocal();
+  });
+
+  const [fechaHasta, setFechaHasta] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return sessionStorage.getItem("sjg_fecha_hasta") || "";
+  });
+
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Edit modal
   const [editingError, setEditingError] = useState<ErrorCarga | null>(null);

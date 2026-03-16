@@ -27,6 +27,6 @@ export default withAuth(
 );
 
 export const config = {
-  // Protect all routes under / (except /login and the api endpoints via regexp if needed, but NextAuth ignores /api/auth)
-  matcher: ["/((?!login|_next|api/auth).*)"],
+  // Protect all routes except login, public assets, and common static files
+  matcher: ["/((?!login|_next|api/auth|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico)).*)"],
 };
