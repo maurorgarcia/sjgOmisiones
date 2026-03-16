@@ -20,6 +20,10 @@ import {
   Search,
   Building2,
   ChevronDown,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Info,
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -101,6 +105,17 @@ export default function Dashboard() {
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
+  // Sorting
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) setSelectedIds(filteredErrores.map((err) => err.id));
     else setSelectedIds([]);
@@ -120,13 +135,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchErrores();
-  }, [filtro, filtroMotivo, filtroSector, fechaFiltro, fechaHasta]);
+  }, [filtro, filtroMotivo, filtroSector, fechaFiltro, fechaHasta, sortConfig]);
 
   function buildQuery() {
     let query = supabase
       .from("error_carga")
-      .select("*")
-      .order("fecha", { ascending: false });
+      .select("*");
+
+    if (sortConfig) {
+      query = query.order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
+    } else {
+      query = query.order("fecha", { ascending: false });
+    }
 
     if (fechaFiltro) {
       const startIso = `${fechaFiltro}T00:00:00.000Z`;
@@ -565,10 +585,30 @@ export default function Dashboard() {
                     />
                   </th>
                 )}
-                <th className="px-5 py-3.5 font-semibold">Estado</th>
-                <th className="px-5 py-3.5 font-semibold">Fecha</th>
-                <th className="px-5 py-3.5 font-semibold">Empleado</th>
-                <th className="px-5 py-3.5 font-semibold">Motivo</th>
+                <th className="px-5 py-3.5 font-semibold">
+                  <button onClick={() => handleSort('resuelto')} className="flex items-center gap-1 hover:text-indigo-600 transition-colors uppercase tracking-wider">
+                    Estado
+                    {sortConfig?.key === 'resuelto' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
+                  </button>
+                </th>
+                <th className="px-5 py-3.5 font-semibold">
+                  <button onClick={() => handleSort('fecha')} className="flex items-center gap-1 hover:text-indigo-600 transition-colors uppercase tracking-wider">
+                    Fecha
+                    {sortConfig?.key === 'fecha' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
+                  </button>
+                </th>
+                <th className="px-5 py-3.5 font-semibold">
+                  <button onClick={() => handleSort('nombre_apellido')} className="flex items-center gap-1 hover:text-indigo-600 transition-colors uppercase tracking-wider">
+                    Empleado
+                    {sortConfig?.key === 'nombre_apellido' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
+                  </button>
+                </th>
+                <th className="px-5 py-3.5 font-semibold">
+                  <button onClick={() => handleSort('motivo_error')} className="flex items-center gap-1 hover:text-indigo-600 transition-colors uppercase tracking-wider">
+                    Motivo
+                    {sortConfig?.key === 'motivo_error' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
+                  </button>
+                </th>
                 <th className="px-5 py-3.5 font-semibold">OT / Sector</th>
                 <th className="px-5 py-3.5 font-semibold text-right">Acción</th>
               </tr>

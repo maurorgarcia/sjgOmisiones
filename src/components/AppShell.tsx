@@ -1,17 +1,37 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
+import { ViewerOnboarding } from "@/components/ViewerOnboarding";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   const isLoginPage = pathname === "/login";
   const isMiniMode = pathname.startsWith("/carga/mini");
 
+  useEffect(() => {
+    if (session?.user?.role === "viewer" && !localStorage.getItem("sjg_onboarding_seen")) {
+      setShowOnboarding(true);
+    }
+  }, [session]);
+
+  const handleCloseOnboarding = () => {
+    localStorage.setItem("sjg_onboarding_seen", "true");
+    setShowOnboarding(false);
+  };
+
   if (isLoginPage || !session || isMiniMode) {
-    return <>{children}</>;
+    return (
+      <>
+        {children}
+        <ViewerOnboarding show={showOnboarding} onClose={handleCloseOnboarding} />
+      </>
+    );
   }
 
   return (
@@ -31,6 +51,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </motion.div>
         </AnimatePresence>
       </main>
+      <ViewerOnboarding show={showOnboarding} onClose={handleCloseOnboarding} />
     </>
   );
 }

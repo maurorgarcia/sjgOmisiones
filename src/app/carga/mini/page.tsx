@@ -206,9 +206,19 @@ export default function MiniCargaPage() {
     const { error } = await supabase.from("error_carga").insert([errorToSave]);
 
     if (error) {
-      toast.error("Error al guardar.");
-      setLoading(false);
-      return;
+      if (error.message.includes("contrato")) {
+        const { contrato: _c, ...withoutContrato } = errorToSave;
+        const { error: err2 } = await supabase.from("error_carga").insert([withoutContrato]);
+        if (err2) {
+          toast.error("Error al guardar.");
+          setLoading(false);
+          return;
+        }
+      } else {
+        toast.error("Error al guardar.");
+        setLoading(false);
+        return;
+      }
     }
 
     toast.success("✅ Registro guardado.");
@@ -374,7 +384,7 @@ export default function MiniCargaPage() {
           <button type="submit" disabled={loading}
             className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-2xl font-bold shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50 text-sm active:scale-[0.97]">
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {loading ? "Gaurdando..." : "Guardar Registro"}
+            {loading ? "Guardando..." : "Guardar Registro"}
           </button>
         </form>
       </div>
