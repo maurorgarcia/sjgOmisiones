@@ -13,7 +13,8 @@ import {
   Calendar,
   Building2,
   FileText,
-  AlertCircle
+  AlertCircle,
+  FilterX
 } from "lucide-react";
 import { toast } from "sonner";
 import { Faltante } from "@/types";
@@ -25,7 +26,12 @@ import { TableSkeleton } from "@/components/Skeleton";
 export default function FaltantesDashboard() {
   const [data, setData] = useState<Faltante[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Filters
   const [searchQuery, setSearchQuery] = useState("");
+  const [fechaDesde, setFechaDesde] = useState(new Date().toISOString().split("T")[0]);
+  const [fechaHasta, setFechaHasta] = useState("");
+  
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'fecha', direction: 'desc' });
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -39,11 +45,21 @@ export default function FaltantesDashboard() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [sortConfig]);
+  }, [sortConfig, fechaDesde, fechaHasta]);
 
   const fetchFaltantes = async () => {
+    setLoading(true);
     let query = supabase.from("faltantes").select("*");
     
+    // Date filter logic (parity with main dashboard)
+    if (fechaDesde) {
+      const startIso = `${fechaDesde}T00:00:00.000Z`;
+      const endIso = fechaHasta
+        ? `${fechaHasta}T23:59:59.999Z`
+        : `${fechaDesde}T23:59:59.999Z`;
+      query = query.gte("fecha", startIso).lte("fecha", endIso);
+    }
+
     if (sortConfig) {
       query = query.order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
     } else {
@@ -51,8 +67,13 @@ export default function FaltantesDashboard() {
     }
 
     const { data: res, error } = await query;
-    if (res) setData(res);
-    if (error) console.error(error);
+    if (res) {
+      setData(res);
+    }
+    if (error) {
+      console.error(error);
+      toast.error("Error al cargar los datos. Verifique la conexión o si la tabla existe.");
+    }
     setLoading(false);
   };
 
@@ -75,6 +96,12 @@ export default function FaltantesDashboard() {
       setData(prev => prev.filter(f => f.id !== id));
     }
     setDeletingId(null);
+  };
+
+  const resetFilters = () => {
+    setFechaDesde(new Date().toISOString().split("T")[0]);
+    setFechaHasta("");
+    setSearchQuery("");
   };
 
   const filtered = searchQuery.trim()
@@ -102,20 +129,53 @@ export default function FaltantesDashboard() {
         </Link>
       </div>
 
-      <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-slate-200">
-        <Search className="w-5 h-5 text-slate-400" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Buscar por nombre, contrato, sector o motivo..."
-          className="flex-1 text-sm outline-none bg-transparent"
-        />
-        {searchQuery && (
-          <span className="text-xs font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">
-            {filtered.length} resultados
-          </span>
-        )}
+      {/* Modern Filter Bar */}
+      <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+              <Calendar className="w-3 h-3" /> Fecha Desde
+            </label>
+            <input
+              type="date"
+              value={fechaDesde}
+              onChange={(e) => setFechaDesde(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+              <Calendar className="w-3 h-3" /> Fecha Hasta <span className="text-[8px] opacity-60">(opcional)</span>
+            </label>
+            <input
+              type="date"
+              value={fechaHasta}
+              onChange={(e) => setFechaHasta(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+              <Search className="w-3 h-3" /> Buscar
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Nombre, contrato..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all"
+              />
+              <button 
+                onClick={resetFilters}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-300 hover:text-slate-500 transition-colors"
+                title="Limpiar filtros"
+              >
+                <FilterX className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
@@ -152,7 +212,7 @@ export default function FaltantesDashboard() {
                         <AlertCircle className="w-8 h-8 text-slate-300" />
                       </div>
                       <p className="font-semibold text-slate-700">No hay faltantes registrados</p>
-                      <p className="text-xs text-slate-400">Los registros que anotes aparecerán aquí de forma independiente.</p>
+                      <p className="text-xs text-slate-400">Pruebe ajustando el rango de fechas o los filtros.</p>
                     </div>
                   </td>
                 </tr>

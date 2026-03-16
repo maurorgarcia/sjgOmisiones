@@ -35,6 +35,9 @@ export default function CargaFaltantePage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    const saved = sessionStorage.getItem("sjg_working_date");
+    if (saved) setFecha(saved);
+
     const handler = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setShowSuggestions(false);
@@ -43,6 +46,11 @@ export default function CargaFaltantePage() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const updateFecha = (val: string) => {
+    setFecha(val);
+    sessionStorage.setItem("sjg_working_date", val);
+  };
 
   const handleSearchChange = (val: string) => {
     setSearchQuery(val);
@@ -123,8 +131,12 @@ export default function CargaFaltantePage() {
           setLoading(false);
           return;
         }
+      } else if (error.message.includes("does not exist")) {
+        toast.error("Error: La tabla 'faltantes' no existe. Asegúrese de ejecutar el script SQL.");
+        setLoading(false);
+        return;
       } else {
-        toast.error("Error al guardar.");
+        toast.error("Error al guardar: " + error.message);
         setLoading(false);
         return;
       }
@@ -167,7 +179,7 @@ export default function CargaFaltantePage() {
               <input
                 type="date"
                 value={fecha}
-                onChange={(e) => setFecha(e.target.value)}
+                onChange={(e) => updateFecha(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3.5 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
               />
             </div>

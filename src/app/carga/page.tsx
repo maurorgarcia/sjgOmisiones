@@ -140,6 +140,11 @@ export default function CargaPage() {
     setLegajoManual("");
   };
 
+  const updateFecha = (val: string) => {
+    setFecha(val);
+    sessionStorage.setItem("sjg_working_date", val);
+  };
+
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
 
