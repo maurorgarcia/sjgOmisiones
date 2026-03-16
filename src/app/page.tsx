@@ -360,8 +360,8 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-50 p-2 rounded-xl">
-              <AlertTriangle className="w-5 h-5 text-blue-500" />
+            <div className="bg-indigo-50 p-2 rounded-xl">
+              <AlertTriangle className="w-5 h-5 text-indigo-500" />
             </div>
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Total</p>
