@@ -20,6 +20,7 @@ import { es } from "date-fns/locale";
 
 import { toast } from "sonner";
 import { ErrorCarga, MOTIVO_COLORS, PAGE_SIZE } from "@/types";
+import { StatsCharts } from "@/components/StatsCharts";
 
 function getMotivoBadge(motivo: string) {
   const classes = MOTIVO_COLORS[motivo] ?? "bg-slate-100 text-slate-700 border-slate-200";
@@ -235,6 +236,9 @@ export default function ReportePage() {
           </div>
         </div>
       </div>
+
+      {/* Visual Analytics */}
+      {!loading && errores.length > 0 && <StatsCharts data={errores} />}
 
       <div className="bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-full md:w-auto overflow-x-auto">

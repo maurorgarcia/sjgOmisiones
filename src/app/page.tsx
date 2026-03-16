@@ -28,6 +28,7 @@ import { useSession } from "next-auth/react";
 
 import { toast } from "sonner";
 import { ErrorCarga, MOTIVO_COLORS, PAGE_SIZE } from "@/types";
+import { StatsCharts } from "@/components/StatsCharts";
 
 
 function getMotivoBadge(motivo: string) {
@@ -307,7 +308,7 @@ export default function Dashboard() {
       {/* Page header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Bandeja de Errores</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Gestión de Omisiones</h1>
           <p className="text-slate-500 text-sm mt-0.5 capitalize">{dateLabel}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -400,6 +401,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Charts Section */}
+      {!loading && errores.length > 0 && <StatsCharts data={errores} />}
 
       {/* Filters */}
       <div className="bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
