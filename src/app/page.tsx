@@ -106,7 +106,22 @@ export default function Dashboard() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   // Sorting
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'nombre_apellido', direction: 'asc' });
+
+  // Highlighting (Progress tracking)
+  const [checkedNames, setCheckedNames] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    const saved = sessionStorage.getItem("sjg_checked_names");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
+  const toggleNameHighlight = (name: string) => {
+    const newChecked = new Set(checkedNames);
+    if (newChecked.has(name)) newChecked.delete(name);
+    else newChecked.add(name);
+    setCheckedNames(newChecked);
+    sessionStorage.setItem("sjg_checked_names", JSON.stringify(Array.from(newChecked)));
+  };
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -144,8 +159,12 @@ export default function Dashboard() {
 
     if (sortConfig) {
       query = query.order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
+      // Add secondary sort by fecha desc to keep it stable
+      if (sortConfig.key !== 'fecha') {
+        query = query.order('fecha', { ascending: false });
+      }
     } else {
-      query = query.order("fecha", { ascending: false });
+      query = query.order("nombre_apellido", { ascending: true });
     }
 
     if (fechaFiltro) {
@@ -678,11 +697,17 @@ export default function Dashboard() {
                       <div className="text-xs text-slate-400">{err.dia_semana}</div>
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="font-semibold text-slate-900">{err.nombre_apellido}</div>
-                      <div className="text-xs text-slate-400 flex items-center gap-1">
+                      <div 
+                        onClick={() => toggleNameHighlight(err.nombre_apellido)}
+                        className={`font-semibold cursor-pointer transition-colors ${checkedNames.has(err.nombre_apellido) ? "text-green-600 bg-green-50 px-2 py-0.5 rounded-lg border border-green-200 shadow-sm" : "text-slate-900"}`}
+                        title="Click para marcar/desmarcar progreso"
+                      >
+                        {err.nombre_apellido}
+                      </div>
+                      <div className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
                         Leg: {err.legajo}
                         <button
-                          onClick={() => navigator.clipboard.writeText(err.legajo)}
+                          onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(err.legajo); }}
                           className="hover:text-blue-500 transition-colors"
                           title="Copiar legajo"
                         >

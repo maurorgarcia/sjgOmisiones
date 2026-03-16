@@ -56,7 +56,7 @@ export default function CargaPage() {
   // Autocomplete
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Empleado[]>([]);
-  const [selectedEmpleado, setSelectedEmpleado] = useState<Empleado | null>(null);
+  const [selectedEmpleados, setSelectedEmpleados] = useState<Empleado[]>([]);
   const [contrato, setContrato] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -101,7 +101,7 @@ export default function CargaPage() {
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    setSelectedEmpleado(null);
+    setSelectedEmpleados([]);
     setContrato("");
     if (errors.empleado) setErrors((e) => ({ ...e, empleado: "" }));
 
@@ -125,16 +125,25 @@ export default function CargaPage() {
   };
 
   const selectEmpleado = (emp: Empleado) => {
-    setSelectedEmpleado(emp);
-    setSearchQuery(emp.nombre_apellido);
-    setContrato(emp.contrato);
+    // Check if already in list
+    if (selectedEmpleados.some(e => e.legajo === emp.legajo)) {
+      toast.error("Este empleado ya está en la lista.");
+      return;
+    }
+    setSelectedEmpleados([...selectedEmpleados, emp]);
+    setSearchQuery(""); // Clear search to allow adding more
+    if (!contrato) setContrato(emp.contrato); // Default to first selected's contract
     setSuggestions([]);
     setShowSuggestions(false);
     setErrors((e) => ({ ...e, empleado: "" }));
   };
 
+  const removeEmpleado = (legajo: string) => {
+    setSelectedEmpleados(prev => prev.filter(e => e.legajo !== legajo));
+  };
+
   const clearEmpleado = () => {
-    setSelectedEmpleado(null);
+    setSelectedEmpleados([]);
     setSearchQuery("");
     setContrato("");
     setLegajoManual("");
@@ -148,11 +157,11 @@ export default function CargaPage() {
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
 
-    const nombre = selectedEmpleado?.nombre_apellido || searchQuery.trim();
-    const legajo = selectedEmpleado?.legajo || legajoManual.trim();
+    const hasNames = selectedEmpleados.length > 0 || searchQuery.trim();
+    const hasLegajos = selectedEmpleados.length > 0 || legajoManual.trim();
 
-    if (!nombre) newErrors.empleado = "Debe ingresar o seleccionar un empleado.";
-    if (!legajo) newErrors.legajo = "El legajo es requerido.";
+    if (!hasNames) newErrors.empleado = "Debe ingresar o seleccionar al menos un empleado.";
+    if (!hasLegajos) newErrors.legajo = "El legajo es requerido.";
     if (!contrato) newErrors.contrato = "Debe seleccionar un contrato.";
     if (!motivo) newErrors.motivo = "Debe seleccionar el motivo del error.";
     if (!sector.trim()) newErrors.sector = "El sector es requerido.";
@@ -190,11 +199,14 @@ export default function CargaPage() {
     const fechaISO = `${fecha}T12:00:00.000Z`;
     const dias = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"];
     const horarioStr = horarioDesde && horarioHasta ? `${horarioDesde} a ${horarioHasta}` : null;
+    const employeesToSave = selectedEmpleados.length > 0 
+      ? selectedEmpleados 
+      : [{ nombre_apellido: searchQuery.trim(), legajo: legajoManual.trim() }];
 
-    const errorToSave = {
-      fecha: fechaISO, // YYYY-MM-DDTHH:mm:ss.sssZ format
-      legajo: selectedEmpleado?.legajo || legajoManual.trim(),
-      nombre_apellido: selectedEmpleado?.nombre_apellido || searchQuery.trim(),
+    const errorsToSave = employeesToSave.map(emp => ({
+      fecha: fechaISO,
+      legajo: emp.legajo,
+      nombre_apellido: emp.nombre_apellido,
       motivo_error: motivo,
       ot: ot.trim() || null,
       sector: sector.trim(),
@@ -214,31 +226,30 @@ export default function CargaPage() {
       hs_100_insa: hs100Mods.insa,
       hs_100_polu: hs100Mods.polu,
       hs_100_noct: hs100Mods.noct,
-    };
+    }));
 
-    const { error } = await supabase.from("error_carga").insert([errorToSave]);
+    const { error } = await supabase.from("error_carga").insert(errorsToSave);
 
     if (error) {
-      // Retry without contrato if column doesn't exist yet
       if (error.message.includes("contrato")) {
-        const { contrato: _c, ...withoutContrato } = errorToSave;
-        const { error: err2 } = await supabase.from("error_carga").insert([withoutContrato]);
+        const withoutContrato = errorsToSave.map(({ contrato: _c, ...rest }) => rest);
+        const { error: err2 } = await supabase.from("error_carga").insert(withoutContrato);
         if (err2) { 
-          toast.error("Error al guardar el registro."); 
+          toast.error("Error al guardar los registros."); 
           setLoading(false); 
           return; 
         }
       } else {
-        toast.error("Error al guardar el registro.");
+        toast.error("Error al guardar los registros.");
         setLoading(false);
         return;
       }
     }
 
-    toast.success("✅ Registro guardado correctamente.");
+    toast.success(`✅ ${errorsToSave.length} registros guardados correctamente.`);
     setLoading(false);
     // Reset
-    setSelectedEmpleado(null);
+    setSelectedEmpleados([]);
     setSearchQuery("");
     setContrato("");
     setMotivo("");
@@ -254,7 +265,6 @@ export default function CargaPage() {
     setHs50Mods({ insa: false, polu: false, noct: false });
     setHoras100("");
     setHs100Mods({ insa: false, polu: false, noct: false });
-    // We do NOT reset `setFecha(...)` here so the user can continue loading errors for the same past date.
     setErrors({});
   };
 
@@ -332,10 +342,17 @@ export default function CargaPage() {
               </div>
             )}
 
-            {selectedEmpleado && (
-              <div className="mt-2 inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg px-3 py-1.5 text-xs font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                {selectedEmpleado.nombre_apellido} · Leg. {selectedEmpleado.legajo}
+            {selectedEmpleados.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {selectedEmpleados.map((emp) => (
+                  <div key={emp.legajo} className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg px-3 py-1.5 text-xs font-semibold animate-in fade-in slide-in-from-top-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    {emp.nombre_apellido}
+                    <button type="button" onClick={() => removeEmpleado(emp.legajo)} className="ml-1 hover:text-red-500 transition-colors">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>

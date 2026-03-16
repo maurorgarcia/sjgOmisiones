@@ -27,10 +27,31 @@ export default function FaltantesReporte() {
   
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
-  const [fechaDesde, setFechaDesde] = useState(new Date().toISOString().split("T")[0]);
-  const [fechaHasta, setFechaHasta] = useState("");
+  const [fechaDesde, setFechaDesde] = useState(() => {
+    if (typeof window === "undefined") return new Date().toISOString().split("T")[0];
+    return sessionStorage.getItem("sjg_working_date") || new Date().toISOString().split("T")[0];
+  });
+  const [fechaHasta, setFechaHasta] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return sessionStorage.getItem("sjg_fecha_hasta") || "";
+  });
 
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'fecha', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'nombre_apellido', direction: 'asc' });
+
+  // Highlighting
+  const [checkedNames, setCheckedNames] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    const saved = sessionStorage.getItem("sjg_checked_names");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
+  const toggleNameHighlight = (name: string) => {
+    const newChecked = new Set(checkedNames);
+    if (newChecked.has(name)) newChecked.delete(name);
+    else newChecked.add(name);
+    setCheckedNames(newChecked);
+    sessionStorage.setItem("sjg_checked_names", JSON.stringify(Array.from(newChecked)));
+  };
 
   useEffect(() => {
     fetchFaltantes();
@@ -51,8 +72,11 @@ export default function FaltantesReporte() {
 
     if (sortConfig) {
       query = query.order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
+      if (sortConfig.key !== 'fecha') {
+        query = query.order('fecha', { ascending: false });
+      }
     } else {
-      query = query.order("fecha", { ascending: false });
+      query = query.order("nombre_apellido", { ascending: true });
     }
 
     const { data: res, error } = await query;
@@ -117,7 +141,10 @@ export default function FaltantesReporte() {
             <input
               type="date"
               value={fechaDesde}
-              onChange={(e) => setFechaDesde(e.target.value)}
+              onChange={(e) => {
+                setFechaDesde(e.target.value);
+                sessionStorage.setItem("sjg_working_date", e.target.value);
+              }}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all"
             />
           </div>
@@ -128,7 +155,11 @@ export default function FaltantesReporte() {
             <input
               type="date"
               value={fechaHasta}
-              onChange={(e) => setFechaHasta(e.target.value)}
+              onChange={(e) => {
+                setFechaHasta(e.target.value);
+                if (e.target.value) sessionStorage.setItem("sjg_fecha_hasta", e.target.value);
+                else sessionStorage.removeItem("sjg_fecha_hasta");
+              }}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all"
             />
           </div>
@@ -212,7 +243,13 @@ export default function FaltantesReporte() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-extrabold text-slate-900">{f.nombre_apellido}</div>
+                      <div 
+                        onClick={() => toggleNameHighlight(f.nombre_apellido)}
+                        className={`font-extrabold cursor-pointer transition-colors ${checkedNames.has(f.nombre_apellido) ? "text-green-600 bg-green-50 px-2 py-0.5 rounded-lg border border-green-200 shadow-sm" : "text-slate-900"}`}
+                        title="Click para marcar/desmarcar progreso"
+                      >
+                        {f.nombre_apellido}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-slate-500">

@@ -44,10 +44,31 @@ export default function ReportePage() {
   const [filtro, setFiltro] = useState<"todos" | "pendientes" | "resueltos">("pendientes");
   const [filtroMotivo, setFiltroMotivo] = useState<string>("todos");
   const [filtroSector, setFiltroSector] = useState<string>("");
-  const [fechaDesde, setFechaDesde] = useState<string>(new Date().toISOString().split("T")[0]);
-  const [fechaHasta, setFechaHasta] = useState<string>("");
+  const [fechaDesde, setFechaDesde] = useState<string>(() => {
+    if (typeof window === "undefined") return new Date().toISOString().split("T")[0];
+    return sessionStorage.getItem("sjg_working_date") || new Date().toISOString().split("T")[0];
+  });
+  const [fechaHasta, setFechaHasta] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return sessionStorage.getItem("sjg_fecha_hasta") || "";
+  });
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'nombre_apellido', direction: 'asc' });
+
+  // Highlighting
+  const [checkedNames, setCheckedNames] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    const saved = sessionStorage.getItem("sjg_checked_names");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
+  const toggleNameHighlight = (name: string) => {
+    const newChecked = new Set(checkedNames);
+    if (newChecked.has(name)) newChecked.delete(name);
+    else newChecked.add(name);
+    setCheckedNames(newChecked);
+    sessionStorage.setItem("sjg_checked_names", JSON.stringify(Array.from(newChecked)));
+  };
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -68,8 +89,11 @@ export default function ReportePage() {
 
     if (sortConfig) {
       query = query.order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
+      if (sortConfig.key !== 'fecha') {
+        query = query.order('fecha', { ascending: false });
+      }
     } else {
-      query = query.order("fecha", { ascending: false });
+      query = query.order("nombre_apellido", { ascending: true });
     }
 
     if (fechaDesde) {
@@ -310,7 +334,11 @@ export default function ReportePage() {
             <input
               type="date"
               value={fechaDesde}
-              onChange={(e) => setFechaDesde(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFechaDesde(val);
+                sessionStorage.setItem("sjg_working_date", val);
+              }}
               className="w-full sm:w-auto pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
             />
           </div>
@@ -319,7 +347,12 @@ export default function ReportePage() {
             <input
               type="date"
               value={fechaHasta}
-              onChange={(e) => setFechaHasta(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFechaHasta(val);
+                if (val) sessionStorage.setItem("sjg_fecha_hasta", val);
+                else sessionStorage.removeItem("sjg_fecha_hasta");
+              }}
               className="w-full sm:w-auto pl-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
               title="Hasta (opcional, para rango)"
             />
@@ -445,7 +478,13 @@ export default function ReportePage() {
                       <div className="text-xs text-slate-400">{err.dia_semana}</div>
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="font-semibold text-slate-900">{err.nombre_apellido}</div>
+                      <div 
+                        onClick={() => toggleNameHighlight(err.nombre_apellido)}
+                        className={`font-semibold cursor-pointer transition-colors ${checkedNames.has(err.nombre_apellido) ? "text-green-600 bg-green-50 px-2 py-0.5 rounded-lg border border-green-200 shadow-sm" : "text-slate-900"}`}
+                        title="Click para marcar/desmarcar progreso"
+                      >
+                        {err.nombre_apellido}
+                      </div>
                       <div className="text-xs text-slate-400">Leg: {err.legajo}</div>
                     </td>
                     <td className="px-5 py-3.5">
