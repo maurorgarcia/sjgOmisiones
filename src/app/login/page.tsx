@@ -3,7 +3,8 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Lock, User, Loader2 } from "lucide-react";
+import { Lock, User, Loader2, ShieldCheck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,45 +36,78 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-slate-800/40 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(at_0%_0%,rgba(99,102,241,0.08)_0,transparent_50%),radial-gradient(at_100%_0%,rgba(168,85,247,0.05)_0,transparent_50%)]" />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 4, repeat: Infinity, repeatType: "reverse" }}
+          className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px]" 
+        />
+        <motion.div 
+          initial={{ opacity: 0, scale: 1.2 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 5, repeat: Infinity, repeatType: "reverse" }}
+          className="absolute -bottom-40 -left-40 w-[600px] h-[600px] bg-violet-500/10 rounded-full blur-[120px]" 
+        />
       </div>
 
-      <div className="w-full max-w-md relative z-10">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-[440px] relative z-10"
+      >
+        {/* Branding */}
+        <div className="mb-8 text-center">
+          <motion.img 
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
+            src="/logo-sjg.png" 
+            alt="SJG Logo" 
+            className="h-14 mx-auto mb-6 object-contain"
+          />
+        </div>
+
         {/* Card */}
-        <div className="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-2xl border border-white rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] overflow-hidden">
           {/* Header */}
-          <div className="px-8 pt-8 pb-6 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/30 mb-4">
-              <AlertTriangle className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-white">SJG Omisiones</h1>
-            <p className="text-slate-400 text-sm mt-1">
-              Sistema de Gestión RRHH · SJG Montajes
+          <div className="px-10 pt-10 pb-6">
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight text-center">Bienvenido</h1>
+            <p className="text-slate-500 mt-2 text-sm font-medium text-center">
+              Ingresá tus credenciales para gestionar las omisiones.
             </p>
           </div>
 
           {/* Form */}
-          <div className="px-8 pb-8">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
-                  <span className="text-red-500">⚠</span>
-                  {error}
-                </div>
-              )}
+          <div className="px-10 pb-10">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <AnimatePresence>
+                {error && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl text-sm flex items-center gap-3"
+                  >
+                    <div className="bg-white p-1 rounded-full shadow-sm text-red-500">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="font-semibold">{error}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              <div className="space-y-1">
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-[0.1em] ml-1">
                   Usuario
                 </label>
-                <div className="relative">
+                <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <User className="w-4 h-4 text-slate-500" />
+                    <User className="w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                   </div>
                   <input
                     id="username"
@@ -81,19 +115,19 @@ export default function LoginPage() {
                     type="text"
                     required
                     autoComplete="username"
-                    className="w-full bg-slate-700/50 border border-slate-600 text-white placeholder-slate-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                    placeholder="rrhh"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 rounded-2xl pl-12 pr-4 py-4 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 outline-none transition-all"
+                    placeholder="Ej: rrhh"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-[0.1em] ml-1">
                   Contraseña
                 </label>
-                <div className="relative">
+                <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Lock className="w-4 h-4 text-slate-500" />
+                    <Lock className="w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                   </div>
                   <input
                     id="password"
@@ -101,34 +135,50 @@ export default function LoginPage() {
                     type="password"
                     required
                     autoComplete="current-password"
-                    className="w-full bg-slate-700/50 border border-slate-600 text-white placeholder-slate-500 rounded-xl pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 rounded-2xl pl-12 pr-4 py-4 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 outline-none transition-all"
                     placeholder="••••••••"
                   />
                 </div>
               </div>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all shadow-lg shadow-blue-500/20 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base transition-all shadow-[0_12px_24px_-8px_rgba(79,70,229,0.4)] disabled:opacity-70 disabled:cursor-not-allowed group mt-2"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Ingresando...
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Iniciando sesión...</span>
                   </>
                 ) : (
-                  "Ingresar al sistema"
+                  <>
+                    <span>Ingresar al Sistema</span>
+                    <motion.div
+                      animate={{ x: [0, 4, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <ShieldCheck className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                    </motion.div>
+                  </>
                 )}
-              </button>
+              </motion.button>
             </form>
           </div>
         </div>
 
-        <p className="text-center text-slate-600 text-xs mt-6">
-          SJG Montajes · Recursos Humanos · {new Date().getFullYear()}
-        </p>
-      </div>
+        <div className="mt-12 flex flex-col items-center gap-4 text-slate-400">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400/60">
+            SJG Montajes Industriales · {new Date().getFullYear()}
+          </p>
+          <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0">
+            <span className="text-[9px] font-bold uppercase tracking-tighter">Powered by</span>
+            <img src="/logo-gdai.png" alt="GDAI" className="h-4" />
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 }
