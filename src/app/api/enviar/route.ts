@@ -3,7 +3,20 @@ import { generateExcelBuffer } from "@/lib/excel";
 import { sendEmail } from "@/lib/email";
 import { NextResponse } from "next/server";
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
+
 export async function POST(request: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  if ((session.user as any).role !== "admin") {
+    return NextResponse.json({ error: "Permisos insuficientes" }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
     const filtro = body.filter || "pendientes";

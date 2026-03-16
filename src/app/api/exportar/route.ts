@@ -2,7 +2,16 @@ import { supabase } from "@/lib/supabase";
 import { generateExcelBuffer } from "@/lib/excel";
 import { NextResponse } from "next/server";
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
+
 export async function GET(request: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const filter = searchParams.get("filter") || "pendientes";
   const motivo = searchParams.get("motivo") || "todos";

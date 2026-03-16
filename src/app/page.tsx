@@ -227,6 +227,37 @@ export default function Dashboard() {
     fetchErrores();
   };
 
+  // Realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel("changes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "error_carga" },
+        (payload) => {
+          const newRow = payload.new as ErrorCarga;
+          
+          // Basic logic: only add if we are not filtering by a specific search query 
+          // that might exclude it, or if it matches current global status filters.
+          // For simplicity and "wow" factor, we add it if it matches the current 'filtro' (pendientes/todos)
+          const isPendiente = !newRow.resuelto;
+          const matchesStatus = 
+            filtro === "todos" || 
+            (filtro === "pendientes" && isPendiente) || 
+            (filtro === "resueltos" && !isPendiente);
+
+          if (matchesStatus) {
+            setErrores((prev) => [newRow, ...prev]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [filtro]);
+
   const handleDownload = async () => {
     try {
       const params = new URLSearchParams({
