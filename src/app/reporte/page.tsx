@@ -114,6 +114,34 @@ export default function ReportePage() {
     setLoadingMore(false);
   };
 
+  // Realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel("changes-reporte")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "error_carga" },
+        (payload) => {
+          const newRow = payload.new as ErrorCarga;
+          
+          const isPendiente = !newRow.resuelto;
+          const matchesStatus = 
+            filtro === "todos" || 
+            (filtro === "pendientes" && isPendiente) || 
+            (filtro === "resueltos" && !isPendiente);
+
+          if (matchesStatus) {
+            setErrores((prev) => [newRow, ...prev]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [filtro]);
+
   const filteredErrores = searchQuery.trim()
     ? errores.filter((e) => {
         const q = searchQuery.trim().toLowerCase();

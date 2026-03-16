@@ -7,8 +7,13 @@ export default withAuth(
     const path = req.nextUrl.pathname;
 
     // Viewers cannot access /carga, /reportes, or /importar
-    if (role === "viewer" && (path.startsWith("/carga") || path.startsWith("/reportes") || path.startsWith("/importar"))) {
-      return NextResponse.redirect(new URL("/", req.url));
+    if (role === "viewer") {
+      if (path === "/") {
+        return NextResponse.redirect(new URL("/reporte", req.url));
+      }
+      if (path.startsWith("/carga") || path.startsWith("/reporte/") || path.startsWith("/importar")) {
+        return NextResponse.redirect(new URL("/reporte", req.url));
+      }
     }
   },
   {
