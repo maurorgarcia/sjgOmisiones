@@ -63,26 +63,26 @@ export function ViewerOnboarding({ show, onClose }: { show: boolean; onClose: ()
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-xl">
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 w-full max-w-md overflow-hidden relative"
+          className="bg-[#111418] rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/10 w-full max-w-md overflow-hidden relative"
         >
           {/* Progress bar */}
-          <div className="absolute top-0 left-0 right-0 flex gap-1 p-2 px-10 pt-4">
+          <div className="absolute top-0 left-0 right-0 flex gap-1 p-2 px-12 pt-6">
             {steps.map((_, i) => (
               <div 
                 key={i} 
-                className={`h-1 flex-1 rounded-full transition-all duration-500 ${i <= currentStep ? 'bg-indigo-500' : 'bg-slate-100'}`} 
+                className={`h-1 flex-1 rounded-full transition-all duration-700 ${i <= currentStep ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-white/5'}`} 
               />
             ))}
           </div>
 
           <button 
             onClick={onClose}
-            className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors"
+            className="absolute top-8 right-8 p-2.5 text-slate-500 hover:text-white rounded-2xl hover:bg-white/5 transition-all"
           >
             <X className="w-5 h-5" />
           </button>
@@ -91,13 +91,13 @@ export function ViewerOnboarding({ show, onClose }: { show: boolean; onClose: ()
             <div className="flex flex-col items-center text-center">
               <motion.div
                 key={currentStep}
-                initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
+                initial={{ opacity: 0, scale: 0.5, rotate: -15 }}
                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6"
+                className="w-20 h-20 bg-amber-500/10 text-amber-500 rounded-3xl flex items-center justify-center mb-8 border border-amber-500/20 shadow-inner"
               >
                 {(() => {
                   const Icon = steps[currentStep].icon;
-                  return <Icon className="w-8 h-8" />;
+                  return <Icon className="w-10 h-10" />;
                 })()}
               </motion.div>
 
@@ -105,7 +105,7 @@ export function ViewerOnboarding({ show, onClose }: { show: boolean; onClose: ()
                 key={`t-${currentStep}`}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="text-2xl font-extrabold text-slate-900 tracking-tight"
+                className="text-2xl font-black text-white tracking-tight uppercase"
               >
                 {steps[currentStep].title}
               </motion.h2>
@@ -115,22 +115,22 @@ export function ViewerOnboarding({ show, onClose }: { show: boolean; onClose: ()
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-slate-500 mt-3 text-sm leading-relaxed"
+                className="text-slate-500 mt-4 text-[13px] leading-relaxed font-medium"
               >
                 {steps[currentStep].description}
               </motion.p>
             </div>
 
-            <div className="mt-10">
+            <div className="mt-12">
               <button
                 onClick={next}
-                className="w-full group flex items-center justify-center gap-2 py-4 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base transition-all shadow-[0_12px_24px_-8px_rgba(79,70,229,0.4)] active:scale-95"
+                className="w-full group flex items-center justify-center gap-3 py-5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95 shadow-amber-900/40"
               >
                 <span>{currentStep === steps.length - 1 ? "Comenzar" : "Siguiente"}</span>
                 {currentStep === steps.length - 1 ? (
-                  <CheckCircle2 className="w-5 h-5" />
+                  <CheckCircle2 className="w-5 h-5 opacity-70" />
                 ) : (
-                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight className="w-5 h-5 opacity-70 group-hover:translate-x-1 transition-transform" />
                 )}
               </button>
               

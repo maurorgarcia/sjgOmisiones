@@ -270,39 +270,42 @@ export default function CargaPage() {
   };
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl mx-auto">
       <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Cargar Omisión / Error</h1>
-          <p className="text-slate-500 text-sm mt-1">Registre un nuevo error arrojado por el sistema web de RRHH.</p>
+        <div className="flex items-center gap-4">
+           <div className="w-1.5 h-8 bg-amber-500 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.5)]" />
+           <div>
+            <h1 className="text-2xl font-black text-white tracking-tight uppercase">Cargar Registro</h1>
+            <p className="text-slate-500 text-xs font-medium uppercase tracking-widest mt-0.5">Gestión de Omisiones y Errores SJG</p>
+          </div>
         </div>
         <button
           onClick={() => window.open("/carga/mini", "MiniCarga", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-indigo-100 bg-indigo-50 text-indigo-600 text-xs font-bold hover:bg-indigo-100 transition-all active:scale-95"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-500 text-[10px] font-black uppercase tracking-wider hover:bg-amber-500/10 transition-all active:scale-95 shadow-lg"
           title="Abrir como ventana flotante para multitarea"
         >
           <Maximize2 className="w-3.5 h-3.5" />
-          <span>MODO VENTANA</span>
+          <span>Modo Ventana</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+      <div className="bg-slate-950/40 rounded-[2.5rem] border border-white/5 shadow-2xl p-8 backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
 
           {/* Employee search */}
           <div ref={searchRef} className="relative">
-            <label className="block text-sm font-semibold mb-2 text-slate-700">
-              Empleado <span className="text-slate-400 font-normal">(nombre o legajo)</span>
-              <span className="text-red-500 ml-1">*</span>
+            <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
+              Empleado <span className="text-slate-600 font-medium">(nombre o legajo)</span>
+              <span className="text-amber-500 ml-1 font-bold">*</span>
             </label>
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <div className="relative group">
+              <Search className="w-4 h-4 text-slate-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none group-focus-within:text-amber-500 transition-colors" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                className={`w-full border rounded-xl pl-10 pr-10 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm ${errors.empleado ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                className={`w-full bg-black/40 border rounded-2xl pl-11 pr-11 py-3.5 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 outline-none transition text-sm font-medium text-slate-200 ${errors.empleado ? "border-red-500/50 bg-red-500/5" : "border-white/5"}`}
                 placeholder="Buscar por nombre o legajo..."
                 autoComplete="off"
               />
@@ -319,12 +322,12 @@ export default function CargaPage() {
 
             {/* Dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
+              <div className="absolute z-50 w-full mt-2 bg-[#0f1115] border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
                 {suggestions.map((emp) => (
                   <button key={emp.legajo} type="button" onClick={() => selectEmpleado(emp)}
-                    className="w-full text-left px-4 py-3 hover:bg-indigo-50 transition-colors border-b border-slate-50 last:border-0">
-                    <div className="font-semibold text-slate-800 text-sm">{emp.nombre_apellido}</div>
-                    <div className="text-xs text-slate-400 mt-0.5">Leg: {emp.legajo} · {emp.contrato}{emp.categoria ? ` · ${emp.categoria}` : ""}</div>
+                    className="w-full text-left px-5 py-4 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 group">
+                    <div className="font-bold text-slate-200 text-sm group-hover:text-amber-400 transition-colors">{emp.nombre_apellido}</div>
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Leg: {emp.legajo} · {emp.contrato}{emp.categoria ? ` · ${emp.categoria}` : ""}</div>
                   </button>
                 ))}
               </div>
@@ -352,11 +355,11 @@ export default function CargaPage() {
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.8 }}
-                      className="inline-flex items-center gap-2 bg-indigo-50/80 border border-indigo-100 text-indigo-600 rounded-xl px-3 py-2 text-xs font-bold shadow-sm"
+                      className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-wider shadow-[0_0_15px_rgba(245,158,11,0.1)]"
                     >
-                      <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" />
+                      <div className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
                       {emp.nombre_apellido}
-                      <button type="button" onClick={() => removeEmpleado(emp.legajo)} className="ml-1 hover:text-red-500 hover:bg-red-50 p-0.5 rounded-md transition-all">
+                      <button type="button" onClick={() => removeEmpleado(emp.legajo)} className="ml-1 hover:text-white hover:bg-amber-500/20 p-0.5 rounded-md transition-all">
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </motion.div>
@@ -387,35 +390,35 @@ export default function CargaPage() {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-semibold mb-2 text-slate-700">
-                Contrato <span className="text-red-500">*</span>
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
+                Contrato <span className="text-amber-500 ml-1 font-bold">*</span>
               </label>
               <select
                 required
                 value={contrato}
                 onChange={(e) => { setContrato(e.target.value); setErrors((err) => ({ ...err, contrato: "" })); }}
-                className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white text-sm ${errors.contrato ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                className={`w-full bg-black/40 border rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 outline-none transition text-sm font-medium text-slate-200 ${errors.contrato ? "border-red-500/50 bg-red-500/5" : "border-white/5"}`}
               >
                 <option value="">Seleccionar contrato...</option>
                 {CONTRATOS.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
-              {errors.contrato && <p className="text-red-500 text-xs mt-1">{errors.contrato}</p>}
+              {errors.contrato && <p className="text-red-500 text-xs mt-1 font-bold">{errors.contrato}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2 text-slate-700">
-                Motivo del Error <span className="text-red-500">*</span>
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
+                Motivo del Error <span className="text-amber-500 ml-1 font-bold">*</span>
               </label>
               <select
                 required
                 value={motivo}
                 onChange={(e) => { setMotivo(e.target.value); setErrors((err) => ({ ...err, motivo: "", ot: "" })); }}
-                className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white text-sm ${errors.motivo ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                className={`w-full bg-black/40 border rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 outline-none transition text-sm font-medium text-slate-200 ${errors.motivo ? "border-red-500/50 bg-red-500/5" : "border-white/5"}`}
               >
                 <option value="">Seleccione un motivo...</option>
                 {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
-              {errors.motivo && <p className="text-red-500 text-xs mt-1">{errors.motivo}</p>}
+              {errors.motivo && <p className="text-red-500 text-xs mt-1 font-bold">{errors.motivo}</p>}
             </div>
           </div>
 
@@ -516,24 +519,24 @@ export default function CargaPage() {
             />
           </div>
 
-          <div className="pt-4 flex justify-end gap-3">
+          <div className="pt-6 flex justify-end gap-3 border-t border-white/5">
             <button type="button" onClick={() => router.push("/")}
-              className="px-6 py-3.5 rounded-2xl border border-slate-200 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all active:scale-[0.98]">
+              className="px-6 py-3.5 rounded-2xl border border-white/5 text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-white/5 hover:text-white transition-all active:scale-[0.98]">
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="min-w-[180px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-8 rounded-2xl shadow-xl shadow-indigo-500/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98] text-sm"
+              className="min-w-[200px] bg-gradient-to-r from-amber-500 to-amber-600 hover:shadow-[0_8px_25px_rgba(245,158,11,0.3)] text-black font-black py-4 px-8 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98] text-xs uppercase tracking-tighter"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Guardando {selectedEmpleados.length > 1 ? `(${selectedEmpleados.length})` : ""}</span>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Guardando...</span>
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-5 h-5" />
                   <span>Guardar {selectedEmpleados.length > 1 ? `(${selectedEmpleados.length})` : "Registro"}</span>
                 </>
               )}

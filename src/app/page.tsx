@@ -38,9 +38,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 
 function getMotivoBadge(motivo: string) {
-  const classes = MOTIVO_COLORS[motivo] ?? "bg-slate-100 text-slate-700 border-slate-200";
+  const classes = MOTIVO_COLORS[motivo] ?? "bg-slate-900/50 text-slate-400 border-white/5";
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${classes}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${classes} shadow-sm`}>
       {motivo}
     </span>
   );
@@ -371,8 +371,8 @@ export default function Dashboard() {
             <div className="absolute inset-0 w-2.5 h-2.5 bg-green-500 rounded-full animate-ping opacity-30" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Gestión de Omisiones</h1>
-            <p className="text-slate-500 text-sm mt-0.5 capitalize">{dateLabel}</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight">Gestión de Omisiones</h1>
+            <p className="text-slate-400 text-sm mt-0.5 capitalize">{dateLabel}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -380,7 +380,7 @@ export default function Dashboard() {
           <button
             onClick={handleDownload}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2.5 border border-white/10 text-xs font-bold text-slate-400 hover:bg-white/10 hover:text-amber-500 transition-all shadow-xl active:scale-95 disabled:opacity-50"
           >
             <ExternalLink className="w-4 h-4" />
           </button>
@@ -399,7 +399,7 @@ export default function Dashboard() {
               )}
               <Link
                 href="/carga"
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition shadow-sm shadow-indigo-500/20 active:scale-95"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-xs font-black text-black uppercase tracking-tight hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:scale-[1.02] transition-all active:scale-95"
               >
                 <PlusCircle className="w-4 h-4" />
                 Nuevo Registro
@@ -407,7 +407,7 @@ export default function Dashboard() {
               <button
                 onClick={handleSendEmail}
                 disabled={sending || loading}
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition shadow-sm shadow-emerald-500/20 disabled:opacity-50 active:scale-95"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600/10 border border-emerald-500/20 px-5 py-2.5 text-xs font-bold text-emerald-500 uppercase tracking-tight hover:bg-emerald-600 hover:text-white transition-all disabled:opacity-50 active:scale-95"
               >
                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Enviar Reporte
@@ -419,47 +419,47 @@ export default function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+        <div className="bg-slate-950/40 rounded-2xl p-4 border border-white/5 shadow-2xl group hover:border-amber-500/20 transition-all">
           <div className="flex items-center gap-3">
-            <div className="bg-indigo-50 p-2 rounded-xl">
-              <AlertTriangle className="w-5 h-5 text-indigo-500" />
+            <div className="bg-amber-500/5 p-2 rounded-xl group-hover:bg-amber-500/10 transition-colors">
+              <AlertTriangle className="w-5 h-5 text-amber-500/70" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Total</p>
-              <p className="text-2xl font-bold text-slate-900">{total}</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total</p>
+              <p className="text-2xl font-black text-white">{total}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-amber-200 shadow-sm">
+        <div className="bg-slate-950/40 rounded-2xl p-4 border border-amber-500/10 shadow-2xl group hover:border-amber-500/30 transition-all">
           <div className="flex items-center gap-3">
-            <div className="bg-amber-50 p-2 rounded-xl">
+            <div className="bg-amber-500/5 p-2 rounded-xl group-hover:bg-amber-500/10 transition-colors">
               <Clock className="w-5 h-5 text-amber-500" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-amber-500 uppercase tracking-wide">Pendientes</p>
-              <p className="text-2xl font-bold text-slate-900">{pendientes}</p>
+              <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Pendientes</p>
+              <p className="text-2xl font-black text-white">{pendientes}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-green-200 shadow-sm">
+        <div className="bg-slate-950/40 rounded-2xl p-4 border border-emerald-500/10 shadow-2xl group hover:border-emerald-500/30 transition-all">
           <div className="flex items-center gap-3">
-            <div className="bg-green-50 p-2 rounded-xl">
-              <CheckCheck className="w-5 h-5 text-green-500" />
+            <div className="bg-emerald-500/5 p-2 rounded-xl group-hover:bg-emerald-500/10 transition-colors">
+              <CheckCheck className="w-5 h-5 text-emerald-500" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-green-600 uppercase tracking-wide">Resueltos</p>
-              <p className="text-2xl font-bold text-slate-900">{resueltos}</p>
+              <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Resueltos</p>
+              <p className="text-2xl font-black text-white">{resueltos}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+        <div className="bg-slate-950/40 rounded-2xl p-4 border border-white/5 shadow-2xl group hover:border-amber-500/20 transition-all">
           <div className="flex items-center gap-3">
-            <div className="bg-slate-50 p-2 rounded-xl">
-              <TrendingDown className="w-5 h-5 text-slate-500" />
+            <div className="bg-white/5 p-2 rounded-xl group-hover:bg-white/10 transition-colors">
+              <TrendingDown className="w-5 h-5 text-slate-400" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Resolución</p>
-              <p className="text-2xl font-bold text-slate-900">{pct}%</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resolución</p>
+              <p className="text-2xl font-black text-white">{pct}%</p>
             </div>
           </div>
         </div>
@@ -477,8 +477,8 @@ export default function Dashboard() {
       )}
 
       {/* Filters */}
-      <div className="bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-full md:w-auto overflow-x-auto">
+      <div className="bg-slate-900/50 px-4 py-3 rounded-2xl border border-white/10 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex gap-1 p-1 bg-black/40 rounded-xl w-full md:w-auto overflow-x-auto border border-white/5">
           {(["pendientes", "resueltos", "todos"] as const).map((f) => (
             <button
               key={f}
@@ -486,13 +486,13 @@ export default function Dashboard() {
                 setFiltro(f);
                 sessionStorage.setItem("sjg_filtro", f);
               }}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap active:scale-95 ${
+              className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap active:scale-95 ${
                 filtro === f
-                  ? "bg-white text-indigo-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg"
+                  : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
               }`}
             >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {f}
             </button>
           ))}
         </div>
@@ -504,7 +504,7 @@ export default function Dashboard() {
               setFiltroMotivo(e.target.value);
               sessionStorage.setItem("sjg_filtro_motivo", e.target.value);
             }}
-            className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
+            className="px-4 py-2 rounded-xl border border-white/5 text-[11px] font-bold uppercase tracking-wider text-slate-400 focus:ring-2 focus:ring-amber-500/50 outline-none transition bg-black/40 hover:bg-black/60 cursor-pointer"
           >
             <option value="todos">Todos los motivos</option>
             {Object.keys(MOTIVO_COLORS).map((m) => (
@@ -513,7 +513,7 @@ export default function Dashboard() {
           </select>
 
           <div className="relative flex-grow sm:flex-grow-0 min-w-[140px]">
-            <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Building2 className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={filtroSector}
@@ -522,12 +522,12 @@ export default function Dashboard() {
                 sessionStorage.setItem("sjg_filtro_sector", e.target.value);
               }}
               placeholder="Sector..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-white/5 text-xs font-medium text-slate-300 placeholder:text-slate-600 focus:ring-2 focus:ring-amber-500/50 outline-none transition bg-black/40 hover:bg-black/60"
             />
           </div>
 
           <div className="relative flex-grow sm:flex-grow-0">
-            <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Calendar className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="date"
               value={fechaFiltro}
@@ -541,7 +541,7 @@ export default function Dashboard() {
                   sessionStorage.setItem("sjg_filtro", "todos");
                 }
               }}
-              className="w-full sm:w-auto pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white"
+              className="w-full sm:w-auto pl-9 pr-4 py-2 rounded-xl border border-white/5 text-xs font-medium text-slate-300 focus:ring-2 focus:ring-amber-500/50 outline-none transition bg-black/40 hover:bg-black/60 [color-scheme:dark]"
             />
           </div>
           <div className="flex items-center gap-1.5 flex-grow sm:flex-grow-0">
@@ -555,7 +555,7 @@ export default function Dashboard() {
                 if (v) sessionStorage.setItem("sjg_fecha_hasta", v);
                 else sessionStorage.removeItem("sjg_fecha_hasta");
               }}
-              className="w-full sm:w-auto pl-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white"
+              className="w-full sm:w-auto pl-4 py-2 rounded-xl border border-white/10 text-sm text-slate-300 focus:ring-2 focus:ring-amber-500 outline-none transition bg-slate-950 [color-scheme:dark]"
               title="Hasta (opcional, para rango)"
             />
           </div>
@@ -568,7 +568,7 @@ export default function Dashboard() {
               sessionStorage.removeItem("sjg_fecha_hasta");
               sessionStorage.setItem("sjg_filtro", "todos");
             }}
-            className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold whitespace-nowrap px-2"
+            className="text-xs text-amber-500 hover:text-amber-400 font-semibold whitespace-nowrap px-2"
           >
             Ver Histórico
           </button>
@@ -578,13 +578,13 @@ export default function Dashboard() {
       {/* Búsqueda en tabla */}
       {!loading && errores.length > 0 && (
         <div className="flex items-center gap-2">
-          <Search className="w-4 h-4 text-slate-400" />
+          <Search className="w-4 h-4 text-slate-600" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por nombre, legajo o OT..."
-            className="flex-1 max-w-xs border border-slate-200 rounded-xl pl-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white"
+            className="flex-1 max-w-xs border border-white/5 rounded-xl pl-4 py-2 text-xs font-medium text-slate-300 placeholder:text-slate-700 focus:ring-2 focus:ring-amber-500/50 outline-none transition bg-black/40 hover:bg-black/60 shadow-inner"
           />
           {searchQuery.trim() && (
             <span className="text-xs text-slate-500">
@@ -595,10 +595,10 @@ export default function Dashboard() {
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-slate-950/40 rounded-2xl border border-white/5 shadow-2xl overflow-hidden backdrop-blur-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-[10px] text-slate-400 uppercase bg-slate-50/50 border-b border-slate-100 tracking-[0.15em] font-bold">
+            <thead className="text-[10px] text-slate-500 uppercase bg-black/60 border-b border-white/5 tracking-[0.2em] font-black">
               <tr>
                 {isAdmin && (
                   <th className="px-5 py-3.5 w-12 text-center">
@@ -606,39 +606,39 @@ export default function Dashboard() {
                       type="checkbox" 
                       onChange={handleSelectAll} 
                       checked={filteredErrores.length > 0 && selectedIds.length === filteredErrores.length} 
-                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
+                      className="rounded border-white/20 bg-slate-950 text-amber-600 focus:ring-amber-500 cursor-pointer" 
                     />
                   </th>
                 )}
                 <th className="px-5 py-3.5 font-semibold">
-                  <button onClick={() => handleSort('resuelto')} className="flex items-center gap-1 hover:text-indigo-600 transition-colors uppercase tracking-wider">
+                  <button onClick={() => handleSort('resuelto')} className="flex items-center gap-1 hover:text-amber-500 transition-colors uppercase tracking-wider">
                     Estado
                     {sortConfig?.key === 'resuelto' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
                 <th className="px-5 py-3.5 font-semibold">
-                  <button onClick={() => handleSort('fecha')} className="flex items-center gap-1 hover:text-indigo-600 transition-colors uppercase tracking-wider">
+                  <button onClick={() => handleSort('fecha')} className="flex items-center gap-1 hover:text-amber-500 transition-colors uppercase tracking-wider">
                     Fecha
                     {sortConfig?.key === 'fecha' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
                 <th className="px-5 py-3.5 font-semibold">
-                  <button onClick={() => handleSort('nombre_apellido')} className="flex items-center gap-1 hover:text-indigo-600 transition-colors uppercase tracking-wider">
+                  <button onClick={() => handleSort('nombre_apellido')} className="flex items-center gap-1 hover:text-amber-500 transition-colors uppercase tracking-wider">
                     Empleado
                     {sortConfig?.key === 'nombre_apellido' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
                 <th className="px-5 py-3.5 font-semibold">
-                  <button onClick={() => handleSort('motivo_error')} className="flex items-center gap-1 hover:text-indigo-600 transition-colors uppercase tracking-wider">
+                  <button onClick={() => handleSort('motivo_error')} className="flex items-center gap-1 hover:text-amber-500 transition-colors uppercase tracking-wider">
                     Motivo
                     {sortConfig?.key === 'motivo_error' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
-                <th className="px-5 py-4 font-bold text-slate-400">OT / Sector</th>
-                <th className="px-5 py-4 font-bold text-right text-slate-400">Acción</th>
+                <th className="px-5 py-4 font-bold text-slate-500">OT / Sector</th>
+                <th className="px-5 py-4 font-bold text-right text-slate-500">Acción</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-white/5">
               {loading ? (
                 <tr>
                   <td colSpan={7} className="py-12">
@@ -671,7 +671,7 @@ export default function Dashboard() {
                 filteredErrores.map((err) => (
                   <tr
                     key={err.id}
-                    className={`hover:bg-slate-50/80 transition-colors ${err.resuelto ? "opacity-60" : ""} ${selectedIds.includes(err.id) ? "bg-blue-50/50" : ""}`}
+                    className={`hover:bg-white/5 transition-colors ${err.resuelto ? "opacity-60" : ""} ${selectedIds.includes(err.id) ? "bg-amber-500/5" : ""}`}
                   >
                     {isAdmin && (
                       <td className="px-5 py-3.5 text-center">
@@ -679,7 +679,7 @@ export default function Dashboard() {
                           type="checkbox" 
                           onChange={() => handleSelectOne(err.id)} 
                           checked={selectedIds.includes(err.id)} 
-                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
+                          className="rounded border-white/20 bg-slate-950 text-amber-600 focus:ring-amber-500 cursor-pointer" 
                         />
                       </td>
                     )}
@@ -697,24 +697,24 @@ export default function Dashboard() {
                       )}
                     </td>
                     <td className="px-5 py-3.5 whitespace-nowrap">
-                      <div className="font-medium text-slate-900">
+                      <div className="font-medium text-slate-200">
                         {format(new Date(err.fecha), "dd MMM yyyy", { locale: es })}
                       </div>
-                      <div className="text-xs text-slate-400">{err.dia_semana}</div>
+                      <div className="text-xs text-slate-500">{err.dia_semana}</div>
                     </td>
                     <td className="px-5 py-3.5">
                       <div 
                         onClick={() => toggleNameHighlight(err.nombre_apellido)}
-                        className={`font-semibold cursor-pointer transition-colors ${checkedNames.has(err.nombre_apellido) ? "text-green-600 bg-green-50 px-2 py-0.5 rounded-lg border border-green-200 shadow-sm" : "text-slate-900"}`}
+                        className={`font-semibold cursor-pointer transition-colors ${checkedNames.has(err.nombre_apellido) ? "text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20 shadow-sm" : "text-slate-200"}`}
                         title="Click para marcar/desmarcar progreso"
                       >
                         {err.nombre_apellido}
                       </div>
-                      <div className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                      <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
                         Leg: {err.legajo}
                         <button
                           onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(err.legajo); }}
-                          className="hover:text-blue-500 transition-colors"
+                          className="hover:text-amber-500 transition-colors"
                           title="Copiar legajo"
                         >
                           <Copy className="w-3 h-3" />
@@ -724,14 +724,14 @@ export default function Dashboard() {
                     <td className="px-5 py-3.5">
                       {getMotivoBadge(err.motivo_error)}
                       {err.notas && (
-                        <div className="text-xs text-slate-400 mt-1 max-w-[180px] truncate" title={err.notas}>
+                        <div className="text-xs text-slate-500 mt-1 max-w-[180px] truncate" title={err.notas}>
                           {err.notas}
                         </div>
                       )}
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="font-medium text-slate-800">{err.sector}</div>
-                      <div className="text-xs text-slate-400">
+                      <div className="font-medium text-slate-300">{err.sector}</div>
+                      <div className="text-xs text-slate-500">
                         {err.ot ? `OT: ${err.ot}` : "Sin OT"}{err.horario ? ` · ${err.horario}` : ""}
                       </div>
                     </td>
@@ -740,7 +740,7 @@ export default function Dashboard() {
                         {/* Always visible: Resolver/Reabrir */}
                         <button
                           onClick={() => toggleResuelto(err.id, err.resuelto)}
-                          className={`text-sm font-semibold transition-colors ${err.resuelto ? "text-slate-400 hover:text-slate-700" : "text-indigo-600 hover:text-indigo-800"}`}
+                          className={`text-sm font-semibold transition-colors ${err.resuelto ? "text-slate-500 hover:text-white" : "text-amber-500 hover:text-amber-400"}`}
                         >
                           {err.resuelto ? "Reabrir" : "Resolver"}
                         </button>
@@ -757,7 +757,7 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => setDeletingId(err.id)}
-                              className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition"
+                              className="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition"
                               title="Eliminar"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -773,12 +773,12 @@ export default function Dashboard() {
           </table>
         </div>
         {!loading && hasMore && errores.length > 0 && !searchQuery.trim() && (
-          <div className="border-t border-slate-100 py-4 flex justify-center">
+          <div className="border-t border-white/5 py-4 flex justify-center">
             <button
               type="button"
               onClick={loadMore}
               disabled={loadingMore}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/10 text-sm font-semibold text-slate-400 hover:bg-white/5 transition disabled:opacity-50"
             >
               {loadingMore ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

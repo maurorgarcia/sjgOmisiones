@@ -40,7 +40,7 @@ export function Sidebar() {
   if (!session) return null;
 
   return (
-    <aside className="fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white flex flex-col z-40 shadow-[4px_0_24px_rgba(0,0,0,0.3)] border-r border-slate-800/50">
+    <aside className="fixed top-0 left-0 h-full w-64 bg-[#0a0c10] text-white flex flex-col z-40 shadow-[4px_0_24px_rgba(0,0,0,0.5)] border-r border-white/5">
       {/* Logo SJG */}
       <div className="px-5 py-6 border-b border-slate-700/50 flex items-center justify-center">
         <Image
@@ -91,17 +91,17 @@ export function Sidebar() {
       </div>
 
       {/* User info + Logout */}
-      <div className="px-3 py-4 border-t border-slate-700/50">
-        <div className="flex items-center gap-3 px-3 py-2 mb-2 rounded-lg bg-slate-800">
-          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white uppercase flex-shrink-0">
+      <div className="px-3 py-4 border-t border-white/5">
+        <div className="flex items-center gap-3 px-3 py-2.5 mb-2 rounded-xl bg-white/5 border border-white/5 shadow-inner">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-xs font-bold text-black uppercase flex-shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
             {(session.user?.name || session.user?.email || "U")[0]}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">
+            <p className="text-sm font-bold text-white truncate tracking-tight">
               {session.user?.name || "Usuario"}
             </p>
-            <p className="text-xs text-slate-400 truncate">
-              {session.user?.email || "RRHH"}
+            <p className="text-[10px] text-slate-500 truncate font-medium uppercase tracking-wider">
+              {session.user?.role === "admin" ? "Administrador" : "Visualizador"}
             </p>
           </div>
         </div>
@@ -128,19 +128,19 @@ function NavItem({ item, isAdmin, pathname }: { item: any; isAdmin: boolean; pat
     <div className="group relative">
       <Link
         href={href}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 relative group/link ${
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 relative group/link ${
           active
-            ? "bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]"
-            : "text-slate-400 hover:bg-slate-800/80 hover:text-white"
+            ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]"
+            : "text-slate-400 hover:bg-white/5 hover:text-white"
         }`}
       >
-        <div className={`absolute inset-0 rounded-xl transition-opacity duration-500 opacity-0 group-hover/link:opacity-100 bg-gradient-to-r from-indigo-500/10 to-transparent pointer-events-none`} />
-        <Icon className={`w-4 h-4 flex-shrink-0 relative z-10 ${active ? 'text-white' : 'text-slate-400 group-hover/link:text-indigo-400 group-hover/link:scale-110 transition-all'}`} />
-        <span className="relative z-10">{label}</span>
+        <div className={`absolute inset-0 rounded-xl transition-opacity duration-500 opacity-0 group-hover/link:opacity-100 bg-gradient-to-r from-amber-500/10 to-transparent pointer-events-none`} />
+        <Icon className={`w-4 h-4 flex-shrink-0 relative z-10 ${active ? 'text-black' : 'text-slate-400 group-hover/link:text-amber-500 group-hover/link:scale-110 transition-all'}`} />
+        <span className="relative z-10 tracking-tight">{label}</span>
         {active && (
           <motion.div 
             layoutId="activeNav"
-            className="absolute left-0 w-1 h-5 bg-white rounded-r-full shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+            className="absolute left-[-12px] w-1.5 h-6 bg-amber-400 rounded-r-full shadow-[0_0_12px_rgba(251,191,36,0.8)]"
             initial={false}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           />
@@ -150,7 +150,7 @@ function NavItem({ item, isAdmin, pathname }: { item: any; isAdmin: boolean; pat
       {(isCarga || href === "/faltantes/carga") && isAdmin && (
         <button
           onClick={() => window.open(href === "/carga" ? "/carga/mini" : "/faltantes/mini", href === "/carga" ? "MiniCarga" : "MiniFaltantes", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-md transition-all opacity-0 group-hover:opacity-100 flex items-center gap-1"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-md transition-all opacity-0 group-hover:opacity-100 flex items-center gap-1"
           title="Abrir en ventana flotante"
         >
           <div className="h-3 w-[1px] bg-slate-700 mr-1" />

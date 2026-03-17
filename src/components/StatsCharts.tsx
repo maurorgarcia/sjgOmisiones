@@ -23,15 +23,16 @@ interface StatsChartsProps {
 }
 
 const COLORS = [
-  "#3b82f6", // blue
-  "#ef4444", // red
-  "#f59e0b", // amber
-  "#8b5cf6", // purple
-  "#64748b", // slate
-  "#10b981", // emerald
+  "#d97706", // amber-600
+  "#f59e0b", // amber-500
+  "#fbbf24", // amber-400
+  "#fcd34d", // amber-300
+  "#ea580c", // orange-600
+  "#f97316", // orange-500
 ];
 
 export function StatsCharts({ data }: StatsChartsProps) {
+  // ... (useMemo logic stays the same)
   // 1. Data for Daily Chart (Last 14 days) - Normalized to string comparison
   const dailyData = useMemo(() => {
     const days = Array.from({ length: 14 }, (_, i) => {
@@ -44,7 +45,6 @@ export function StatsCharts({ data }: StatsChartsProps) {
     });
 
     data.forEach((err) => {
-      // Normalize to local date string YYYY-MM-DD
       const errDateKey = format(parseISO(err.fecha), "yyyy-MM-dd");
       const day = days.find((d) => d.key === errDateKey);
       if (day) day.total += 1;
@@ -83,43 +83,52 @@ export function StatsCharts({ data }: StatsChartsProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Daily Chart */}
-      <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex flex-col hover:shadow-md transition-shadow duration-300">
-        <h3 className="text-[10px] font-extrabold text-slate-400 mb-4 uppercase tracking-[0.2em]">Omisiones últimos 14 días</h3>
+      <div className="bg-slate-950/40 p-5 rounded-3xl border border-white/5 shadow-2xl flex flex-col hover:border-amber-500/20 transition-all duration-300 group">
+        <h3 className="text-[10px] font-black text-slate-500 mb-4 uppercase tracking-[0.2em] group-hover:text-amber-500/50 transition-colors">Omisiones últimos 14 días</h3>
         <div className="h-[200px] w-full mt-auto">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={dailyData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} dy={5} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.02)" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 10 }} dy={5} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 10 }} />
               <Tooltip 
-                cursor={{ fill: '#f8fafc', radius: 4 }}
-                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontSize: '11px', fontWeight: 'bold' }}
+                cursor={{ fill: 'rgba(251,191,36,0.05)', radius: 8 }}
+                contentStyle={{ backgroundColor: '#0a0c10', borderRadius: '16px', border: '1px solid rgba(251,191,36,0.1)', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.8)', fontSize: '11px', fontWeight: 'bold', color: '#f8fafc' }}
+                itemStyle={{ color: '#fbbf24' }}
               />
-              <Bar dataKey="total" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={14} />
+              <Bar dataKey="total" fill="url(#colorTotal)" radius={[6, 6, 0, 0]} barSize={16}>
+                <defs>
+                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#d97706" stopOpacity={0.8}/>
+                  </linearGradient>
+                </defs>
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Top OTs Chart */}
-      <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex flex-col hover:shadow-md transition-shadow duration-300">
-        <h3 className="text-[10px] font-extrabold text-slate-400 mb-4 uppercase tracking-[0.2em]">Top 5 OTs con más omisiones</h3>
+      <div className="bg-slate-950/40 p-5 rounded-3xl border border-white/5 shadow-2xl flex flex-col hover:border-amber-500/20 transition-all duration-300 group">
+        <h3 className="text-[10px] font-black text-slate-500 mb-4 uppercase tracking-[0.2em] group-hover:text-amber-500/50 transition-colors">Top 5 OTs con más omisiones</h3>
         <div className="h-[200px] w-full mt-auto">
           {otData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={otData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.02)" />
                 <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: '500' }} width={80} />
+                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 10, fontWeight: '600' }} width={80} />
                 <Tooltip 
-                  cursor={{ fill: '#f8fafc', radius: 4 }}
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontSize: '11px', fontWeight: 'bold' }}
+                  cursor={{ fill: 'rgba(251,191,36,0.05)', radius: 8 }}
+                  contentStyle={{ backgroundColor: '#0a0c10', borderRadius: '16px', border: '1px solid rgba(251,191,36,0.1)', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.8)', fontSize: '11px', fontWeight: 'bold', color: '#f8fafc' }}
+                  itemStyle={{ color: '#fbbf24' }}
                 />
-                <Bar dataKey="value" fill="#f43f5e" radius={[0, 4, 4, 0]} barSize={12} />
+                <Bar dataKey="value" fill="#fbbf24" radius={[0, 6, 6, 0]} barSize={14} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-full text-slate-400 text-[10px] font-bold uppercase tracking-widest bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+            <div className="flex items-center justify-center h-full text-slate-600 text-[10px] font-black uppercase tracking-widest bg-black/20 rounded-2xl border border-dashed border-white/5">
               No hay datos de OTs
             </div>
           )}
@@ -127,18 +136,20 @@ export function StatsCharts({ data }: StatsChartsProps) {
       </div>
 
       {/* Motives Chart */}
-      <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] flex flex-col hover:shadow-md transition-shadow duration-300">
-        <h3 className="text-[10px] font-extrabold text-slate-400 mb-4 uppercase tracking-[0.2em]">Distribución por Motivo</h3>
+      <div className="bg-slate-950/40 p-5 rounded-3xl border border-white/5 shadow-2xl flex flex-col hover:border-amber-500/20 transition-all duration-300 group">
+        <h3 className="text-[10px] font-black text-slate-500 mb-4 uppercase tracking-[0.2em] group-hover:text-amber-500/50 transition-colors">Distribución por Motivo</h3>
         <div className="h-[200px] w-full mt-auto">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={motivesData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={8} dataKey="value" animationBegin={0} animationDuration={1000}>
+              <Pie data={motivesData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={8} dataKey="value" animationBegin={0} animationDuration={1000} stroke="none">
                 {motivesData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontSize: '11px', fontWeight: 'bold' }} />
-              <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '9px', paddingTop: '10px', fontWeight: '600' }} />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#0a0c10', borderRadius: '16px', border: '1px solid rgba(251,191,36,0.1)', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.8)', fontSize: '11px', fontWeight: 'bold', color: '#f8fafc' }}
+              />
+              <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '9px', paddingTop: '10px', fontWeight: '700', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, AlertCircle, Info, CheckCircle2, Trash2 } from "lucide-react";
+import { X, AlertCircle, Info, CheckCircle2, Trash2, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 
 interface ModalProps {
@@ -40,24 +40,24 @@ export function Modal({
   }, [isOpen]);
 
   const icons = {
-    danger: <Trash2 className="w-6 h-6 text-red-600" />,
-    info: <Info className="w-6 h-6 text-blue-600" />,
-    success: <CheckCircle2 className="w-6 h-6 text-emerald-600" />,
-    warning: <AlertCircle className="w-6 h-6 text-amber-600" />,
+    danger: <Trash2 className="w-5 h-5 text-red-500" />,
+    info: <Info className="w-5 h-5 text-amber-500" />,
+    success: <CheckCircle2 className="w-5 h-5 text-emerald-500" />,
+    warning: <AlertCircle className="w-5 h-5 text-orange-500" />,
   };
-
+  
   const colors = {
-    danger: "bg-red-50",
-    info: "bg-blue-50",
-    success: "bg-emerald-50",
-    warning: "bg-amber-50",
+    danger: "bg-red-500/10 border border-red-500/20",
+    info: "bg-amber-500/10 border border-amber-500/20",
+    success: "bg-emerald-500/10 border border-emerald-500/20",
+    warning: "bg-orange-500/10 border border-orange-500/20",
   };
-
+  
   const buttonColors = {
-    danger: "bg-red-600 hover:bg-red-700 shadow-red-500/20",
-    info: "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20",
-    success: "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20",
-    warning: "bg-amber-600 hover:bg-amber-700 shadow-amber-500/20",
+    danger: "bg-red-600 hover:bg-red-500 shadow-red-500/20",
+    info: "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black",
+    success: "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20",
+    warning: "bg-orange-600 hover:bg-orange-500 shadow-orange-500/20",
   };
 
   return (
@@ -79,26 +79,26 @@ export function Modal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", duration: 0.4, bounce: 0.3 }}
-            className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100"
+            className="relative w-full max-w-md bg-[#111418] rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] overflow-hidden border border-white/5"
           >
             <div className="p-6">
               <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-2xl ${colors[type]}`}>
+                <div className={`p-3 rounded-2xl shrink-0 ${colors[type]}`}>
                   {icons[type]}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-slate-900 leading-tight">
+                  <h3 className="text-lg font-bold text-white tracking-tight">
                     {title}
                   </h3>
                   {description && (
-                    <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+                    <p className="mt-2 text-xs font-medium text-slate-500 leading-relaxed uppercase tracking-widest">
                       {description}
                     </p>
                   )}
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400 hover:text-slate-600"
+                  className="p-2.5 hover:bg-white/5 rounded-2xl transition-colors text-slate-500 hover:text-white"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -110,7 +110,7 @@ export function Modal({
                 <button
                   onClick={onClose}
                   disabled={loading}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-50"
+                  className="px-6 py-3 rounded-2xl border border-white/5 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 hover:bg-white/5 hover:text-white transition-all disabled:opacity-50"
                 >
                   Cancelar
                 </button>
@@ -118,14 +118,10 @@ export function Modal({
                   <button
                     onClick={onConfirm}
                     disabled={loading}
-                    className={`px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-lg active:scale-95 disabled:opacity-50 flex items-center gap-2 ${buttonColors[type]}`}
+                    className={`px-8 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 ${buttonColors[type]}`}
                   >
                     {loading && (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                        className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
-                      />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     )}
                     {confirmLabel || "Confirmar"}
                   </button>

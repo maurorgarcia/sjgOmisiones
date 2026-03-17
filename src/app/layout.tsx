@@ -36,7 +36,7 @@ export default function RootLayout({
     <html lang="es">
       <body
         suppressHydrationWarning
-        className={`${inter.variable} font-sans bg-slate-100 min-h-screen`}
+        className={`${inter.variable} font-sans min-h-screen`}
       >
         <Providers>
           <AppShell>{children}</AppShell>
