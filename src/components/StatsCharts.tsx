@@ -23,21 +23,21 @@ interface StatsChartsProps {
 }
 
 const DARK_COLORS = [
-  "#fbbf24", // amber-400
   "#f59e0b", // amber-500
+  "#fbbf24", // amber-400
   "#d97706", // amber-600
-  "#b45309", // amber-700
-  "#92400e", // amber-800
-  "#78350f", // amber-900
+  "#60a5fa", // blue-400
+  "#34d399", // emerald-400
+  "#a78bfa", // violet-400
 ];
 
 const LIGHT_COLORS = [
-  "#92400e", // amber-800
-  "#b45309", // amber-700
   "#d97706", // amber-600
+  "#b45309", // amber-700
   "#ea580c", // orange-600
-  "#c2410c", // orange-700
-  "#9a3412", // orange-800
+  "#2563eb", // blue-600
+  "#059669", // emerald-600
+  "#7c3aed", // violet-600
 ];
 
 export function StatsCharts({ data }: StatsChartsProps) {
