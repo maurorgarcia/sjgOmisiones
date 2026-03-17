@@ -1,6 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { supabase } from "@/lib/supabase";
+import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -22,8 +23,11 @@ export const authOptions: NextAuthOptions = {
 
         if (error || !user) return null;
 
-        // Check password (plain text just for this MVP, normally hashed)
-        if (user.password_hash !== credentials.password) return null;
+        const isValidPassword = user.password_hash.startsWith("$2")
+          ? await bcrypt.compare(credentials.password, user.password_hash)
+          : user.password_hash === credentials.password;
+
+        if (!isValidPassword) return null;
 
         return {
           id: user.id.toString(),
@@ -46,7 +50,7 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).role = token.role;
+        session.user.role = token.role;
       }
       return session;
     },

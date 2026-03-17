@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  if ((session.user as any).role !== "admin") {
+  if (session.user?.role !== "admin") {
     return NextResponse.json({ error: "Permisos insuficientes" }, { status: 403 });
   }
 

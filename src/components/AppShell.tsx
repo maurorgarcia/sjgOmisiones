@@ -37,7 +37,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Sidebar />
-      <main className="ml-64 min-h-screen p-8 overflow-hidden">
+      <main className="lg:ml-64 min-h-screen p-4 sm:p-6 lg:p-8 overflow-hidden pt-16 lg:pt-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}

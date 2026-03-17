@@ -12,11 +12,14 @@ import {
   Maximize2,
   Users2,
   ClipboardList,
+  Menu,
+  X,
 } from "lucide-react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "./ThemeToggle";
 import { useTheme } from "next-themes";
+import { useState, useEffect } from "react";
 
 const navItems = [
   { href: "/", label: "Gestión Administrativa", icon: LayoutDashboard, adminOnly: true },
@@ -39,20 +42,41 @@ export function Sidebar() {
   const { data: session } = useSession();
   const { theme } = useTheme();
   const isAdmin = session?.user?.role === "admin";
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
   if (!session) return null;
 
-  return (
-    <aside className="fixed top-0 left-0 h-full w-64 bg-sidebar text-foreground flex flex-col z-40 shadow-[4px_0_24px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.5)] border-r border-border transition-colors duration-300">
-      {/* Logo SJG */}
-      <div className="px-5 py-6 border-b border-border flex items-center justify-center">
+  const sidebarContent = (
+    <aside className="h-full w-64 bg-sidebar text-foreground flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.5)] border-r border-border transition-colors duration-300">
+      {/* Logo */}
+      <div className="px-5 py-6 border-b border-border flex items-center justify-between">
         <Image
           src="/logo-sjg.png"
           alt="SJG Montajes Industriales"
           width={180}
           height={60}
-          className={`w-full max-w-[180px] object-contain transition-all duration-300 ${theme === 'dark' ? 'invert brightness-0' : ''}`}
+          className={`w-full max-w-[150px] object-contain transition-all duration-300 ${theme === "dark" ? "invert brightness-0" : ""}`}
         />
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+          aria-label="Cerrar menú"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Navigation */}
@@ -61,21 +85,27 @@ export function Sidebar() {
           Gestión Errores
         </p>
         <div className="space-y-1 mb-6">
-          {navItems.map((item) => <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />)}
+          {navItems.map((item) => (
+            <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />
+          ))}
         </div>
 
         <p className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-80">
           Sección Faltantes
         </p>
         <div className="space-y-1 mb-6">
-          {faltantesItems.map((item) => <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />)}
+          {faltantesItems.map((item) => (
+            <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />
+          ))}
         </div>
 
         <p className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-80">
           Sistema
         </p>
         <div className="space-y-1">
-          {adminItems.map((item) => <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />)}
+          {adminItems.map((item) => (
+            <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />
+          ))}
         </div>
       </nav>
 
@@ -88,13 +118,15 @@ export function Sidebar() {
           className="flex flex-col items-center justify-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity"
           title="Desarrollado por GDAI"
         >
-          <span className="text-[9px] text-slate-500 tracking-widest uppercase font-black opacity-70">Desarrollado por</span>
-          <Image 
-            src="/logo-gdai.png" 
-            alt="GDAI" 
-            width={80} 
-            height={22} 
-            className={`h-[22px] w-auto object-contain transition-all duration-300 ${theme === 'dark' ? 'invert brightness-0' : ''}`} 
+          <span className="text-[9px] text-slate-500 tracking-widest uppercase font-black opacity-70">
+            Desarrollado por
+          </span>
+          <Image
+            src="/logo-gdai.png"
+            alt="GDAI"
+            width={80}
+            height={22}
+            className={`h-[22px] w-auto object-contain transition-all duration-300 ${theme === "dark" ? "invert brightness-0" : ""}`}
           />
         </a>
       </div>
@@ -125,9 +157,62 @@ export function Sidebar() {
       </div>
     </aside>
   );
+
+  return (
+    <>
+      {/* Mobile hamburger button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-card border border-border shadow-lg text-foreground hover:bg-accent-gold hover:text-black hover:border-transparent transition-all active:scale-95"
+        aria-label="Abrir menú"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
+      {/* Desktop sidebar */}
+      <div className="hidden lg:block fixed top-0 left-0 h-full w-64 z-40">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile overlay */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.div
+              key="sidebar"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 35 }}
+              className="fixed top-0 left-0 h-full w-64 z-50 lg:hidden"
+            >
+              {sidebarContent}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
 }
 
-function NavItem({ item, isAdmin, pathname }: { item: any; isAdmin: boolean; pathname: string }) {
+function NavItem({
+  item,
+  isAdmin,
+  pathname,
+}: {
+  item: { href: string; label: string; icon: React.ComponentType<{ className?: string }>; adminOnly: boolean };
+  isAdmin: boolean;
+  pathname: string;
+}) {
   const { href, label, icon: Icon, adminOnly } = item;
   if (adminOnly && !isAdmin) return null;
 
@@ -144,11 +229,17 @@ function NavItem({ item, isAdmin, pathname }: { item: any; isAdmin: boolean; pat
             : "text-slate-600 dark:text-slate-500 hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground"
         }`}
       >
-        <div className={`absolute inset-0 rounded-xl transition-opacity duration-500 opacity-0 group-hover/link:opacity-100 bg-gradient-to-r from-amber-500/10 to-transparent pointer-events-none`} />
-        <Icon className={`w-4 h-4 flex-shrink-0 relative z-10 ${active ? 'text-black' : 'text-slate-600 dark:text-slate-500 group-hover/link:text-accent-gold group-hover/link:scale-110 transition-all'}`} />
+        <div className="absolute inset-0 rounded-xl transition-opacity duration-500 opacity-0 group-hover/link:opacity-100 bg-gradient-to-r from-amber-500/10 to-transparent pointer-events-none" />
+        <Icon
+          className={`w-4 h-4 flex-shrink-0 relative z-10 ${
+            active
+              ? "text-black"
+              : "text-slate-600 dark:text-slate-500 group-hover/link:text-accent-gold group-hover/link:scale-110 transition-all"
+          }`}
+        />
         <span className="relative z-10 tracking-tight font-black uppercase text-[11px]">{label}</span>
         {active && (
-          <motion.div 
+          <motion.div
             layoutId="activeNav"
             className="absolute left-[-12px] w-1.5 h-6 bg-amber-400 rounded-r-full shadow-[0_0_12px_rgba(251,191,36,0.8)]"
             initial={false}
@@ -156,10 +247,16 @@ function NavItem({ item, isAdmin, pathname }: { item: any; isAdmin: boolean; pat
           />
         )}
       </Link>
-      
+
       {(isCarga || href === "/faltantes/carga") && isAdmin && (
         <button
-          onClick={() => window.open(href === "/carga" ? "/carga/mini" : "/faltantes/mini", href === "/carga" ? "MiniCarga" : "MiniFaltantes", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
+          onClick={() =>
+            window.open(
+              href === "/carga" ? "/carga/mini" : "/faltantes/mini",
+              href === "/carga" ? "MiniCarga" : "MiniFaltantes",
+              "width=450,height=800,menubar=no,toolbar=no,location=no,status=no"
+            )
+          }
           className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-md transition-all opacity-0 group-hover:opacity-100 flex items-center gap-1"
           title="Abrir en ventana flotante"
         >

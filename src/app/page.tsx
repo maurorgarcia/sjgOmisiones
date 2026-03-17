@@ -272,7 +272,7 @@ export default function Dashboard() {
     fetchErrores();
   }, [fetchErrores]);
 
-  // Realtime subscription
+  // Realtime subscription (INSERT, UPDATE, DELETE)
   useEffect(() => {
     const channel = supabase
       .channel("changes")
@@ -281,19 +281,32 @@ export default function Dashboard() {
         { event: "INSERT", schema: "public", table: "error_carga" },
         (payload) => {
           const newRow = payload.new as ErrorCarga;
-          
-          // Basic logic: only add if we are not filtering by a specific search query 
-          // that might exclude it, or if it matches current global status filters.
-          // For simplicity and "wow" factor, we add it if it matches the current 'filtro' (pendientes/todos)
           const isPendiente = !newRow.resuelto;
-          const matchesStatus = 
-            filtro === "todos" || 
-            (filtro === "pendientes" && isPendiente) || 
+          const matchesStatus =
+            filtro === "todos" ||
+            (filtro === "pendientes" && isPendiente) ||
             (filtro === "resueltos" && !isPendiente);
-
           if (matchesStatus) {
             setErrores((prev) => [newRow, ...prev]);
           }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "error_carga" },
+        (payload) => {
+          const updated = payload.new as ErrorCarga;
+          setErrores((prev) =>
+            prev.map((e) => (e.id === updated.id ? updated : e))
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "error_carga" },
+        (payload) => {
+          const deleted = payload.old as { id: number };
+          setErrores((prev) => prev.filter((e) => e.id !== deleted.id));
         }
       )
       .subscribe();
@@ -326,6 +339,7 @@ export default function Dashboard() {
       document.body.appendChild(a);
       a.click();
       a.remove();
+      window.URL.revokeObjectURL(url);
     } catch (err) {
       toast.error("Ocurrió un error al descargar el archivo.");
     }
