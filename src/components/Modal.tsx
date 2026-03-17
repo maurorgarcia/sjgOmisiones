@@ -70,7 +70,7 @@ export function Modal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-background/40 dark:bg-slate-900/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-900/20 dark:bg-slate-900/60 backdrop-blur-md"
           />
 
           {/* Modal Content */}
@@ -91,7 +91,7 @@ export function Modal({
                     {title}
                   </h3>
                   {description && (
-                    <p className="mt-2 text-[10px] font-bold text-slate-500 leading-relaxed uppercase tracking-widest">
+                    <p className="mt-2 text-[10px] font-bold text-slate-600 dark:text-slate-500 leading-relaxed uppercase tracking-widest">
                       {description}
                     </p>
                   )}
@@ -110,7 +110,7 @@ export function Modal({
                 <button
                   onClick={onClose}
                   disabled={loading}
-                  className="px-6 py-3 rounded-2xl border border-border text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-all disabled:opacity-50"
+                  className="px-6 py-3 rounded-2xl border border-border text-[11px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500 hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-all disabled:opacity-50"
                 >
                   Cancelar
                 </button>

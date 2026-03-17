@@ -32,12 +32,12 @@ const DARK_COLORS = [
 ];
 
 const LIGHT_COLORS = [
+  "#92400e", // amber-800
+  "#b45309", // amber-700
   "#d97706", // amber-600
-  "#f59e0b", // amber-500
-  "#fbbf24", // amber-400
-  "#fcd34d", // amber-300
-  "#fbbf24", // amber-400
-  "#d97706", // amber-600
+  "#ea580c", // orange-600
+  "#c2410c", // orange-700
+  "#9a3412", // orange-800
 ];
 
 export function StatsCharts({ data }: StatsChartsProps) {
@@ -101,17 +101,18 @@ export function StatsCharts({ data }: StatsChartsProps) {
   const tooltipStyle = {
     backgroundColor: isDark ? "#0a0c10" : "#ffffff",
     borderRadius: "16px",
-    border: `1px solid ${isDark ? "rgba(251,191,36,0.2)" : "rgba(217,119,6,0.2)"}`,
     boxShadow: isDark ? "0 20px 25px -5px rgb(0 0 0 / 0.8)" : "0 10px 15px -3px rgb(0 0 0 / 0.1)",
     fontSize: "11px",
-    fontWeight: "bold",
-    color: isDark ? "#f8fafc" : "#1e293b",
+    fontWeight: "800",
+    color: isDark ? "#f8fafc" : "#0f172a",
+    border: `1px solid ${isDark ? "rgba(251,191,36,0.3)" : "rgba(180,83,9,0.3)"}`,
+    textTransform: "uppercase" as const,
   };
 
   const axisStyle = {
-    fill: isDark ? "#475569" : "#64748b",
+    fill: isDark ? "#94a3b8" : "#475569",
     fontSize: 10,
-    fontWeight: isDark ? "normal" : "600",
+    fontWeight: isDark ? "500" : "700",
   };
 
   const gridStroke = isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.05)";
@@ -120,7 +121,7 @@ export function StatsCharts({ data }: StatsChartsProps) {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Daily Chart */}
       <div className="bg-card/40 p-5 rounded-3xl border border-border shadow-2xl flex flex-col hover:border-accent-gold/20 transition-all duration-300 group">
-        <h3 className="text-[10px] font-black text-slate-500 mb-4 uppercase tracking-[0.2em] group-hover:text-accent-gold/50 transition-colors">Omisiones últimos 14 días</h3>
+        <h3 className="text-[10px] font-black text-slate-600 dark:text-slate-500 mb-4 uppercase tracking-[0.2em] group-hover:text-accent-gold/50 transition-colors">Omisiones últimos 14 días</h3>
         <div className="h-[200px] w-full mt-auto">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={dailyData}>
@@ -147,7 +148,7 @@ export function StatsCharts({ data }: StatsChartsProps) {
 
       {/* Top OTs Chart */}
       <div className="bg-card/40 p-5 rounded-3xl border border-border shadow-2xl flex flex-col hover:border-accent-gold/20 transition-all duration-300 group">
-        <h3 className="text-[10px] font-black text-slate-500 mb-4 uppercase tracking-[0.2em] group-hover:text-accent-gold/50 transition-colors">Top 5 OTs con más omisiones</h3>
+        <h3 className="text-[10px] font-black text-slate-600 dark:text-slate-500 mb-4 uppercase tracking-[0.2em] group-hover:text-accent-gold/50 transition-colors">Top 5 OTs con más omisiones</h3>
         <div className="h-[200px] w-full mt-auto">
           {otData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
@@ -173,7 +174,7 @@ export function StatsCharts({ data }: StatsChartsProps) {
 
       {/* Motives Chart */}
       <div className="bg-card/40 p-5 rounded-3xl border border-border shadow-2xl flex flex-col hover:border-accent-gold/20 transition-all duration-300 group">
-        <h3 className="text-[10px] font-black text-slate-500 mb-4 uppercase tracking-[0.2em] group-hover:text-accent-gold/50 transition-colors">Distribución por Motivo</h3>
+        <h3 className="text-[10px] font-black text-slate-600 dark:text-slate-500 mb-4 uppercase tracking-[0.2em] group-hover:text-accent-gold/50 transition-colors">Distribución por Motivo</h3>
         <div className="h-[200px] w-full mt-auto">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>

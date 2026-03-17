@@ -196,7 +196,7 @@ export default function CargaFaltantePage() {
           <div className="w-1.5 h-10 bg-accent-gold rounded-full shadow-[0_0_20px_rgba(245,158,11,0.5)]" />
           <div>
             <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">Registrar Faltante</h1>
-            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">Anote personas que faltan en la planilla o sistema.</p>
+            <p className="text-slate-600 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">Anote personas que faltan en la planilla o sistema.</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -222,7 +222,7 @@ export default function CargaFaltantePage() {
           <div className="space-y-4">
             {/* Fecha */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
                 <Calendar className="w-3.5 h-3.5 group-hover:text-accent-gold transition-colors" /> Fecha
               </label>
               <input
@@ -235,7 +235,7 @@ export default function CargaFaltantePage() {
 
             {/* Búsqueda de Empleado */}
             <div className="space-y-2 relative" ref={searchRef}>
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
                 <Search className="w-3.5 h-3.5 group-hover:text-accent-gold transition-colors" /> Empleado
               </label>
               <div className="relative group/input">
@@ -274,7 +274,7 @@ export default function CargaFaltantePage() {
                       >
                         <div>
                           <p className="text-sm font-bold text-foreground group-hover:text-accent-gold transition-colors uppercase tracking-tight">{emp.nombre_apellido}</p>
-                          <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-0.5">Legajo: {emp.legajo}</p>
+                          <p className="text-[10px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-widest mt-0.5">Legajo: {emp.legajo}</p>
                         </div>
                         <div className="text-[10px] font-black text-accent-gold/70 uppercase bg-accent-gold/5 px-2.5 py-1.5 rounded-xl border border-accent-gold/10 group-hover:bg-accent-gold group-hover:text-black group-hover:border-transparent transition-all">
                           {emp.contrato}
@@ -287,7 +287,7 @@ export default function CargaFaltantePage() {
 
               {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && !searchLoading && (
                 <div className="absolute z-50 left-0 right-0 top-[110%] bg-card rounded-[2rem] border border-border shadow-2xl p-6 animate-in fade-in slide-in-from-top-4 duration-300">
-                  <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-3">Empleado no encontrado. Ingrese legajo manual:</p>
+                  <p className="text-[10px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-widest mb-3">Empleado no encontrado. Ingrese legajo manual:</p>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -338,7 +338,7 @@ export default function CargaFaltantePage() {
 
             {/* Contrato */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
                 <Hash className="w-3.5 h-3.5 group-hover:text-accent-gold transition-colors" /> Contrato
               </label>
               <select
@@ -353,7 +353,7 @@ export default function CargaFaltantePage() {
 
             {/* Sector */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
                 <Building2 className="w-3.5 h-3.5 group-hover:text-accent-gold transition-colors" /> Sector
               </label>
               <input
@@ -371,7 +371,7 @@ export default function CargaFaltantePage() {
 
             {/* Motivo */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
                 <FileText className="w-3.5 h-3.5 group-hover:text-accent-gold transition-colors" /> Motivo
               </label>
               <input
@@ -408,7 +408,7 @@ export default function CargaFaltantePage() {
         </form>
       </div>
       
-      <p className="mt-8 text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-500/60">
+      <p className="mt-8 text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500 opacity-60">
         SJG Montajes Industriales · Sistema de Gestión
       </p>
     </div>

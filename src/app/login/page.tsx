@@ -71,7 +71,7 @@ export default function LoginPage() {
             y fichadas
           </h1>
           
-          <p className="text-slate-500 dark:text-slate-400 text-lg lg:text-xl max-w-lg mb-10 leading-relaxed font-medium">
+          <p className="text-slate-600 dark:text-slate-400 text-lg lg:text-xl max-w-lg mb-10 leading-relaxed font-medium">
             Sistema inteligente para el control y resolución eficiente de omisiones administrativas.
           </p>
 
@@ -93,7 +93,7 @@ export default function LoginPage() {
                 </div>
                 <div>
                   <h3 className="text-foreground font-bold text-base">{item.text}</h3>
-                  <p className="text-slate-500 text-sm">{item.desc}</p>
+                  <p className="text-slate-600 dark:text-slate-500 text-sm">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -106,7 +106,7 @@ export default function LoginPage() {
           transition={{ delay: 1 }}
           className="relative z-10 flex items-center gap-4 border-t border-border pt-8"
         >
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">SJG Montajes Industriales · {new Date().getFullYear()}</span>
+          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-500 uppercase tracking-[0.3em]">SJG Montajes Industriales · {new Date().getFullYear()}</span>
         </motion.div>
       </div>
 
@@ -132,7 +132,7 @@ export default function LoginPage() {
             {/* Header */}
             <div className="px-8 lg:px-12 pt-10 lg:pt-14 pb-8">
               <h2 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight mb-2">Ingresar</h2>
-              <p className="text-slate-500 text-sm font-medium">Inicie sesión para acceder al panel de control.</p>
+               <p className="text-slate-600 dark:text-slate-500 text-sm font-medium">Inicie sesión para acceder al panel de control.</p>
             </div>
 
             <div className="px-8 lg:px-12 pb-10 lg:pb-14">
@@ -152,7 +152,7 @@ export default function LoginPage() {
                 </AnimatePresence>
 
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest ml-1">Usuario</label>
+                   <label className="block text-[10px] font-extrabold text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1">Usuario</label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-accent-gold">
                       <User className="w-5 h-5 text-slate-400 dark:text-slate-600" />
@@ -168,7 +168,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest ml-1">Contraseña</label>
+                   <label className="block text-[10px] font-extrabold text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1">Contraseña</label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-accent-gold">
                       <Lock className="w-5 h-5 text-slate-400 dark:text-slate-600" />
@@ -210,7 +210,7 @@ export default function LoginPage() {
 
           <div className="mt-12 flex flex-col items-center gap-4 md:opacity-50">
              <div className="flex items-center gap-2 border-t border-border pt-6 group">
-                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Powered by</span>
+                 <span className="text-[9px] font-bold text-slate-600 dark:text-slate-500 uppercase tracking-tighter">Powered by</span>
                 <Image 
                   src="/logo-gdai.png" 
                   alt="GDAI" 

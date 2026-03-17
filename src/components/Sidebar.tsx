@@ -57,21 +57,21 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-70">
+        <p className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-80">
           Gestión Errores
         </p>
         <div className="space-y-1 mb-6">
           {navItems.map((item) => <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />)}
         </div>
 
-        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-70">
+        <p className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-80">
           Sección Faltantes
         </p>
         <div className="space-y-1 mb-6">
           {faltantesItems.map((item) => <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />)}
         </div>
 
-        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-70">
+        <p className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-80">
           Sistema
         </p>
         <div className="space-y-1">
@@ -141,11 +141,11 @@ function NavItem({ item, isAdmin, pathname }: { item: any; isAdmin: boolean; pat
         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 relative group/link ${
           active
             ? "bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]"
-            : "text-slate-500 hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground"
+            : "text-slate-600 dark:text-slate-500 hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground"
         }`}
       >
         <div className={`absolute inset-0 rounded-xl transition-opacity duration-500 opacity-0 group-hover/link:opacity-100 bg-gradient-to-r from-amber-500/10 to-transparent pointer-events-none`} />
-        <Icon className={`w-4 h-4 flex-shrink-0 relative z-10 ${active ? 'text-black' : 'text-slate-500 group-hover/link:text-accent-gold group-hover/link:scale-110 transition-all'}`} />
+        <Icon className={`w-4 h-4 flex-shrink-0 relative z-10 ${active ? 'text-black' : 'text-slate-600 dark:text-slate-500 group-hover/link:text-accent-gold group-hover/link:scale-110 transition-all'}`} />
         <span className="relative z-10 tracking-tight font-black uppercase text-[11px]">{label}</span>
         {active && (
           <motion.div 

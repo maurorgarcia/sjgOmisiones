@@ -24,7 +24,7 @@ function HourInputRow({ label, val, setVal, mods, setMods }: { label: string, va
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-card/40 p-3 rounded-xl border border-border">
       <div className="flex items-center gap-3 w-full sm:w-1/3">
-        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest w-24">{label}</label>
+        <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest w-24">{label}</label>
         <input 
           type="number" step="0.5" min="0" 
           value={val} onChange={(e) => setVal(e.target.value)} 
@@ -34,7 +34,7 @@ function HourInputRow({ label, val, setVal, mods, setMods }: { label: string, va
       </div>
       <div className="flex items-center gap-4 w-full sm:w-2/3 mt-2 sm:mt-0 pt-2 sm:pt-0 sm:border-l sm:pl-4 border-border">
         {(["insa", "polu", "noct"] as const).map(m => (
-          <label key={m} className="flex items-center gap-1.5 text-[9px] font-black text-slate-500 cursor-pointer uppercase hover:text-accent-gold transition">
+          <label key={m} className="flex items-center gap-1.5 text-[9px] font-black text-slate-600 dark:text-slate-500 cursor-pointer uppercase hover:text-accent-gold transition">
             <input 
               type="checkbox" 
               checked={mods[m]} 
@@ -304,7 +304,7 @@ export default function CargaPage() {
            <div className="w-1.5 h-8 bg-accent-gold rounded-full shadow-[0_0_12px_rgba(245,158,11,0.5)]" />
            <div>
             <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">Cargar Registro</h1>
-            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">Gestión de Omisiones y Errores SJG</p>
+            <p className="text-slate-600 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">Gestión de Omisiones y Errores SJG</p>
           </div>
         </div>
         <button
@@ -322,7 +322,7 @@ export default function CargaPage() {
 
           {/* Employee search */}
           <div ref={searchRef} className="relative">
-            <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
+            <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-600 dark:text-slate-500 ml-1">
               Empleado <span className="text-slate-600 font-medium">(nombre o legajo)</span>
               <span className="text-accent-gold ml-1 font-bold">*</span>
             </label>
@@ -355,7 +355,7 @@ export default function CargaPage() {
                   <button key={emp.legajo} type="button" onClick={() => selectEmpleado(emp)}
                     className="w-full text-left px-5 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-b border-border last:border-0 group">
                     <div className="font-bold text-foreground text-sm group-hover:text-accent-gold transition-colors">{emp.nombre_apellido}</div>
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Leg: {emp.legajo} · {emp.contrato}{emp.categoria ? ` · ${emp.categoria}` : ""}</div>
+                    <div className="text-[10px] font-bold text-slate-600 dark:text-slate-500 uppercase tracking-widest mt-1">Leg: {emp.legajo} · {emp.contrato}{emp.categoria ? ` · ${emp.categoria}` : ""}</div>
                   </button>
                 ))}
               </div>
@@ -363,7 +363,7 @@ export default function CargaPage() {
 
             {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && !searchLoading && (
               <div className="absolute z-50 w-full mt-2 bg-card border border-border rounded-[2rem] shadow-2xl p-6 animate-in fade-in slide-in-from-top-4 duration-300">
-                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-3">Empleado no encontrado. ¿Desea agregarlo manualmente?</p>
+                <p className="text-[10px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-widest mb-3">Empleado no encontrado. ¿Desea agregarlo manualmente?</p>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -409,7 +409,7 @@ export default function CargaPage() {
           {/* Contrato + Motivo */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-600 dark:text-slate-500 ml-1">
                 Fecha del Error <span className="text-accent-gold ml-1 font-bold">*</span>
               </label>
               <input
@@ -427,7 +427,7 @@ export default function CargaPage() {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-600 dark:text-slate-500 ml-1">
                 Contrato <span className="text-accent-gold ml-1 font-bold">*</span>
               </label>
               <select
@@ -443,7 +443,7 @@ export default function CargaPage() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-600 dark:text-slate-500 ml-1">
                 Motivo del Error <span className="text-accent-gold ml-1 font-bold">*</span>
               </label>
               <select
@@ -462,7 +462,7 @@ export default function CargaPage() {
           {/* Sector + OT */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-600 dark:text-slate-500 ml-1">
                 Sector / Área <span className="text-accent-gold ml-1 font-bold">*</span>
               </label>
               <input
@@ -482,7 +482,7 @@ export default function CargaPage() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-600 dark:text-slate-500 ml-1">
                 Número de OT
                 {motivo && motivo !== "OT Inexistente" && <span className="text-accent-gold ml-1 font-bold">*</span>}
                 <span className="text-slate-400 font-normal ml-1">(10 dígitos)</span>
@@ -503,12 +503,12 @@ export default function CargaPage() {
 
           {/* Horario time pickers */}
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
+            <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-600 dark:text-slate-500 ml-1">
               Horario de Fichaje <span className="text-accent-gold ml-1 font-bold">*</span>
             </label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest ml-1">Entrada</label>
+                <label className="block text-[10px] font-black text-slate-600 dark:text-slate-500 mb-1 uppercase tracking-widest ml-1">Entrada</label>
                 <input
                   type="time"
                   value={horarioDesde}
@@ -518,7 +518,7 @@ export default function CargaPage() {
                 {errors.horarioDesde && <p className="text-red-500 text-xs mt-1 font-bold">{errors.horarioDesde}</p>}
               </div>
               <div>
-                <label className="block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest ml-1">Salida</label>
+                <label className="block text-[10px] font-black text-slate-600 dark:text-slate-500 mb-1 uppercase tracking-widest ml-1">Salida</label>
                 <input
                   type="time"
                   value={horarioHasta}
@@ -533,8 +533,8 @@ export default function CargaPage() {
           {/* Hours details (New requirement) */}
           <div className="space-y-4 pt-4 border-t border-border">
             <div>
-              <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Detalle de Horas Trabajadas <span className="text-slate-400 font-normal ml-1">(Opcional)</span></h3>
-              <p className="text-[9px] text-slate-500 mt-0.5 font-bold uppercase tracking-wider ml-1">Indique la cantidad de horas y defina si tienen modificadores adicionales.</p>
+              <h3 className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1">Detalle de Horas Trabajadas <span className="text-slate-400 font-normal ml-1">(Opcional)</span></h3>
+              <p className="text-[9px] text-slate-600 dark:text-slate-500 mt-0.5 font-bold uppercase tracking-wider ml-1">Indique la cantidad de horas y defina si tienen modificadores adicionales.</p>
             </div>
             
             <div className="space-y-3">
@@ -546,7 +546,7 @@ export default function CargaPage() {
 
           {/* Notas */}
           <div className="pt-2 border-t border-border">
-            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 ml-1">Notas adicionales</label>
+            <label className="block text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] mb-2 ml-1">Notas adicionales</label>
             <textarea
               value={notas}
               onChange={(e) => setNotas(e.target.value)}

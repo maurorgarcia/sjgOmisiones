@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   ExternalLink,
@@ -23,13 +23,14 @@ import { es } from "date-fns/locale";
 
 import { toast } from "sonner";
 import { ErrorCarga, MOTIVO_COLORS, PAGE_SIZE } from "@/types";
-import { StatsCharts } from "@/components/StatsCharts";
+import { StatsCharts as StatsChartsBase } from "@/components/StatsCharts";
+const StatsCharts = memo(StatsChartsBase);
 import { Skeleton, TableSkeleton } from "@/components/Skeleton";
 
 function getMotivoBadge(motivo: string) {
-  const classes = MOTIVO_COLORS[motivo] ?? "bg-slate-900/50 text-slate-400 border-white/5";
+  const classes = MOTIVO_COLORS[motivo] ?? "bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20";
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${classes} shadow-sm`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-widest ${classes} shadow-sm`}>
       {motivo}
     </span>
   );
@@ -62,27 +63,42 @@ export default function ReportePage() {
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
-  const toggleNameHighlight = (name: string) => {
-    const newChecked = new Set(checkedNames);
-    if (newChecked.has(name)) newChecked.delete(name);
-    else newChecked.add(name);
-    setCheckedNames(newChecked);
-    sessionStorage.setItem("sjg_checked_names", JSON.stringify(Array.from(newChecked)));
-  };
+  // Búsqueda en tabla (client-side) - Moved up to resolve dependency
+  const filteredErrores = useMemo(() => {
+    if (!searchQuery.trim()) return errores;
+    const q = searchQuery.trim().toLowerCase();
+    return errores.filter((e) =>
+      e.nombre_apellido.toLowerCase().includes(q) ||
+      e.legajo.includes(searchQuery.trim()) ||
+      (e.ot && e.ot.includes(searchQuery.trim()))
+    );
+  }, [errores, searchQuery]);
 
-  const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
+  const toggleNameHighlight = useCallback((name: string) => {
+    setCheckedNames(prev => {
+      const newChecked = new Set(prev);
+      if (newChecked.has(name)) newChecked.delete(name);
+      else newChecked.add(name);
+      sessionStorage.setItem("sjg_checked_names", JSON.stringify(Array.from(newChecked)));
+      return newChecked;
+    });
+  }, []);
+
+  const handleSort = useCallback((key: string) => {
+    setSortConfig(prev => {
+      let direction: 'asc' | 'desc' = 'asc';
+      if (prev && prev.key === key && prev.direction === 'asc') {
+        direction = 'desc';
+      }
+      return { key, direction };
+    });
+  }, []);
 
   useEffect(() => {
     fetchErrores();
   }, [filtro, filtroMotivo, filtroSector, fechaDesde, fechaHasta, sortConfig]);
 
-  function buildQuery() {
+  const buildQuery = useCallback(() => {
     let query = supabase
       .from("error_carga")
       .select("*");
@@ -108,9 +124,9 @@ export default function ReportePage() {
     if (filtroMotivo !== "todos") query = query.eq("motivo_error", filtroMotivo);
     if (filtroSector.trim()) query = query.ilike("sector", `%${filtroSector.trim()}%`);
     return query;
-  }
+  }, [filtro, filtroMotivo, filtroSector, fechaDesde, fechaHasta, sortConfig]);
 
-  const fetchErrores = async () => {
+  const fetchErrores = useCallback(async () => {
     setLoading(true);
     const query = buildQuery().range(0, PAGE_SIZE - 1);
     const { data, error } = await query;
@@ -120,9 +136,9 @@ export default function ReportePage() {
     }
     if (error) console.error(error);
     setLoading(false);
-  };
+  }, [buildQuery]);
 
-  const loadMore = async () => {
+  const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
     const from = errores.length;
@@ -134,7 +150,7 @@ export default function ReportePage() {
     }
     if (error) console.error(error);
     setLoadingMore(false);
-  };
+  }, [loadingMore, hasMore, errores.length, buildQuery]);
 
   // Realtime subscription
   useEffect(() => {
@@ -164,18 +180,8 @@ export default function ReportePage() {
     };
   }, [filtro]);
 
-  const filteredErrores = searchQuery.trim()
-    ? errores.filter((e) => {
-      const q = searchQuery.trim().toLowerCase();
-      return (
-        e.nombre_apellido.toLowerCase().includes(q) ||
-        e.legajo.includes(searchQuery.trim()) ||
-        (e.ot && e.ot.includes(searchQuery.trim()))
-      );
-    })
-    : errores;
 
-  const handleDownload = async () => {
+  const handleDownload = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         filter: filtro,
@@ -202,18 +208,23 @@ export default function ReportePage() {
     } catch {
       toast.error("Ocurrió un error al descargar el archivo.");
     }
-  };
+  }, [filtro, filtroMotivo, fechaDesde, fechaHasta, filtroSector]);
 
-  const total = filteredErrores.length;
-  const pendientes = filteredErrores.filter((e) => !e.resuelto).length;
-  const resueltos = filteredErrores.filter((e) => e.resuelto).length;
-  const pct = total > 0 ? Math.round((resueltos / total) * 100) : 0;
+  // KPI stats (memoized)
+  const stats = useMemo(() => {
+    const total = filteredErrores.length;
+    const pendientes = filteredErrores.filter((e) => !e.resuelto).length;
+    const resueltos = total - pendientes;
+    const pct = total > 0 ? Math.round((resueltos / total) * 100) : 0;
+    return { total, pendientes, resueltos, pct };
+  }, [filteredErrores]);
 
-  const dateLabel = fechaDesde
-    ? fechaHasta
+  const dateLabel = useMemo(() => {
+    if (!fechaDesde) return "Todos los registros";
+    return fechaHasta
       ? `${format(new Date(fechaDesde + "T12:00:00"), "d/M/yyyy", { locale: es })} – ${format(new Date(fechaHasta + "T12:00:00"), "d/M/yyyy", { locale: es })}`
-      : format(new Date(fechaDesde + "T12:00:00"), "EEEE d 'de' MMMM", { locale: es })
-    : "Todos los registros";
+      : format(new Date(fechaDesde + "T12:00:00"), "EEEE d 'de' MMMM", { locale: es });
+  }, [fechaDesde, fechaHasta]);
 
   return (
     <div className="space-y-6 max-w-7xl">
@@ -243,7 +254,7 @@ export default function ReportePage() {
             </div>
             <div>
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total</p>
-              <p className="text-2xl font-black text-foreground">{total}</p>
+              <p className="text-2xl font-black text-foreground">{stats.total}</p>
             </div>
           </div>
         </div>
@@ -254,7 +265,7 @@ export default function ReportePage() {
             </div>
             <div>
               <p className="text-[10px] font-black text-accent-gold uppercase tracking-widest">Pendientes</p>
-              <p className="text-2xl font-black text-foreground">{pendientes}</p>
+              <p className="text-2xl font-black text-foreground">{stats.pendientes}</p>
             </div>
           </div>
         </div>
@@ -265,7 +276,7 @@ export default function ReportePage() {
             </div>
             <div>
               <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Resueltos</p>
-              <p className="text-2xl font-black text-foreground">{resueltos}</p>
+              <p className="text-2xl font-black text-foreground">{stats.resueltos}</p>
             </div>
           </div>
         </div>
@@ -276,7 +287,7 @@ export default function ReportePage() {
             </div>
             <div>
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Resolución</p>
-              <p className="text-2xl font-black text-foreground">{pct}%</p>
+              <p className="text-2xl font-black text-foreground">{stats.pct}%</p>
             </div>
           </div>
         </div>
@@ -302,7 +313,7 @@ export default function ReportePage() {
               className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap active:scale-95 ${
                 filtro === f
                   ? "bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black shadow-lg"
-                  : "text-slate-500 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                  : "text-slate-600 dark:text-slate-500 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
               {f}
@@ -314,7 +325,7 @@ export default function ReportePage() {
           <select
             value={filtroMotivo}
             onChange={(e) => setFiltroMotivo(e.target.value)}
-            className="px-4 py-2 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest text-slate-500 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card cursor-pointer shadow-inner appearance-none"
+            className="px-4 py-2 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-500 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card cursor-pointer shadow-inner appearance-none"
           >
             <option value="todos" className="bg-card font-black uppercase">Todos los motivos</option>
             {Object.keys(MOTIVO_COLORS).map((m) => (
@@ -323,7 +334,7 @@ export default function ReportePage() {
           </select>
 
           <div className="relative flex-grow sm:flex-grow-0 min-w-[140px]">
-            <Building2 className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Building2 className="w-3.5 h-3.5 text-slate-600 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={filtroSector}
@@ -334,7 +345,7 @@ export default function ReportePage() {
           </div>
 
           <div className="relative flex-grow sm:flex-grow-0">
-            <Calendar className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Calendar className="w-3.5 h-3.5 text-slate-600 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="date"
               value={fechaDesde}
@@ -347,7 +358,7 @@ export default function ReportePage() {
             />
           </div>
           <div className="flex items-center gap-1.5 flex-grow sm:flex-grow-0">
-            <span className="text-xs text-slate-500 hidden sm:inline">a</span>
+            <span className="text-xs text-slate-600 dark:text-slate-500 hidden sm:inline">a</span>
             <input
               type="date"
               value={fechaHasta}
@@ -376,7 +387,7 @@ export default function ReportePage() {
 
       {!loading && errores.length > 0 && (
         <div className="flex items-center gap-2">
-          <Search className="w-4 h-4 text-slate-500" />
+          <Search className="w-4 h-4 text-slate-600 dark:text-slate-500" />
           <input
             type="text"
             value={searchQuery}
@@ -385,7 +396,7 @@ export default function ReportePage() {
             className="flex-1 max-w-xs border border-border rounded-xl pl-4 py-2 text-xs font-medium text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 dark:placeholder:opacity-50 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner"
           />
           {searchQuery.trim() && (
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+            <span className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest">
               Mostrando {filteredErrores.length} de {errores.length}
             </span>
           )}
@@ -395,7 +406,7 @@ export default function ReportePage() {
       <div className="bg-card/40 rounded-2xl border border-border shadow-2xl overflow-hidden backdrop-blur-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-[10px] text-slate-500 uppercase bg-background/60 border-b border-border tracking-[0.2em] font-black">
+            <thead className="text-[10px] text-slate-600 dark:text-slate-500 uppercase bg-background/60 border-b border-border tracking-[0.2em] font-black">
               <tr>
                 <th className="px-5 py-3.5">
                   <button onClick={() => handleSort('resuelto')} className="flex items-center gap-1 hover:text-accent-gold transition-colors">
@@ -421,7 +432,7 @@ export default function ReportePage() {
                     {sortConfig?.key === 'motivo_error' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
-                <th className="px-5 py-3.5 font-black uppercase tracking-widest text-slate-500">OT / Sector</th>
+                <th className="px-5 py-3.5 font-black uppercase tracking-widest text-slate-600 dark:text-slate-500">OT / Sector</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

@@ -8,7 +8,7 @@ interface SkeletonProps {
 }
 
 export function Skeleton({ className = "", variant = "rectangular" }: SkeletonProps) {
-  const baseClasses = "bg-slate-200 dark:bg-white/5 relative overflow-hidden backdrop-blur-sm border border-slate-300 dark:border-white/5";
+  const baseClasses = "bg-slate-300/40 dark:bg-white/5 relative overflow-hidden backdrop-blur-sm border border-slate-400/20 dark:border-white/5";
   
   const variantClasses = {
     text: "h-4 w-full rounded-md",

@@ -20,7 +20,7 @@ function HourInputRow({ label, val, setVal, mods, setMods }: { label: string, va
   return (
     <div className="bg-background/40 p-3 rounded-2xl border border-border space-y-2 shadow-inner group transition-all hover:border-accent-gold/20">
       <div className="flex items-center justify-between">
-        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">{label}</label>
+        <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1">{label}</label>
         <input 
           type="number" step="0.5" min="0" 
           value={val} onChange={(e) => setVal(e.target.value)} 
@@ -30,7 +30,7 @@ function HourInputRow({ label, val, setVal, mods, setMods }: { label: string, va
       </div>
       <div className="flex items-center justify-around pt-2 border-t border-border">
         {(["insa", "polu", "noct"] as const).map(m => (
-          <label key={m} className={`flex items-center gap-1.5 text-[9px] font-black cursor-pointer uppercase transition-all tracking-tighter ${mods[m] ? 'text-accent-gold' : 'text-slate-500 hover:text-slate-400'}`}>
+          <label key={m} className={`flex items-center gap-1.5 text-[9px] font-black cursor-pointer uppercase transition-all tracking-tighter ${mods[m] ? 'text-accent-gold' : 'text-slate-600 dark:text-slate-500 hover:text-slate-400'}`}>
             <div className="relative flex items-center">
               <input 
                 type="checkbox" 
@@ -293,7 +293,7 @@ export default function MiniCargaPage() {
           <div className="w-1 h-6 bg-accent-gold rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
           <div>
             <h1 className="text-xs font-black text-foreground tracking-tight uppercase">Mini Omisiones</h1>
-            <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.15em] mt-0.5">SJG Gestión</p>
+            <p className="text-[9px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-[0.15em] mt-0.5">SJG Gestión</p>
           </div>
         </div>
         <button 
@@ -310,7 +310,7 @@ export default function MiniCargaPage() {
           
           {/* Empleado */}
           <div ref={searchRef} className="space-y-1.5">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+            <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
               <Search className="w-3 h-3 group-hover:text-accent-gold transition-colors" /> Empleado*
             </label>
             <div className="relative group/input">
@@ -383,12 +383,12 @@ export default function MiniCargaPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Fecha*</label>
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Fecha*</label>
               <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)}
                 className="w-full bg-background border border-border rounded-2xl px-3 py-3 text-xs font-medium text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Contrato*</label>
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Contrato*</label>
               <select value={contrato} onChange={(e) => setContrato(e.target.value)}
                 className={`w-full bg-background border rounded-2xl px-3 py-3 text-xs font-black uppercase tracking-widest text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all appearance-none cursor-pointer ${errors.contrato ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
               >
@@ -399,7 +399,7 @@ export default function MiniCargaPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Motivo*</label>
+            <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Motivo*</label>
             <select value={motivo} onChange={(e) => setMotivo(e.target.value)}
               className={`w-full bg-background border rounded-2xl px-3 py-3 text-xs font-black uppercase tracking-widest text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all appearance-none cursor-pointer ${errors.motivo ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
             >
@@ -410,14 +410,14 @@ export default function MiniCargaPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Sector*</label>
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Sector*</label>
               <input type="text" value={sector} onChange={(e) => setSector(e.target.value)}
                 className={`w-full bg-background border rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest  text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner ${errors.sector ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
                 placeholder="Ej: Planta A" list="mini-sectores" />
               <datalist id="mini-sectores"><option value="Planta A" /><option value="Planta B" /><option value="Mantenimiento" /></datalist>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">OT</label>
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">OT</label>
               <input type="text" value={ot} onChange={(e) => setOt(e.target.value.replace(/\D/g, "").slice(0, 10))}
                 disabled={motivo === "OT Inexistente"}
                 className={`w-full bg-background border rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner disabled:opacity-20 ${errors.ot ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
@@ -426,7 +426,7 @@ export default function MiniCargaPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Horario*</label>
+            <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Horario*</label>
             <div className="flex items-center gap-3">
               <input type="time" value={horarioDesde} onChange={(e) => setHorarioDesde(e.target.value)}
                 className="flex-1 bg-background border border-border rounded-2xl px-4 py-3 text-xs font-medium text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner [color-scheme:light] dark:[color-scheme:dark]" />
@@ -437,7 +437,7 @@ export default function MiniCargaPage() {
           </div>
 
           <div className="space-y-3 pt-4 border-t border-border">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] text-center mb-1">Horas y Detalles</p>
+            <p className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] text-center mb-1">Horas y Detalles</p>
             <div className="grid grid-cols-1 gap-3">
               <HourInputRow label="Normales" val={horasNormales} setVal={setHorasNormales} mods={hsNormalesMods} setMods={setHsNormalesMods} />
               <div className="grid grid-cols-2 gap-3">
@@ -463,7 +463,7 @@ export default function MiniCargaPage() {
         </form>
       </div>
       
-      <p className="text-center text-[9px] text-slate-500 mt-6 font-black uppercase tracking-[0.3em] opacity-40">
+      <p className="text-center text-[9px] text-slate-600 dark:text-slate-500 mt-6 font-black uppercase tracking-[0.3em] opacity-80">
         SJG Management Hub · v2.0
       </p>
     </div>

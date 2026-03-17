@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   Search, 
@@ -47,13 +47,27 @@ export default function FaltantesDashboard() {
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
-  const toggleNameHighlight = (name: string) => {
-    const newChecked = new Set(checkedNames);
-    if (newChecked.has(name)) newChecked.delete(name);
-    else newChecked.add(name);
-    setCheckedNames(newChecked);
-    sessionStorage.setItem("sjg_checked_names", JSON.stringify(Array.from(newChecked)));
-  };
+  // Búsqueda en tabla (client-side) - Moved up to resolve dependency
+  const filtered = useMemo(() => {
+    if (!searchQuery.trim()) return data;
+    const q = searchQuery.toLowerCase();
+    return data.filter(f => 
+      f.nombre_apellido.toLowerCase().includes(q) ||
+      f.contrato.toLowerCase().includes(q) ||
+      (f.sector && f.sector.toLowerCase().includes(q)) ||
+      (f.motivo && f.motivo.toLowerCase().includes(q))
+    );
+  }, [data, searchQuery]);
+
+  const toggleNameHighlight = useCallback((name: string) => {
+    setCheckedNames(prev => {
+      const newChecked = new Set(prev);
+      if (newChecked.has(name)) newChecked.delete(name);
+      else newChecked.add(name);
+      sessionStorage.setItem("sjg_checked_names", JSON.stringify(Array.from(newChecked)));
+      return newChecked;
+    });
+  }, []);
 
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -69,7 +83,7 @@ export default function FaltantesDashboard() {
     return () => { supabase.removeChannel(channel); };
   }, [sortConfig, fechaDesde, fechaHasta]);
 
-  const fetchFaltantes = async () => {
+  const fetchFaltantes = useCallback(async () => {
     setLoading(true);
     let query = supabase.from("faltantes").select("*");
     
@@ -100,17 +114,19 @@ export default function FaltantesDashboard() {
       toast.error("Error al cargar los datos. Verifique la conexión o si la tabla existe.");
     }
     setLoading(false);
-  };
+  }, [fechaDesde, fechaHasta, sortConfig]);
 
-  const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
+  const handleSort = useCallback((key: string) => {
+    setSortConfig(prev => {
+      let direction: 'asc' | 'desc' = 'asc';
+      if (prev && prev.key === key && prev.direction === 'asc') {
+        direction = 'desc';
+      }
+      return { key, direction };
+    });
+  }, []);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
     if (!confirm("¿Está seguro de eliminar este registro?")) return;
     setDeletingId(id);
     const { error } = await supabase.from("faltantes").delete().eq("id", id);
@@ -121,22 +137,13 @@ export default function FaltantesDashboard() {
       setData(prev => prev.filter(f => f.id !== id));
     }
     setDeletingId(null);
-  };
+  }, []);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setFechaDesde(new Date().toISOString().split("T")[0]);
     setFechaHasta("");
     setSearchQuery("");
-  };
-
-  const filtered = searchQuery.trim()
-    ? data.filter(f => 
-        f.nombre_apellido.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        f.contrato.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (f.sector && f.sector.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (f.motivo && f.motivo.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    : data;
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -145,7 +152,7 @@ export default function FaltantesDashboard() {
           <div className="w-1.5 h-8 bg-accent-gold rounded-full shadow-[0_0_12px_rgba(245,158,11,0.5)]" />
           <div>
             <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">Gestión de Faltantes</h1>
-            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">Control independiente de personal faltante en registros.</p>
+            <p className="text-slate-600 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">Control independiente de personal faltante en registros.</p>
           </div>
         </div>
         <Link
@@ -161,7 +168,7 @@ export default function FaltantesDashboard() {
       <div className="bg-card/40 p-6 rounded-[2.5rem] border border-border shadow-2xl space-y-4 backdrop-blur-xl">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
+            <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
               <Calendar className="w-3 h-3 group-hover:text-accent-gold transition-colors" /> Fecha Desde
             </label>
             <input
@@ -175,7 +182,7 @@ export default function FaltantesDashboard() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
+            <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
               <Calendar className="w-3 h-3 group-hover:text-accent-gold transition-colors" /> Fecha Hasta <span className="text-[8px] opacity-40 font-bold">(Opcional)</span>
             </label>
             <input
@@ -190,7 +197,7 @@ export default function FaltantesDashboard() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
+            <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
               <Search className="w-3 h-3 group-hover:text-accent-gold transition-colors" /> Buscar
             </label>
             <div className="relative group/input">
@@ -216,7 +223,7 @@ export default function FaltantesDashboard() {
       <div className="bg-card/40 rounded-[2rem] border border-border shadow-2xl overflow-hidden backdrop-blur-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-[10px] text-slate-500 uppercase bg-background/60 border-b border-border tracking-[0.2em] font-black">
+            <thead className="text-[10px] text-slate-600 dark:text-slate-500 uppercase bg-background/60 border-b border-border tracking-[0.2em] font-black">
               <tr>
                 <th className="px-6 py-4">
                   <button onClick={() => handleSort('fecha')} className="flex items-center gap-1.5 hover:text-accent-gold transition-colors">
@@ -240,9 +247,9 @@ export default function FaltantesDashboard() {
               {loading ? (
                 <tr>
                   <td colSpan={6} className="py-24 text-center">
-                    <div className="flex flex-col items-center gap-4 text-slate-500">
+                    <div className="flex flex-col items-center gap-4 text-slate-600 dark:text-slate-500">
                       <Loader2 className="w-8 h-8 animate-spin text-accent-gold" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Cargando base de faltantes...</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">Cargando registros...</span>
                     </div>
                   </td>
                 </tr>

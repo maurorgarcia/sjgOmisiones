@@ -87,7 +87,7 @@ export default function ImportarPage() {
           <div className="w-1.5 h-10 bg-accent-gold rounded-full shadow-[0_0_20px_rgba(245,158,11,0.5)]" />
           <div>
             <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">Base de Empleados</h1>
-            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">
+            <p className="text-slate-600 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">
               Subí tu archivo Excel o agregá personal manualmente.
             </p>
           </div>
@@ -130,14 +130,14 @@ export default function ImportarPage() {
 
         <form onSubmit={handleUpload} className="space-y-6">
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2">
+            <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2">
               Archivo Excel (.xlsx)
             </label>
             <div className="border-2 border-dashed border-border rounded-[2rem] p-10 text-center hover:border-accent-gold/30 transition-all bg-background group relative overflow-hidden">
               <div className="absolute inset-0 bg-accent-gold/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10">
                 <FileSpreadsheet className="w-10 h-10 text-slate-400 dark:text-slate-700 mx-auto mb-3 group-hover:text-accent-gold transition-colors group-hover:scale-110 duration-300" />
-                <p className="text-[11px] text-slate-500 font-black uppercase tracking-widest mb-4">Arrastrá o seleccioná el archivo</p>
+                <p className="text-[11px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-widest mb-4">Arrastrá o seleccioná el archivo</p>
                 <input
                   type="file"
                   name="archivo"
@@ -208,7 +208,7 @@ export default function ImportarPage() {
             <div className="w-2 h-2 bg-accent-gold rounded-full" />
             Carga Individual
           </h2>
-          <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">Registrá un solo empleado rápidamente.</p>
+          <p className="text-[10px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-widest mt-1">Registrá un solo empleado rápidamente.</p>
         </div>
 
         {singleSuccess && (
@@ -227,19 +227,19 @@ export default function ImportarPage() {
         <form onSubmit={handleSingleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nombre y Apellido</label>
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1">Nombre y Apellido</label>
               <input type="text" required value={singleData.nombre_apellido}
                 onChange={(e) => setSingleData({ ...singleData, nombre_apellido: e.target.value })}
                 className="w-full bg-background border border-border rounded-2xl px-5 py-4 text-xs font-medium text-foreground dark:placeholder:text-slate-700 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all shadow-inner" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Legajo SAP</label>
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1">Legajo SAP</label>
               <input type="text" required value={singleData.legajo}
                 onChange={(e) => setSingleData({ ...singleData, legajo: e.target.value })}
                 className="w-full bg-background border border-border rounded-2xl px-5 py-4 text-xs font-medium text-foreground dark:placeholder:text-slate-700 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all shadow-inner" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Contrato</label>
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1">Contrato</label>
               <select required value={singleData.contrato}
                 onChange={(e) => setSingleData({ ...singleData, contrato: e.target.value })}
                 className="w-full bg-background border border-border rounded-2xl px-5 py-4 text-xs font-black uppercase tracking-widest text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all appearance-none cursor-pointer" >
@@ -248,7 +248,7 @@ export default function ImportarPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Categoría <span className="opacity-40 tracking-normal capitalize">(Opcional)</span></label>
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1">Categoría <span className="opacity-40 tracking-normal capitalize">(Opcional)</span></label>
               <input type="text" value={singleData.categoria}
                 onChange={(e) => setSingleData({ ...singleData, categoria: e.target.value })}
                 className="w-full bg-background border border-border rounded-2xl px-5 py-4 text-xs font-medium text-foreground dark:placeholder:text-slate-700 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all shadow-inner" />

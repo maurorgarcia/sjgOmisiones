@@ -153,7 +153,7 @@ export default function MiniCargaFaltante() {
           <div className="w-1 h-6 bg-accent-gold rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
           <div>
             <h1 className="text-base font-black text-foreground tracking-tight uppercase">Mini Faltantes</h1>
-            <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.15em] mt-0.5">SJG Gestión</p>
+            <p className="text-[9px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-[0.15em] mt-0.5">SJG Gestión</p>
           </div>
         </div>
         <div className="p-2 rounded-xl bg-background border border-border shadow-inner">
@@ -164,7 +164,7 @@ export default function MiniCargaFaltante() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Fecha */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+          <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
             <Calendar className="w-3 h-3 group-hover:text-accent-gold transition-colors" /> Fecha
           </label>
           <input
@@ -180,7 +180,7 @@ export default function MiniCargaFaltante() {
 
         {/* Empleado */}
         <div className="space-y-1.5 relative" ref={searchRef}>
-          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+          <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
             <Search className="w-3 h-3 group-hover:text-accent-gold transition-colors" /> Empleado
           </label>
           <div className="relative group/input">
@@ -243,7 +243,7 @@ export default function MiniCargaFaltante() {
 
         {/* Contrato */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+          <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
             <Hash className="w-3 h-3 group-hover:text-accent-gold transition-colors" /> Contrato
           </label>
           <select
@@ -258,7 +258,7 @@ export default function MiniCargaFaltante() {
 
         {/* Sector */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+          <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
             <Building2 className="w-3 h-3 group-hover:text-accent-gold transition-colors" /> Sector
           </label>
           <input
@@ -276,7 +276,7 @@ export default function MiniCargaFaltante() {
 
         {/* Motivo */}
         <div className="space-y-1.5">
-          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+          <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
             <FileText className="w-3 h-3 group-hover:text-accent-gold transition-colors" /> Motivo
           </label>
           <input
@@ -303,7 +303,7 @@ export default function MiniCargaFaltante() {
       </form>
 
       <div className="mt-8 pt-4 border-t border-border flex flex-col items-center gap-2 opacity-30">
-        <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">SJG Montajes Industriales</p>
+        <p className="text-[8px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-500">SJG Montajes Industriales</p>
       </div>
     </div>
   );

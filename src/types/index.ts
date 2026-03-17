@@ -34,11 +34,11 @@ export const MOTIVOS = [
 ];
 
 export const MOTIVO_COLORS: Record<string, string> = {
-  "OT Inexistente": "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20",
-  "Saldo hrs insuficiente": "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
-  "Par de fichada incompleto": "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-  "Omisión": "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
-  "Otro": "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
+  "OT Inexistente": "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
+  "Saldo hrs insuficiente": "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
+  "Par de fichada incompleto": "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
+  "Omisión": "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20",
+  "Otro": "bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20",
 };
 
 export const CONTRATOS = ["6700302926", "6700248017"];
