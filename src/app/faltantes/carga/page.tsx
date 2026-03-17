@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { Save, Loader2, ArrowLeft, UserPlus, Calendar, Building2, FileText, Hash, Search, X } from "lucide-react";
+import { Save, Loader2, ArrowLeft, Calendar, Building2, FileText, Hash, Search, X, Maximize2, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { CONTRATOS, SECTORES_FALTANTES, MOTIVOS_FALTANTES } from "@/types";
 
@@ -20,7 +21,7 @@ export default function CargaFaltantePage() {
   // Autocomplete
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Empleado[]>([]);
-  const [selectedEmpleado, setSelectedEmpleado] = useState<Empleado | null>(null);
+  const [selectedEmpleados, setSelectedEmpleados] = useState<Empleado[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -54,12 +55,12 @@ export default function CargaFaltantePage() {
 
   const handleSearchChange = (val: string) => {
     setSearchQuery(val);
-    if (selectedEmpleado) setSelectedEmpleado(null);
     
     if (searchTimer.current) clearTimeout(searchTimer.current);
     
-    if (!val.trim()) {
+    if (!val.trim() || val.length < 2) {
       setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
 
@@ -69,7 +70,7 @@ export default function CargaFaltantePage() {
         .from("empleados")
         .select("nombre_apellido, legajo, contrato")
         .or(`nombre_apellido.ilike.%${val}%,legajo.ilike.%${val}%`)
-        .limit(10);
+        .limit(8);
       setSuggestions(data || []);
       setShowSuggestions(true);
       setSearchLoading(false);
@@ -77,22 +78,30 @@ export default function CargaFaltantePage() {
   };
 
   const selectEmpleado = (emp: Empleado) => {
-    setSelectedEmpleado(emp);
-    setSearchQuery(emp.nombre_apellido);
-    setContrato(emp.contrato);
+    if (selectedEmpleados.some(e => e.legajo === emp.legajo)) {
+      toast.error("Este empleado ya está en la lista.");
+      return;
+    }
+    setSelectedEmpleados([...selectedEmpleados, emp]);
+    setSearchQuery("");
+    if (!contrato) setContrato(emp.contrato);
     setSuggestions([]);
     setShowSuggestions(false);
     setErrors(e => ({ ...e, nombre: "" }));
+  };
+
+  const removeEmpleado = (legajo: string) => {
+    setSelectedEmpleados(prev => prev.filter(e => e.legajo !== legajo));
   };
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!fecha) newErrors.fecha = "Requerido";
     if (!contrato) newErrors.contrato = "Requerido";
-    if (!searchQuery.trim()) newErrors.nombre = "Requerido";
     
-    // Only error if BOTH are missing, if that's the intention, 
-    // but the user said "can be sector or motivo", implying they are individually optional.
+    const hasEmployees = selectedEmpleados.length > 0 || searchQuery.trim();
+    if (!hasEmployees) newErrors.nombre = "Debe seleccionar al menos un empleado.";
+    
     if (!sector.trim() && !motivo.trim()) {
       toast.error("Debe ingresar al menos un Sector o un Motivo.");
       return false;
@@ -108,33 +117,31 @@ export default function CargaFaltantePage() {
 
     setLoading(true);
     
-    // Adjust date to noon to avoid timezone shifts in DB
     const fechaISO = `${fecha}T12:00:00.000Z`;
+    const employeesToSave = selectedEmpleados.length > 0 
+      ? selectedEmpleados 
+      : [{ nombre_apellido: searchQuery.trim(), legajo: "" }];
 
-    const entryToSave = {
+    const entriesToSave = employeesToSave.map(emp => ({
       fecha: fechaISO,
       contrato,
-      nombre_apellido: searchQuery.trim(),
+      nombre_apellido: emp.nombre_apellido,
+      legajo: emp.legajo || null,
       sector: sector.trim() || null,
       motivo: motivo.trim() || null,
-    };
+    }));
 
-    const { error } = await supabase.from("faltantes").insert([entryToSave]);
+    const { error } = await supabase.from("faltantes").insert(entriesToSave);
 
     if (error) {
-      // Retry without contrato if column doesn't exist yet (parity with main carga)
       if (error.message.includes("contrato")) {
-        const { contrato: _c, ...withoutContrato } = entryToSave;
-        const { error: err2 } = await supabase.from("faltantes").insert([withoutContrato]);
+        const withoutContrato = entriesToSave.map(({ contrato: _c, ...rest }) => rest);
+        const { error: err2 } = await supabase.from("faltantes").insert(withoutContrato);
         if (err2) {
           toast.error("Error al guardar.");
           setLoading(false);
           return;
         }
-      } else if (error.message.includes("does not exist")) {
-        toast.error("Error: La tabla 'faltantes' no existe. Asegúrese de ejecutar el script SQL.");
-        setLoading(false);
-        return;
       } else {
         toast.error("Error al guardar: " + error.message);
         setLoading(false);
@@ -142,10 +149,10 @@ export default function CargaFaltantePage() {
       }
     }
 
-    toast.success("✅ Registro guardado correctamente.");
+    toast.success(`✅ ${entriesToSave.length} registros guardados correctamente.`);
     // Reset
     setSearchQuery("");
-    setSelectedEmpleado(null);
+    setSelectedEmpleados([]);
     setSector("");
     setMotivo("");
     setErrors({});
@@ -154,17 +161,26 @@ export default function CargaFaltantePage() {
 
   return (
     <div className="max-w-xl mx-auto">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Registrar Faltante</h1>
           <p className="text-slate-500 text-sm mt-1">Anote personas que faltan en la planilla o sistema.</p>
         </div>
-        <button 
-          onClick={() => router.back()}
-          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.open("/faltantes/mini", "MiniFaltantes", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-indigo-100 bg-indigo-50 text-indigo-600 text-xs font-bold hover:bg-indigo-100 transition-all active:scale-95"
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+            <span>VENTANA</span>
+          </button>
+          <button 
+            onClick={() => router.back()}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
@@ -184,7 +200,7 @@ export default function CargaFaltantePage() {
               />
             </div>
 
-            {/* Búsqueda de Empleado (nombre_apellido) */}
+            {/* Búsqueda de Empleado */}
             <div className="space-y-1.5 relative" ref={searchRef}>
               <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
                 <Search className="w-3.5 h-3.5" /> Empleado
@@ -201,11 +217,14 @@ export default function CargaFaltantePage() {
                 {searchQuery && (
                   <button
                     type="button"
-                    onClick={() => { setSearchQuery(""); setSelectedEmpleado(null); setSuggestions([]); }}
+                    onClick={() => { setSearchQuery(""); setSuggestions([]); }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
                   >
                     <X className="w-4 h-4" />
                   </button>
+                )}
+                {searchLoading && (
+                  <Loader2 className="absolute right-10 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin" />
                 )}
               </div>
 
@@ -232,6 +251,33 @@ export default function CargaFaltantePage() {
                   </div>
                 </div>
               )}
+
+              {/* Selected List */}
+              <AnimatePresence>
+                {selectedEmpleados.length > 0 && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100"
+                  >
+                    {selectedEmpleados.map((emp) => (
+                      <motion.div 
+                        key={emp.legajo}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-100 text-indigo-600 px-3 py-1.5 rounded-xl text-xs font-bold"
+                      >
+                        {emp.nombre_apellido}
+                        <button type="button" onClick={() => removeEmpleado(emp.legajo)} className="hover:text-red-500 p-0.5 transition-colors">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Contrato */}
@@ -260,7 +306,7 @@ export default function CargaFaltantePage() {
                 onChange={(e) => setSector(e.target.value)}
                 placeholder="Ej: Pañol/Logistica"
                 list="sectores-faltantes"
-                className={`w-full bg-slate-50 border rounded-2xl px-4 py-3.5 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all ${errors.sector ? "border-red-300" : "border-slate-200"}`}
+                className={`w-full bg-slate-50 border rounded-2xl px-4 py-3.5 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all border-slate-200`}
               />
               <datalist id="sectores-faltantes">
                 {SECTORES_FALTANTES.map(s => <option key={s} value={s} />)}
@@ -278,7 +324,7 @@ export default function CargaFaltantePage() {
                 onChange={(e) => setMotivo(e.target.value)}
                 placeholder="Ej: Falta cargar"
                 list="motivos-faltantes"
-                className={`w-full bg-slate-50 border rounded-2xl px-4 py-3.5 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all ${errors.motivo ? "border-red-300" : "border-slate-200"}`}
+                className={`w-full bg-slate-50 border rounded-2xl px-4 py-3.5 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all border-slate-200`}
               />
               <datalist id="motivos-faltantes">
                 {MOTIVOS_FALTANTES.map(m => <option key={m} value={m} />)}
@@ -294,12 +340,12 @@ export default function CargaFaltantePage() {
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Guardando...</span>
+                <span>Guardando {selectedEmpleados.length > 1 ? `(${selectedEmpleados.length})` : ""}...</span>
               </>
             ) : (
               <>
-                <span>Guardar Registro</span>
-                <Save className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                <span>Guardar {selectedEmpleados.length > 1 ? `(${selectedEmpleados.length}) Registros` : "Registro"}</span>
+                <CheckCircle2 className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity" />
               </>
             )}
           </button>

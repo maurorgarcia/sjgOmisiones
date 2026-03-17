@@ -147,9 +147,9 @@ function NavItem({ item, isAdmin, pathname }: { item: any; isAdmin: boolean; pat
         )}
       </Link>
       
-      {isCarga && isAdmin && (
+      {(isCarga || href === "/faltantes/carga") && isAdmin && (
         <button
-          onClick={() => window.open("/carga/mini", "MiniCarga", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
+          onClick={() => window.open(href === "/carga" ? "/carga/mini" : "/faltantes/mini", href === "/carga" ? "MiniCarga" : "MiniFaltantes", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
           className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-md transition-all opacity-0 group-hover:opacity-100 flex items-center gap-1"
           title="Abrir en ventana flotante"
         >
