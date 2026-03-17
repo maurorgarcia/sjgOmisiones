@@ -32,6 +32,7 @@ export default function CargaFaltantePage() {
   const [contrato, setContrato] = useState("");
   const [sector, setSector] = useState("");
   const [motivo, setMotivo] = useState("");
+  const [legajoManual, setLegajoManual] = useState("");
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -90,6 +91,23 @@ export default function CargaFaltantePage() {
     setErrors(e => ({ ...e, nombre: "" }));
   };
 
+  const addManualEmpleado = () => {
+    if (!searchQuery.trim() || !legajoManual.trim()) {
+      toast.error("Nombre y legajo requeridos");
+      return;
+    }
+    const virtualEmp: Empleado = {
+      nombre_apellido: searchQuery.trim().toUpperCase(),
+      legajo: legajoManual.trim(),
+      contrato: contrato || "S/C"
+    };
+    setSelectedEmpleados([...selectedEmpleados, virtualEmp]);
+    setSearchQuery("");
+    setLegajoManual("");
+    setShowSuggestions(false);
+    setErrors(e => ({ ...e, nombre: "" }));
+  };
+
   const removeEmpleado = (legajo: string) => {
     setSelectedEmpleados(prev => prev.filter(e => e.legajo !== legajo));
   };
@@ -118,9 +136,21 @@ export default function CargaFaltantePage() {
     setLoading(true);
     
     const fechaISO = `${fecha}T12:00:00.000Z`;
-    const employeesToSave = selectedEmpleados.length > 0 
-      ? selectedEmpleados 
-      : [{ nombre_apellido: searchQuery.trim(), legajo: "" }];
+    const employeesToSave = [...selectedEmpleados];
+
+    if (employeesToSave.length === 0) {
+      if (searchQuery.trim() && legajoManual.trim()) {
+        employeesToSave.push({
+          nombre_apellido: searchQuery.trim(),
+          legajo: legajoManual.trim(),
+          contrato: contrato || "S/C"
+        });
+      } else {
+        toast.error("Seleccione o agregue al menos un empleado");
+        setLoading(false);
+        return;
+      }
+    }
 
     const entriesToSave = employeesToSave.map(emp => ({
       fecha: fechaISO,
@@ -251,6 +281,28 @@ export default function CargaFaltantePage() {
                         </div>
                       </button>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && !searchLoading && (
+                <div className="absolute z-50 left-0 right-0 top-[110%] bg-card rounded-[2rem] border border-border shadow-2xl p-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-3">Empleado no encontrado. Ingrese legajo manual:</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={legajoManual}
+                      onChange={(e) => setLegajoManual(e.target.value)}
+                      className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm font-black outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all font-black"
+                      placeholder="Legajo SAP..."
+                    />
+                    <button 
+                      type="button" 
+                      onClick={addManualEmpleado}
+                      className="px-6 rounded-xl bg-accent-gold text-black font-black text-[10px] uppercase tracking-[0.2em] active:scale-95 transition-all shadow-lg shadow-accent-gold/10"
+                    >
+                      Agregar
+                    </button>
                   </div>
                 </div>
               )}

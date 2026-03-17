@@ -102,8 +102,6 @@ export default function CargaPage() {
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    setSelectedEmpleados([]);
-    setContrato("");
     if (errors.empleado) setErrors((e) => ({ ...e, empleado: "" }));
 
     if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -137,6 +135,23 @@ export default function CargaPage() {
     setSuggestions([]);
     setShowSuggestions(false);
     setErrors((e) => ({ ...e, empleado: "" }));
+  };
+
+  const addManualEmpleado = () => {
+    if (!searchQuery.trim() || !legajoManual.trim()) {
+      toast.error("Complete nombre y legajo");
+      return;
+    }
+    const virtualEmp: Empleado = {
+      nombre_apellido: searchQuery.trim().toUpperCase(),
+      legajo: legajoManual.trim(),
+      contrato: contrato || "S/C",
+      categoria: "MANUAL"
+    };
+    setSelectedEmpleados([...selectedEmpleados, virtualEmp]);
+    setSearchQuery("");
+    setLegajoManual("");
+    setShowSuggestions(false);
   };
 
   const removeEmpleado = (legajo: string) => {
@@ -200,9 +215,22 @@ export default function CargaPage() {
     const fechaISO = `${fecha}T12:00:00.000Z`;
     const dias = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"];
     const horarioStr = horarioDesde && horarioHasta ? `${horarioDesde} a ${horarioHasta}` : null;
-    const employeesToSave = selectedEmpleados.length > 0 
-    ? selectedEmpleados 
-    : [{ nombre_apellido: searchQuery.trim(), legajo: legajoManual.trim() }];
+    const employeesToSave = [...selectedEmpleados];
+
+    if (employeesToSave.length === 0) {
+      if (searchQuery.trim() && legajoManual.trim()) {
+        employeesToSave.push({
+          nombre_apellido: searchQuery.trim(),
+          legajo: legajoManual.trim(),
+          contrato: contrato || "S/C",
+          categoria: null
+        });
+      } else {
+        toast.error("Agregue al menos un empleado");
+        setLoading(false);
+        return;
+      }
+    }
 
     const errorsToSave = employeesToSave.map(emp => ({
       fecha: fechaISO,
@@ -334,15 +362,24 @@ export default function CargaPage() {
             )}
 
             {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && !searchLoading && (
-              <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-xl shadow-xl px-4 py-3 space-y-2">
-                <p className="text-sm text-slate-500">No se encontró "{searchQuery}". Ingresá el legajo manualmente:</p>
-                <input
-                  type="text"
-                  value={legajoManual}
-                  onChange={(e) => setLegajoManual(e.target.value)}
-                  className={`w-full bg-background border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-accent-gold ${errors.legajo ? "border-red-400" : "border-border"}`}
-                  placeholder="Ej: 60019454"
-                />
+              <div className="absolute z-50 w-full mt-2 bg-card border border-border rounded-[2rem] shadow-2xl p-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-3">Empleado no encontrado. ¿Desea agregarlo manualmente?</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={legajoManual}
+                    onChange={(e) => setLegajoManual(e.target.value)}
+                    className={`flex-1 bg-background border rounded-xl px-4 py-3 text-sm font-black outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all ${errors.legajo ? "border-red-400" : "border-border"}`}
+                    placeholder="Legajo SAP..."
+                  />
+                  <button 
+                    type="button" 
+                    onClick={addManualEmpleado}
+                    className="px-6 rounded-xl bg-accent-gold text-black font-black text-[10px] uppercase tracking-[0.2em] active:scale-95 transition-all shadow-lg shadow-accent-gold/10 hover:shadow-accent-gold/20"
+                  >
+                    Agregar
+                  </button>
+                </div>
               </div>
             )}
 

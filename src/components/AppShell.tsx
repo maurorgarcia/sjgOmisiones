@@ -12,7 +12,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   const isLoginPage = pathname === "/login";
-  const isMiniMode = pathname.startsWith("/carga/mini");
+  const isMiniMode = pathname.endsWith("/mini");
 
   useEffect(() => {
     if (session?.user?.role === "viewer" && !localStorage.getItem("sjg_onboarding_seen")) {

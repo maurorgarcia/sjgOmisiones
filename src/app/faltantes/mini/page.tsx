@@ -27,6 +27,7 @@ export default function MiniCargaFaltante() {
   const [contrato, setContrato] = useState("");
   const [sector, setSector] = useState("");
   const [motivo, setMotivo] = useState("");
+  const [legajoManual, setLegajoManual] = useState("");
 
   useEffect(() => {
     const saved = sessionStorage.getItem("sjg_working_date");
@@ -75,6 +76,22 @@ export default function MiniCargaFaltante() {
     setShowSuggestions(false);
   };
 
+  const addManualEmpleado = () => {
+    if (!searchQuery.trim() || !legajoManual.trim()) {
+      toast.error("Nombre y legajo requeridos");
+      return;
+    }
+    const virtualEmp: Empleado = {
+      nombre_apellido: searchQuery.trim().toUpperCase(),
+      legajo: legajoManual.trim(),
+      contrato: contrato || "S/C"
+    };
+    setSelectedEmpleados([...selectedEmpleados, virtualEmp]);
+    setSearchQuery("");
+    setLegajoManual("");
+    setShowSuggestions(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contrato || (selectedEmpleados.length === 0 && !searchQuery.trim())) {
@@ -88,9 +105,21 @@ export default function MiniCargaFaltante() {
 
     setLoading(true);
     const fechaISO = `${fecha}T12:00:00.000Z`;
-    const employeesToSave = selectedEmpleados.length > 0 
-      ? selectedEmpleados 
-      : [{ nombre_apellido: searchQuery.trim(), legajo: "" }];
+    const employeesToSave = [...selectedEmpleados];
+
+    if (employeesToSave.length === 0) {
+      if (searchQuery.trim() && legajoManual.trim()) {
+        employeesToSave.push({
+          nombre_apellido: searchQuery.trim(),
+          legajo: legajoManual.trim(),
+          contrato: contrato || "S/C"
+        });
+      } else {
+        toast.error("Seleccione o agregue al menos un empleado");
+        setLoading(false);
+        return;
+      }
+    }
 
     const entriesToSave = employeesToSave.map(emp => ({
       fecha: fechaISO,
@@ -178,6 +207,24 @@ export default function MiniCargaFaltante() {
                   <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mt-0.5">Leg: {emp.legajo} · {emp.contrato}</p>
                 </button>
               ))}
+            </div>
+          )}
+
+          {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && !searchLoading && (
+            <div className="p-3 bg-accent-gold/5 rounded-2xl border border-dashed border-accent-gold/20 space-y-2 animate-in fade-in zoom-in duration-300">
+              <p className="text-[9px] text-accent-gold/80 font-black uppercase tracking-widest leading-none">Manual:</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={legajoManual}
+                  onChange={(e) => setLegajoManual(e.target.value)}
+                  className="flex-1 bg-background border border-border rounded-xl px-3 py-1.5 text-[11px] font-bold text-foreground outline-none focus:ring-2 focus:ring-accent-gold/20"
+                  placeholder="Legajo..."
+                />
+                <button type="button" onClick={addManualEmpleado} className="px-3 rounded-xl bg-accent-gold text-black font-black text-[9px] uppercase tracking-widest active:scale-95 transition-transform">
+                  Agregar
+                </button>
+              </div>
             </div>
           )}
 

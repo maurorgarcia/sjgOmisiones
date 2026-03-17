@@ -53,7 +53,7 @@ export default function MiniCargaPage() {
   // Autocomplete
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Empleado[]>([]);
-  const [selectedEmpleado, setSelectedEmpleado] = useState<Empleado | null>(null);
+  const [selectedEmpleados, setSelectedEmpleados] = useState<Empleado[]>([]);
   const [contrato, setContrato] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -101,8 +101,6 @@ export default function MiniCargaPage() {
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    setSelectedEmpleado(null);
-    setContrato("");
     if (errors.empleado) setErrors((e) => ({ ...e, empleado: "" }));
 
     if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -125,16 +123,41 @@ export default function MiniCargaPage() {
   };
 
   const selectEmpleado = (emp: Empleado) => {
-    setSelectedEmpleado(emp);
-    setSearchQuery(emp.nombre_apellido);
-    setContrato(emp.contrato);
+    if (selectedEmpleados.some(e => e.legajo === emp.legajo)) {
+      toast.error("Ya está en la lista.");
+      return;
+    }
+    setSelectedEmpleados([...selectedEmpleados, emp]);
+    if (!contrato) setContrato(emp.contrato);
+    setSearchQuery("");
     setSuggestions([]);
     setShowSuggestions(false);
     setErrors((e) => ({ ...e, empleado: "" }));
   };
 
+  const addManualEmpleado = () => {
+    if (!searchQuery.trim() || !legajoManual.trim()) {
+      toast.error("Complete nombre y legajo");
+      return;
+    }
+    const virtualEmp: Empleado = {
+      nombre_apellido: searchQuery.trim().toUpperCase(),
+      legajo: legajoManual.trim(),
+      contrato: contrato || "S/C",
+      categoria: "MANUAL"
+    };
+    setSelectedEmpleados([...selectedEmpleados, virtualEmp]);
+    setSearchQuery("");
+    setLegajoManual("");
+    setShowSuggestions(false);
+  };
+
+  const removeEmpleado = (legajo: string) => {
+    setSelectedEmpleados(prev => prev.filter(e => e.legajo !== legajo));
+  };
+
   const clearEmpleado = () => {
-    setSelectedEmpleado(null);
+    setSelectedEmpleados([]);
     setSearchQuery("");
     setContrato("");
     setLegajoManual("");
@@ -142,11 +165,11 @@ export default function MiniCargaPage() {
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
-    const nombre = selectedEmpleado?.nombre_apellido || searchQuery.trim();
-    const legajo = selectedEmpleado?.legajo || legajoManual.trim();
+    const hasNames = selectedEmpleados.length > 0 || searchQuery.trim();
+    const hasLegajos = selectedEmpleados.length > 0 || legajoManual.trim();
 
-    if (!nombre) newErrors.empleado = "Requerido";
-    if (!legajo) newErrors.legajo = "Requerido";
+    if (!hasNames) newErrors.empleado = "Requerido";
+    if (!hasLegajos) newErrors.legajo = "Requerido";
     if (!contrato) newErrors.contrato = "Requerido";
     if (!motivo) newErrors.motivo = "Requerido";
     if (!sector.trim()) newErrors.sector = "Requerido";
@@ -180,10 +203,27 @@ export default function MiniCargaPage() {
     const dias = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"];
     const horarioStr = horarioDesde && horarioHasta ? `${horarioDesde} a ${horarioHasta}` : null;
 
-    const errorToSave = {
+    const employeesToSave = selectedEmpleados;
+
+    if (employeesToSave.length === 0) {
+      if (searchQuery.trim() && legajoManual.trim()) {
+        employeesToSave.push({
+          nombre_apellido: searchQuery.trim(),
+          legajo: legajoManual.trim(),
+          contrato: contrato || "S/C",
+          categoria: null
+        });
+      } else {
+        toast.error("Agregue al menos un empleado");
+        setLoading(false);
+        return;
+      }
+    }
+
+    const errorsToSave = employeesToSave.map(emp => ({
       fecha: fechaISO,
-      legajo: selectedEmpleado?.legajo || legajoManual.trim(),
-      nombre_apellido: selectedEmpleado?.nombre_apellido || searchQuery.trim(),
+      legajo: emp.legajo,
+      nombre_apellido: emp.nombre_apellido,
       motivo_error: motivo,
       ot: ot.trim() || null,
       sector: sector.trim(),
@@ -203,14 +243,14 @@ export default function MiniCargaPage() {
       hs_100_insa: hs100Mods.insa,
       hs_100_polu: hs100Mods.polu,
       hs_100_noct: hs100Mods.noct,
-    };
+    }));
 
-    const { error } = await supabase.from("error_carga").insert([errorToSave]);
+    const { error } = await supabase.from("error_carga").insert(errorsToSave);
 
     if (error) {
       if (error.message.includes("contrato")) {
-        const { contrato: _c, ...withoutContrato } = errorToSave;
-        const { error: err2 } = await supabase.from("error_carga").insert([withoutContrato]);
+        const withoutContrato = errorsToSave.map(({ contrato: _c, ...rest }) => rest);
+        const { error: err2 } = await supabase.from("error_carga").insert(withoutContrato);
         if (err2) {
           toast.error("Error al guardar.");
           setLoading(false);
@@ -223,11 +263,11 @@ export default function MiniCargaPage() {
       }
     }
 
-    toast.success("✅ Registro guardado.");
+    toast.success(`✅ ${errorsToSave.length} ${errorsToSave.length > 1 ? 'registros guardados' : 'registro guardado'}.`);
     setLoading(false);
     
     // Reset fields but keep state relevant for multiple loads
-    setSelectedEmpleado(null);
+    setSelectedEmpleados([]);
     setSearchQuery("");
     setContrato("");
     setMotivo("");
@@ -285,12 +325,26 @@ export default function MiniCargaPage() {
               />
               <Search className="w-4 h-4 text-slate-400 dark:text-slate-700 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none group-focus-within/input:text-accent-gold transition-colors" />
               {searchQuery && (
-                <button type="button" onClick={clearEmpleado} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-foreground transition-colors">
+                <button type="button" onClick={() => { setSearchQuery(""); setSelectedEmpleados([]); }} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-foreground transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               )}
             </div>
             {errors.empleado && <p className="text-red-500 text-[9px] ml-1 font-black uppercase tracking-widest leading-none mt-1">{errors.empleado}</p>}
+
+            {/* Selected List */}
+            {selectedEmpleados.length > 0 && (
+              <div className="mt-2.5 flex flex-wrap gap-1.5 animate-in fade-in zoom-in duration-300">
+                {selectedEmpleados.map((emp) => (
+                  <div key={emp.legajo} className="flex items-center gap-2 bg-accent-gold/10 border border-accent-gold/20 text-accent-gold px-2.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-tight shadow-lg">
+                    {emp.nombre_apellido.split(' ')[0]}
+                    <button type="button" onClick={() => removeEmpleado(emp.legajo)}>
+                      <X className="w-3 h-3 hover:text-foreground transition-colors stroke-[3px]" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {showSuggestions && suggestions.length > 0 && (
               <div className="absolute z-50 left-0 right-0 top-[110%] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300 backdrop-blur-xl max-h-60 overflow-y-auto custom-scrollbar">
@@ -305,15 +359,24 @@ export default function MiniCargaPage() {
             )}
 
             {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && !searchLoading && (
-              <div className="p-4 bg-accent-gold/5 rounded-2xl border border-dashed border-accent-gold/20 space-y-2 animate-in fade-in zoom-in duration-300">
-                <p className="text-[9px] text-accent-gold/80 font-black uppercase tracking-widest">Legajo Manual:</p>
-                <input
-                  type="text"
-                  value={legajoManual}
-                  onChange={(e) => setLegajoManual(e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-3 py-2 text-[11px] font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all font-black"
-                  placeholder="Ej: 60019454"
-                />
+              <div className="p-4 bg-accent-gold/5 rounded-2xl border border-dashed border-accent-gold/20 space-y-3 animate-in fade-in zoom-in duration-300">
+                <p className="text-[9px] text-accent-gold/80 font-black uppercase tracking-widest leading-none">Empleado no encontrado. Ingrese legajo manual:</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={legajoManual}
+                    onChange={(e) => setLegajoManual(e.target.value)}
+                    className="flex-1 bg-background border border-border rounded-xl px-3 py-2 text-[11px] font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all font-black"
+                    placeholder="Legajo SAP..."
+                  />
+                  <button 
+                    type="button" 
+                    onClick={addManualEmpleado}
+                    className="px-3 rounded-xl bg-accent-gold text-black font-black text-[10px] uppercase tracking-widest active:scale-95 transition-transform"
+                  >
+                    Agregar
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -395,7 +458,7 @@ export default function MiniCargaPage() {
           >
             <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700 skew-x-12" />
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 opacity-70" />}
-            <span className="relative z-10">{loading ? "Guardando..." : "Finalizar Registro"}</span>
+            <span className="relative z-10">{loading ? "Guardando..." : `Guardar ${selectedEmpleados.length > 1 ? `(${selectedEmpleados.length})` : "Registro"}`}</span>
           </button>
         </form>
       </div>
