@@ -70,7 +70,7 @@ export function Modal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-background/40 dark:bg-slate-900/60 backdrop-blur-sm"
           />
 
           {/* Modal Content */}
@@ -79,7 +79,7 @@ export function Modal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", duration: 0.4, bounce: 0.3 }}
-            className="relative w-full max-w-md bg-[#111418] rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] overflow-hidden border border-white/5"
+            className="relative w-full max-w-md bg-card rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] dark:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] overflow-hidden border border-border"
           >
             <div className="p-6">
               <div className="flex items-start gap-4">
@@ -87,18 +87,18 @@ export function Modal({
                   {icons[type]}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-white tracking-tight">
+                  <h3 className="text-lg font-bold text-foreground tracking-tight">
                     {title}
                   </h3>
                   {description && (
-                    <p className="mt-2 text-xs font-medium text-slate-500 leading-relaxed uppercase tracking-widest">
+                    <p className="mt-2 text-[10px] font-bold text-slate-500 leading-relaxed uppercase tracking-widest">
                       {description}
                     </p>
                   )}
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2.5 hover:bg-white/5 rounded-2xl transition-colors text-slate-500 hover:text-white"
+                  className="p-2.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-2xl transition-colors text-slate-400 hover:text-foreground"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -110,7 +110,7 @@ export function Modal({
                 <button
                   onClick={onClose}
                   disabled={loading}
-                  className="px-6 py-3 rounded-2xl border border-white/5 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 hover:bg-white/5 hover:text-white transition-all disabled:opacity-50"
+                  className="px-6 py-3 rounded-2xl border border-border text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-all disabled:opacity-50"
                 >
                   Cancelar
                 </button>

@@ -219,16 +219,16 @@ export default function ReportePage() {
     <div className="space-y-6 max-w-7xl">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-1.5 h-8 bg-amber-500 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.5)]" />
+          <div className="w-1.5 h-8 bg-accent-gold rounded-full shadow-[0_0_12px_rgba(245,158,11,0.5)]" />
           <div>
-            <h1 className="text-2xl font-black text-white tracking-tight uppercase">Reporte de Errores</h1>
-            <p className="text-slate-500 text-xs font-medium uppercase tracking-widest mt-0.5">{dateLabel}</p>
+            <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">Reporte de Errores</h1>
+            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">{dateLabel}</p>
           </div>
         </div>
         <button
           onClick={handleDownload}
           disabled={loading}
-          className="inline-flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2.5 border border-white/10 text-xs font-bold text-slate-400 hover:bg-white/10 hover:text-amber-500 transition-all shadow-xl active:scale-95 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-accent-gold transition-all shadow-xl active:scale-95 disabled:opacity-50"
         >
           <ExternalLink className="w-4 h-4" />
           Descargar Excel
@@ -236,47 +236,47 @@ export default function ReportePage() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-slate-950/40 rounded-2xl p-4 border border-white/5 shadow-2xl group hover:border-amber-500/20 transition-all">
+        <div className="bg-card/40 rounded-2xl p-4 border border-border shadow-2xl group hover:border-accent-gold/20 transition-all">
           <div className="flex items-center gap-3">
-            <div className="bg-amber-500/5 p-2 rounded-xl group-hover:bg-amber-500/10 transition-colors">
-              <AlertTriangle className="w-5 h-5 text-amber-500/70" />
+            <div className="bg-accent-gold/5 p-2 rounded-xl group-hover:bg-accent-gold/10 transition-colors">
+              <AlertTriangle className="w-5 h-5 text-accent-gold/70" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total</p>
-              <p className="text-2xl font-black text-white">{total}</p>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total</p>
+              <p className="text-2xl font-black text-foreground">{total}</p>
             </div>
           </div>
         </div>
-        <div className="bg-slate-950/40 rounded-2xl p-4 border border-amber-500/10 shadow-2xl group hover:border-amber-500/30 transition-all">
+        <div className="bg-card/40 rounded-2xl p-4 border border-accent-gold/10 shadow-2xl group hover:border-accent-gold/30 transition-all">
           <div className="flex items-center gap-3">
-            <div className="bg-amber-500/5 p-2 rounded-xl group-hover:bg-amber-500/10 transition-colors">
-              <Clock className="w-5 h-5 text-amber-500" />
+            <div className="bg-accent-gold/5 p-2 rounded-xl group-hover:bg-accent-gold/10 transition-colors">
+              <Clock className="w-5 h-5 text-accent-gold" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Pendientes</p>
-              <p className="text-2xl font-black text-white">{pendientes}</p>
+              <p className="text-[10px] font-black text-accent-gold uppercase tracking-widest">Pendientes</p>
+              <p className="text-2xl font-black text-foreground">{pendientes}</p>
             </div>
           </div>
         </div>
-        <div className="bg-slate-950/40 rounded-2xl p-4 border border-emerald-500/10 shadow-2xl group hover:border-emerald-500/30 transition-all">
+        <div className="bg-card/40 rounded-2xl p-4 border border-emerald-500/10 shadow-2xl group hover:border-emerald-500/30 transition-all">
           <div className="flex items-center gap-3">
             <div className="bg-emerald-500/5 p-2 rounded-xl group-hover:bg-emerald-500/10 transition-colors">
               <CheckCheck className="w-5 h-5 text-emerald-500" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Resueltos</p>
-              <p className="text-2xl font-black text-white">{resueltos}</p>
+              <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Resueltos</p>
+              <p className="text-2xl font-black text-foreground">{resueltos}</p>
             </div>
           </div>
         </div>
-        <div className="bg-slate-950/40 rounded-2xl p-4 border border-white/5 shadow-2xl group hover:border-amber-500/20 transition-all">
+        <div className="bg-card/40 rounded-2xl p-4 border border-border shadow-2xl group hover:border-accent-gold/20 transition-all">
           <div className="flex items-center gap-3">
-            <div className="bg-white/5 p-2 rounded-xl group-hover:bg-white/10 transition-colors">
+            <div className="bg-background border border-border p-2 rounded-xl group-hover:bg-card transition-colors shadow-inner">
               <TrendingDown className="w-5 h-5 text-slate-400" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resolución</p>
-              <p className="text-2xl font-black text-white">{pct}%</p>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Resolución</p>
+              <p className="text-2xl font-black text-foreground">{pct}%</p>
             </div>
           </div>
         </div>
@@ -293,16 +293,16 @@ export default function ReportePage() {
         errores.length > 0 && <StatsCharts data={errores} />
       )}
 
-      <div className="bg-slate-900/50 px-4 py-3 rounded-2xl border border-white/10 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex gap-1 p-1 bg-black/40 rounded-xl w-full md:w-auto overflow-x-auto border border-white/5">
+      <div className="bg-card px-4 py-3 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex gap-1 p-1 bg-background rounded-xl w-full md:w-auto overflow-x-auto border border-border shadow-inner">
           {(["pendientes", "resueltos", "todos"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFiltro(f)}
               className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap active:scale-95 ${
                 filtro === f
-                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg"
-                  : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                  ? "bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black shadow-lg"
+                  : "text-slate-500 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
               {f}
@@ -314,11 +314,11 @@ export default function ReportePage() {
           <select
             value={filtroMotivo}
             onChange={(e) => setFiltroMotivo(e.target.value)}
-            className="px-4 py-2 rounded-xl border border-white/5 text-[11px] font-bold uppercase tracking-wider text-slate-400 focus:ring-2 focus:ring-amber-500/50 outline-none transition bg-black/40 hover:bg-black/60 cursor-pointer"
+            className="px-4 py-2 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest text-slate-500 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card cursor-pointer shadow-inner appearance-none"
           >
-            <option value="todos">Todos los motivos</option>
+            <option value="todos" className="bg-card font-black uppercase">Todos los motivos</option>
             {Object.keys(MOTIVO_COLORS).map((m) => (
-              <option key={m} value={m}>{m}</option>
+              <option key={m} value={m} className="bg-card font-black uppercase">{m}</option>
             ))}
           </select>
 
@@ -329,7 +329,7 @@ export default function ReportePage() {
               value={filtroSector}
               onChange={(e) => setFiltroSector(e.target.value)}
               placeholder="Sector..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-white/5 text-xs font-medium text-slate-300 placeholder:text-slate-600 focus:ring-2 focus:ring-amber-500/50 outline-none transition bg-black/40 hover:bg-black/60"
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-border text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 dark:placeholder:opacity-50 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner"
             />
           </div>
 
@@ -343,7 +343,7 @@ export default function ReportePage() {
                 setFechaDesde(val);
                 sessionStorage.setItem("sjg_working_date", val);
               }}
-              className="w-full sm:w-auto pl-9 pr-4 py-2 rounded-xl border border-white/5 text-xs font-medium text-slate-300 focus:ring-2 focus:ring-amber-500/50 outline-none transition bg-black/40 hover:bg-black/60 [color-scheme:dark]"
+              className="w-full sm:w-auto pl-9 pr-4 py-2 rounded-xl border border-border text-xs font-medium text-foreground focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
             />
           </div>
           <div className="flex items-center gap-1.5 flex-grow sm:flex-grow-0">
@@ -357,7 +357,7 @@ export default function ReportePage() {
                 if (val) sessionStorage.setItem("sjg_fecha_hasta", val);
                 else sessionStorage.removeItem("sjg_fecha_hasta");
               }}
-              className="w-full sm:w-auto pl-4 py-2 rounded-xl border border-white/5 text-xs font-medium text-slate-300 focus:ring-2 focus:ring-amber-500/50 outline-none transition bg-black/40 hover:bg-black/60 [color-scheme:dark]"
+              className="w-full sm:w-auto pl-4 py-2 rounded-xl border border-border text-xs font-medium text-foreground focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
               title="Hasta (opcional, para rango)"
             />
           </div>
@@ -367,7 +367,7 @@ export default function ReportePage() {
               setFechaHasta("");
               setFiltro("todos");
             }}
-            className="text-[10px] text-amber-500 hover:text-amber-400 font-black uppercase tracking-widest whitespace-nowrap px-4 py-2 rounded-xl border border-amber-500/10 hover:bg-amber-500/5 transition-all"
+            className="text-[10px] text-accent-gold hover:text-accent-gold-dark font-black uppercase tracking-widest whitespace-nowrap px-4 py-2 rounded-xl border border-accent-gold/10 hover:bg-accent-gold/5 transition-all shadow-inner active:scale-95"
           >
             Ver Histórico
           </button>
@@ -376,60 +376,60 @@ export default function ReportePage() {
 
       {!loading && errores.length > 0 && (
         <div className="flex items-center gap-2">
-          <Search className="w-4 h-4 text-slate-600" />
+          <Search className="w-4 h-4 text-slate-500" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por nombre, legajo o OT..."
-            className="flex-1 max-w-xs border border-white/5 rounded-xl pl-4 py-2 text-xs font-medium text-slate-300 placeholder:text-slate-700 focus:ring-2 focus:ring-amber-500/50 outline-none transition bg-black/40 hover:bg-black/60 shadow-inner"
+            className="flex-1 max-w-xs border border-border rounded-xl pl-4 py-2 text-xs font-medium text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 dark:placeholder:opacity-50 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner"
           />
           {searchQuery.trim() && (
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
               Mostrando {filteredErrores.length} de {errores.length}
             </span>
           )}
         </div>
       )}
 
-      <div className="bg-slate-950/40 rounded-2xl border border-white/5 shadow-2xl overflow-hidden backdrop-blur-sm">
+      <div className="bg-card/40 rounded-2xl border border-border shadow-2xl overflow-hidden backdrop-blur-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-[10px] text-slate-500 uppercase bg-black/60 border-b border-white/5 tracking-[0.2em] font-black">
+            <thead className="text-[10px] text-slate-500 uppercase bg-background/60 border-b border-border tracking-[0.2em] font-black">
               <tr>
                 <th className="px-5 py-3.5">
-                  <button onClick={() => handleSort('resuelto')} className="flex items-center gap-1 hover:text-amber-500 transition-colors">
+                  <button onClick={() => handleSort('resuelto')} className="flex items-center gap-1 hover:text-accent-gold transition-colors">
                     Estado
                     {sortConfig?.key === 'resuelto' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
                 <th className="px-5 py-3.5">
-                  <button onClick={() => handleSort('fecha')} className="flex items-center gap-1 hover:text-amber-500 transition-colors">
+                  <button onClick={() => handleSort('fecha')} className="flex items-center gap-1 hover:text-accent-gold transition-colors">
                     Fecha
                     {sortConfig?.key === 'fecha' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
                 <th className="px-5 py-3.5">
-                  <button onClick={() => handleSort('nombre_apellido')} className="flex items-center gap-1 hover:text-amber-500 transition-colors">
+                  <button onClick={() => handleSort('nombre_apellido')} className="flex items-center gap-1 hover:text-accent-gold transition-colors">
                     Empleado
                     {sortConfig?.key === 'nombre_apellido' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
                 <th className="px-5 py-3.5">
-                  <button onClick={() => handleSort('motivo_error')} className="flex items-center gap-1 hover:text-amber-500 transition-colors">
+                  <button onClick={() => handleSort('motivo_error')} className="flex items-center gap-1 hover:text-accent-gold transition-colors">
                     Motivo
                     {sortConfig?.key === 'motivo_error' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
-                <th className="px-5 py-3.5 font-semibold">OT / Sector</th>
+                <th className="px-5 py-3.5 font-black uppercase tracking-widest text-slate-500">OT / Sector</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
                   <td colSpan={5} className="py-24 text-center">
                     <div className="flex flex-col items-center gap-4 text-slate-500">
-                      <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+                      <Loader2 className="w-8 h-8 animate-spin text-accent-gold" />
                       <span className="text-[10px] font-black uppercase tracking-widest">Cargando datos maestros...</span>
                     </div>
                   </td>
@@ -438,15 +438,15 @@ export default function ReportePage() {
                 <tr>
                   <td colSpan={5} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-2">
-                      <div className="bg-slate-100 p-4 rounded-full">
+                      <div className="bg-background border border-border p-4 rounded-full shadow-inner">
                         <CheckCheck className="w-7 h-7 text-slate-400" />
                       </div>
-                      <p className="font-semibold text-slate-700 mt-1">
+                      <p className="font-black uppercase text-[11px] tracking-widest text-slate-500 mt-1">
                         {errores.length === 0
                           ? "No hay errores para mostrar"
                           : "Ningún registro coincide con la búsqueda"}
                       </p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-[10px] font-bold uppercase tracking-tight text-slate-400 opacity-60">
                         {errores.length === 0
                           ? filtro === "pendientes"
                             ? "¡Todo al día! No hay nada pendiente."
@@ -460,7 +460,7 @@ export default function ReportePage() {
                 filteredErrores.map((err) => (
                   <tr
                     key={err.id}
-                    className={`hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 ${err.resuelto ? "opacity-40 grayscale-[0.5]" : ""}`}
+                    className={`hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-b border-border last:border-0 ${err.resuelto ? "opacity-40 grayscale-[0.5]" : ""}`}
                   >
                     <td className="px-5 py-4">
                       {err.resuelto ? (
@@ -469,39 +469,39 @@ export default function ReportePage() {
                           Resuelto
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-[0_0_12px_rgba(245,158,11,0.1)]">
+                        <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-accent-gold/10 text-accent-gold border border-accent-gold/20 shadow-[0_0_12px_rgba(245,158,11,0.1)]">
                           <Clock className="w-3.5 h-3.5" />
                           Pendiente
                         </span>
                       )}
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap">
-                      <div className="font-bold text-white text-sm">
+                      <div className="font-bold text-foreground text-sm">
                         {format(new Date(err.fecha), "dd MMM yyyy", { locale: es })}
                       </div>
-                      <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{err.dia_semana}</div>
+                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{err.dia_semana}</div>
                     </td>
                     <td className="px-5 py-4">
                       <div 
                         onClick={() => toggleNameHighlight(err.nombre_apellido)}
-                        className={`font-bold text-sm cursor-pointer transition-all ${checkedNames.has(err.nombre_apellido) ? "text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 shadow-lg scale-[1.02]" : "text-slate-200 hover:text-amber-400"}`}
+                        className={`font-bold text-sm cursor-pointer transition-all ${checkedNames.has(err.nombre_apellido) ? "text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-xl border border-emerald-500/20 shadow-lg scale-[1.02]" : "text-foreground hover:text-accent-gold"}`}
                         title="Click para marcar progreso"
                       >
                         {err.nombre_apellido}
                       </div>
-                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Leg: {err.legajo}</div>
+                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Leg: {err.legajo}</div>
                     </td>
                     <td className="px-5 py-4">
                       {getMotivoBadge(err.motivo_error)}
                       {err.notas && (
-                        <div className="text-[10px] font-medium text-slate-500 mt-1.5 max-w-[200px] truncate italic" title={err.notas}>
+                        <div className="text-[10px] font-bold text-slate-500 mt-1.5 max-w-[200px] truncate italic uppercase tracking-tight" title={err.notas}>
                           "{err.notas}"
                         </div>
                       )}
                     </td>
                     <td className="px-5 py-4">
-                      <div className="font-bold text-slate-300 text-xs uppercase tracking-tight">{err.sector}</div>
-                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                      <div className="font-bold text-foreground text-xs uppercase tracking-tight">{err.sector}</div>
+                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">
                         {err.ot ? `OT: ${err.ot}` : "Sin OT"}
                         {err.horario ? ` · ${err.horario}` : ""}
                       </div>
@@ -513,12 +513,12 @@ export default function ReportePage() {
           </table>
         </div>
         {!loading && hasMore && errores.length > 0 && !searchQuery.trim() && (
-          <div className="border-t border-white/5 py-6 flex justify-center bg-black/20">
+          <div className="border-t border-border py-6 flex justify-center bg-black/5 dark:bg-white/5">
             <button
               type="button"
               onClick={loadMore}
               disabled={loadingMore}
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-2xl border border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:bg-white/10 hover:text-amber-500 transition-all disabled:opacity-50 active:scale-95 shadow-xl"
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-2xl border border-border bg-background text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:bg-card hover:text-accent-gold transition-all disabled:opacity-50 active:scale-95 shadow-xl"
             >
               {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
               {loadingMore ? "Cargando…" : "Cargar más registros"}

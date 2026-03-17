@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { ThemeToggle } from "./ThemeToggle";
+import { useTheme } from "next-themes";
 
 const navItems = [
   { href: "/", label: "Gestión Administrativa", icon: LayoutDashboard, adminOnly: true },
@@ -35,40 +37,41 @@ const adminItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { theme } = useTheme();
   const isAdmin = session?.user?.role === "admin";
 
   if (!session) return null;
 
   return (
-    <aside className="fixed top-0 left-0 h-full w-64 bg-[#0a0c10] text-white flex flex-col z-40 shadow-[4px_0_24px_rgba(0,0,0,0.5)] border-r border-white/5">
+    <aside className="fixed top-0 left-0 h-full w-64 bg-sidebar text-foreground flex flex-col z-40 shadow-[4px_0_24px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.5)] border-r border-border transition-colors duration-300">
       {/* Logo SJG */}
-      <div className="px-5 py-6 border-b border-slate-700/50 flex items-center justify-center">
+      <div className="px-5 py-6 border-b border-border flex items-center justify-center">
         <Image
           src="/logo-sjg.png"
           alt="SJG Montajes Industriales"
           width={180}
           height={60}
-          className="w-full max-w-[180px] object-contain invert brightness-0"
+          className={`w-full max-w-[180px] object-contain transition-all duration-300 ${theme === 'dark' ? 'invert brightness-0' : ''}`}
         />
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] px-3 mb-2">
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-70">
           Gestión Errores
         </p>
         <div className="space-y-1 mb-6">
           {navItems.map((item) => <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />)}
         </div>
 
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] px-3 mb-2">
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-70">
           Sección Faltantes
         </p>
         <div className="space-y-1 mb-6">
           {faltantesItems.map((item) => <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />)}
         </div>
 
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] px-3 mb-2">
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-70">
           Sistema
         </p>
         <div className="space-y-1">
@@ -77,7 +80,7 @@ export function Sidebar() {
       </nav>
 
       {/* GDAI Credit */}
-      <div className="px-4 py-4 border-t border-slate-700/50">
+      <div className="px-4 py-4 border-t border-border">
         <a
           href="https://www.godreamai.com/"
           target="_blank"
@@ -85,29 +88,36 @@ export function Sidebar() {
           className="flex flex-col items-center justify-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity"
           title="Desarrollado por GDAI"
         >
-          <span className="text-[10px] text-slate-400 tracking-wide uppercase font-semibold">Desarrollado por</span>
-          <Image src="/logo-gdai.png" alt="GDAI" width={80} height={22} className="h-[22px] w-auto object-contain invert brightness-0" />
+          <span className="text-[9px] text-slate-500 tracking-widest uppercase font-black opacity-70">Desarrollado por</span>
+          <Image 
+            src="/logo-gdai.png" 
+            alt="GDAI" 
+            width={80} 
+            height={22} 
+            className={`h-[22px] w-auto object-contain transition-all duration-300 ${theme === 'dark' ? 'invert brightness-0' : ''}`} 
+          />
         </a>
       </div>
 
       {/* User info + Logout */}
-      <div className="px-3 py-4 border-t border-white/5">
-        <div className="flex items-center gap-3 px-3 py-2.5 mb-2 rounded-xl bg-white/5 border border-white/5 shadow-inner">
+      <div className="px-3 py-4 border-t border-border bg-sidebar/50">
+        <div className="flex items-center gap-3 px-3 py-2.5 mb-2 rounded-xl bg-card border border-border shadow-sm">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-xs font-bold text-black uppercase flex-shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
             {(session.user?.name || session.user?.email || "U")[0]}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-white truncate tracking-tight">
+            <p className="text-sm font-bold text-foreground truncate tracking-tight">
               {session.user?.name || "Usuario"}
             </p>
             <p className="text-[10px] text-slate-500 truncate font-medium uppercase tracking-wider">
               {session.user?.role === "admin" ? "Administrador" : "Visualizador"}
             </p>
           </div>
+          <ThemeToggle />
         </div>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-red-400 transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400 transition-all font-medium"
         >
           <LogOut className="w-4 h-4" />
           Cerrar sesión
@@ -130,13 +140,13 @@ function NavItem({ item, isAdmin, pathname }: { item: any; isAdmin: boolean; pat
         href={href}
         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 relative group/link ${
           active
-            ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]"
-            : "text-slate-400 hover:bg-white/5 hover:text-white"
+            ? "bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]"
+            : "text-slate-500 hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground"
         }`}
       >
         <div className={`absolute inset-0 rounded-xl transition-opacity duration-500 opacity-0 group-hover/link:opacity-100 bg-gradient-to-r from-amber-500/10 to-transparent pointer-events-none`} />
-        <Icon className={`w-4 h-4 flex-shrink-0 relative z-10 ${active ? 'text-black' : 'text-slate-400 group-hover/link:text-amber-500 group-hover/link:scale-110 transition-all'}`} />
-        <span className="relative z-10 tracking-tight">{label}</span>
+        <Icon className={`w-4 h-4 flex-shrink-0 relative z-10 ${active ? 'text-black' : 'text-slate-500 group-hover/link:text-accent-gold group-hover/link:scale-110 transition-all'}`} />
+        <span className="relative z-10 tracking-tight font-black uppercase text-[11px]">{label}</span>
         {active && (
           <motion.div 
             layoutId="activeNav"
@@ -153,7 +163,7 @@ function NavItem({ item, isAdmin, pathname }: { item: any; isAdmin: boolean; pat
           className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-md transition-all opacity-0 group-hover:opacity-100 flex items-center gap-1"
           title="Abrir en ventana flotante"
         >
-          <div className="h-3 w-[1px] bg-slate-700 mr-1" />
+          <div className="h-3 w-[1px] bg-border mr-1" />
           <Maximize2 className="w-3.5 h-3.5" />
         </button>
       )}

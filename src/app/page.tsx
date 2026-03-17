@@ -24,6 +24,7 @@ import {
   ArrowUp,
   ArrowDown,
   Info,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -38,9 +39,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 
 function getMotivoBadge(motivo: string) {
-  const classes = MOTIVO_COLORS[motivo] ?? "bg-slate-900/50 text-slate-400 border-white/5";
+  const classes = MOTIVO_COLORS[motivo] ?? "bg-slate-500/10 text-slate-500 border-slate-500/20";
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${classes} shadow-sm`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-widest ${classes} shadow-sm`}>
       {motivo}
     </span>
   );
@@ -371,8 +372,8 @@ export default function Dashboard() {
             <div className="absolute inset-0 w-2.5 h-2.5 bg-green-500 rounded-full animate-ping opacity-30" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Gestión de Omisiones</h1>
-            <p className="text-slate-400 text-sm mt-0.5 capitalize">{dateLabel}</p>
+            <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">Gestión de Omisiones</h1>
+            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">{dateLabel}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -380,7 +381,7 @@ export default function Dashboard() {
           <button
             onClick={handleDownload}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2.5 border border-white/10 text-xs font-bold text-slate-400 hover:bg-white/10 hover:text-amber-500 transition-all shadow-xl active:scale-95 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl bg-card/20 px-4 py-2.5 border border-border text-xs font-bold text-slate-500 hover:bg-card/40 hover:text-accent-gold transition-all shadow-xl active:scale-95 disabled:opacity-50"
           >
             <ExternalLink className="w-4 h-4" />
           </button>
@@ -407,7 +408,7 @@ export default function Dashboard() {
               <button
                 onClick={handleSendEmail}
                 disabled={sending || loading}
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600/10 border border-emerald-500/20 px-5 py-2.5 text-xs font-bold text-emerald-500 uppercase tracking-tight hover:bg-emerald-600 hover:text-white transition-all disabled:opacity-50 active:scale-95"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-5 py-2.5 text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all disabled:opacity-50 active:scale-95 shadow-lg"
               >
                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Enviar Reporte
@@ -419,47 +420,47 @@ export default function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-slate-950/40 rounded-2xl p-4 border border-white/5 shadow-2xl group hover:border-amber-500/20 transition-all">
+        <div className="bg-card/40 rounded-2xl p-4 border border-border shadow-2xl group hover:border-accent-gold/20 transition-all">
           <div className="flex items-center gap-3">
             <div className="bg-amber-500/5 p-2 rounded-xl group-hover:bg-amber-500/10 transition-colors">
               <AlertTriangle className="w-5 h-5 text-amber-500/70" />
             </div>
             <div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total</p>
-              <p className="text-2xl font-black text-white">{total}</p>
+              <p className="text-2xl font-black text-foreground">{total}</p>
             </div>
           </div>
         </div>
-        <div className="bg-slate-950/40 rounded-2xl p-4 border border-amber-500/10 shadow-2xl group hover:border-amber-500/30 transition-all">
+        <div className="bg-card/40 rounded-2xl p-4 border border-accent-gold/10 shadow-2xl group hover:border-accent-gold/30 transition-all">
           <div className="flex items-center gap-3">
             <div className="bg-amber-500/5 p-2 rounded-xl group-hover:bg-amber-500/10 transition-colors">
               <Clock className="w-5 h-5 text-amber-500" />
             </div>
             <div>
               <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Pendientes</p>
-              <p className="text-2xl font-black text-white">{pendientes}</p>
+              <p className="text-2xl font-black text-foreground">{pendientes}</p>
             </div>
           </div>
         </div>
-        <div className="bg-slate-950/40 rounded-2xl p-4 border border-emerald-500/10 shadow-2xl group hover:border-emerald-500/30 transition-all">
+        <div className="bg-card/40 rounded-2xl p-4 border border-emerald-500/10 shadow-2xl group hover:border-emerald-500/30 transition-all">
           <div className="flex items-center gap-3">
             <div className="bg-emerald-500/5 p-2 rounded-xl group-hover:bg-emerald-500/10 transition-colors">
               <CheckCheck className="w-5 h-5 text-emerald-500" />
             </div>
             <div>
               <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Resueltos</p>
-              <p className="text-2xl font-black text-white">{resueltos}</p>
+              <p className="text-2xl font-black text-foreground">{resueltos}</p>
             </div>
           </div>
         </div>
-        <div className="bg-slate-950/40 rounded-2xl p-4 border border-white/5 shadow-2xl group hover:border-amber-500/20 transition-all">
+        <div className="bg-card/40 rounded-2xl p-4 border border-border shadow-2xl group hover:border-accent-gold/20 transition-all">
           <div className="flex items-center gap-3">
-            <div className="bg-white/5 p-2 rounded-xl group-hover:bg-white/10 transition-colors">
+            <div className="bg-background border border-border p-2 rounded-xl group-hover:bg-card transition-colors shadow-inner">
               <TrendingDown className="w-5 h-5 text-slate-400" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resolución</p>
-              <p className="text-2xl font-black text-white">{pct}%</p>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Resolución</p>
+              <p className="text-2xl font-black text-foreground">{pct}%</p>
             </div>
           </div>
         </div>
@@ -477,8 +478,8 @@ export default function Dashboard() {
       )}
 
       {/* Filters */}
-      <div className="bg-slate-900/50 px-4 py-3 rounded-2xl border border-white/10 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex gap-1 p-1 bg-black/40 rounded-xl w-full md:w-auto overflow-x-auto border border-white/5">
+      <div className="bg-sidebar/50 px-4 py-3 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex gap-1 p-1 bg-background/60 rounded-xl w-full md:w-auto overflow-x-auto border border-border">
           {(["pendientes", "resueltos", "todos"] as const).map((f) => (
             <button
               key={f}
@@ -488,8 +489,8 @@ export default function Dashboard() {
               }}
               className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap active:scale-95 ${
                 filtro === f
-                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg"
-                  : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                  ? "bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black shadow-lg"
+                  : "text-slate-500 hover:text-foreground hover:bg-white/5 dark:hover:bg-white/5"
               }`}
             >
               {f}
@@ -504,9 +505,9 @@ export default function Dashboard() {
               setFiltroMotivo(e.target.value);
               sessionStorage.setItem("sjg_filtro_motivo", e.target.value);
             }}
-            className="px-4 py-2 rounded-xl border border-white/5 text-[11px] font-bold uppercase tracking-wider text-slate-400 focus:ring-2 focus:ring-amber-500/50 outline-none transition bg-black/40 hover:bg-black/60 cursor-pointer"
+            className="px-4 py-2 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest text-slate-500 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card cursor-pointer shadow-inner appearance-none"
           >
-            <option value="todos">Todos los motivos</option>
+            <option value="todos" className="bg-card font-black uppercase">Todos los motivos</option>
             {Object.keys(MOTIVO_COLORS).map((m) => (
               <option key={m} value={m}>{m}</option>
             ))}
@@ -522,7 +523,7 @@ export default function Dashboard() {
                 sessionStorage.setItem("sjg_filtro_sector", e.target.value);
               }}
               placeholder="Sector..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-white/5 text-xs font-medium text-slate-300 placeholder:text-slate-600 focus:ring-2 focus:ring-amber-500/50 outline-none transition bg-black/40 hover:bg-black/60"
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-border text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 dark:placeholder:opacity-50 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner"
             />
           </div>
 
@@ -541,7 +542,7 @@ export default function Dashboard() {
                   sessionStorage.setItem("sjg_filtro", "todos");
                 }
               }}
-              className="w-full sm:w-auto pl-9 pr-4 py-2 rounded-xl border border-white/5 text-xs font-medium text-slate-300 focus:ring-2 focus:ring-amber-500/50 outline-none transition bg-black/40 hover:bg-black/60 [color-scheme:dark]"
+              className="w-full sm:w-auto pl-9 pr-4 py-2 rounded-xl border border-border text-xs font-medium text-foreground focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
             />
           </div>
           <div className="flex items-center gap-1.5 flex-grow sm:flex-grow-0">
@@ -555,7 +556,7 @@ export default function Dashboard() {
                 if (v) sessionStorage.setItem("sjg_fecha_hasta", v);
                 else sessionStorage.removeItem("sjg_fecha_hasta");
               }}
-              className="w-full sm:w-auto pl-4 py-2 rounded-xl border border-white/10 text-sm text-slate-300 focus:ring-2 focus:ring-amber-500 outline-none transition bg-slate-950 [color-scheme:dark]"
+              className="w-full sm:w-auto pl-4 py-2 rounded-xl border border-border text-xs font-medium text-foreground focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
               title="Hasta (opcional, para rango)"
             />
           </div>
@@ -568,7 +569,7 @@ export default function Dashboard() {
               sessionStorage.removeItem("sjg_fecha_hasta");
               sessionStorage.setItem("sjg_filtro", "todos");
             }}
-            className="text-xs text-amber-500 hover:text-amber-400 font-semibold whitespace-nowrap px-2"
+            className="text-[10px] text-accent-gold hover:text-accent-gold-dark font-black uppercase tracking-widest whitespace-nowrap px-4 py-2 rounded-xl border border-accent-gold/10 hover:bg-accent-gold/5 transition-all shadow-inner active:scale-95"
           >
             Ver Histórico
           </button>
@@ -584,7 +585,7 @@ export default function Dashboard() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por nombre, legajo o OT..."
-            className="flex-1 max-w-xs border border-white/5 rounded-xl pl-4 py-2 text-xs font-medium text-slate-300 placeholder:text-slate-700 focus:ring-2 focus:ring-amber-500/50 outline-none transition bg-black/40 hover:bg-black/60 shadow-inner"
+            className="flex-1 max-w-xs border border-border rounded-xl pl-4 py-2 text-xs font-medium text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 dark:placeholder:opacity-50 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner"
           />
           {searchQuery.trim() && (
             <span className="text-xs text-slate-500">
@@ -595,10 +596,10 @@ export default function Dashboard() {
       )}
 
       {/* Table */}
-      <div className="bg-slate-950/40 rounded-2xl border border-white/5 shadow-2xl overflow-hidden backdrop-blur-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-[10px] text-slate-500 uppercase bg-black/60 border-b border-white/5 tracking-[0.2em] font-black">
+        <div className="bg-card/40 rounded-2xl border border-border shadow-2xl overflow-hidden backdrop-blur-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-[10px] text-slate-500 uppercase bg-sidebar/60 border-b border-border tracking-[0.2em] font-black">
               <tr>
                 {isAdmin && (
                   <th className="px-5 py-3.5 w-12 text-center">
@@ -606,39 +607,39 @@ export default function Dashboard() {
                       type="checkbox" 
                       onChange={handleSelectAll} 
                       checked={filteredErrores.length > 0 && selectedIds.length === filteredErrores.length} 
-                      className="rounded border-white/20 bg-slate-950 text-amber-600 focus:ring-amber-500 cursor-pointer" 
+                      className="rounded border-border bg-card text-accent-gold focus:ring-accent-gold cursor-pointer" 
                     />
                   </th>
                 )}
                 <th className="px-5 py-3.5 font-semibold">
-                  <button onClick={() => handleSort('resuelto')} className="flex items-center gap-1 hover:text-amber-500 transition-colors uppercase tracking-wider">
+                  <button onClick={() => handleSort('resuelto')} className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider">
                     Estado
                     {sortConfig?.key === 'resuelto' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
                 <th className="px-5 py-3.5 font-semibold">
-                  <button onClick={() => handleSort('fecha')} className="flex items-center gap-1 hover:text-amber-500 transition-colors uppercase tracking-wider">
+                  <button onClick={() => handleSort('fecha')} className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider">
                     Fecha
                     {sortConfig?.key === 'fecha' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
                 <th className="px-5 py-3.5 font-semibold">
-                  <button onClick={() => handleSort('nombre_apellido')} className="flex items-center gap-1 hover:text-amber-500 transition-colors uppercase tracking-wider">
+                  <button onClick={() => handleSort('nombre_apellido')} className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider">
                     Empleado
                     {sortConfig?.key === 'nombre_apellido' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
                 <th className="px-5 py-3.5 font-semibold">
-                  <button onClick={() => handleSort('motivo_error')} className="flex items-center gap-1 hover:text-amber-500 transition-colors uppercase tracking-wider">
+                  <button onClick={() => handleSort('motivo_error')} className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider">
                     Motivo
                     {sortConfig?.key === 'motivo_error' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
-                <th className="px-5 py-4 font-bold text-slate-500">OT / Sector</th>
-                <th className="px-5 py-4 font-bold text-right text-slate-500">Acción</th>
+                <th className="px-5 py-3.5 font-black uppercase tracking-widest text-slate-500">OT / Sector</th>
+                <th className="px-5 py-3.5 font-black uppercase tracking-widest text-right text-slate-500">Acción</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
                   <td colSpan={7} className="py-12">
@@ -671,7 +672,7 @@ export default function Dashboard() {
                 filteredErrores.map((err) => (
                   <tr
                     key={err.id}
-                    className={`hover:bg-white/5 transition-colors ${err.resuelto ? "opacity-60" : ""} ${selectedIds.includes(err.id) ? "bg-amber-500/5" : ""}`}
+                    className={`hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${err.resuelto ? "opacity-60" : ""} ${selectedIds.includes(err.id) ? "bg-accent-gold/5" : ""}`}
                   >
                     {isAdmin && (
                       <td className="px-5 py-3.5 text-center">
@@ -679,42 +680,42 @@ export default function Dashboard() {
                           type="checkbox" 
                           onChange={() => handleSelectOne(err.id)} 
                           checked={selectedIds.includes(err.id)} 
-                          className="rounded border-white/20 bg-slate-950 text-amber-600 focus:ring-amber-500 cursor-pointer" 
+                          className="rounded border-border bg-card text-accent-gold focus:ring-accent-gold cursor-pointer" 
                         />
                       </td>
                     )}
                     <td className="px-5 py-3.5">
                       {err.resuelto ? (
-                        <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                        <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Resuelto
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+                        <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-accent-gold/10 text-accent-gold border border-accent-gold/20 shadow-[0_0_12px_rgba(245,158,11,0.1)]">
                           <Clock className="w-3.5 h-3.5" />
                           Pendiente
                         </span>
                       )}
                     </td>
                     <td className="px-5 py-3.5 whitespace-nowrap">
-                      <div className="font-medium text-slate-200">
+                      <div className="font-bold text-foreground text-sm">
                         {format(new Date(err.fecha), "dd MMM yyyy", { locale: es })}
                       </div>
-                      <div className="text-xs text-slate-500">{err.dia_semana}</div>
+                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{err.dia_semana}</div>
                     </td>
                     <td className="px-5 py-3.5">
                       <div 
                         onClick={() => toggleNameHighlight(err.nombre_apellido)}
-                        className={`font-semibold cursor-pointer transition-colors ${checkedNames.has(err.nombre_apellido) ? "text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20 shadow-sm" : "text-slate-200"}`}
+                        className={`font-bold text-sm cursor-pointer transition-all ${checkedNames.has(err.nombre_apellido) ? "text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-xl border border-emerald-500/20 shadow-lg scale-[1.02]" : "text-foreground hover:text-accent-gold"}`}
                         title="Click para marcar/desmarcar progreso"
                       >
                         {err.nombre_apellido}
                       </div>
-                      <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 mt-1">
                         Leg: {err.legajo}
                         <button
                           onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(err.legajo); }}
-                          className="hover:text-amber-500 transition-colors"
+                          className="hover:text-accent-gold transition-colors"
                           title="Copiar legajo"
                         >
                           <Copy className="w-3 h-3" />
@@ -724,14 +725,14 @@ export default function Dashboard() {
                     <td className="px-5 py-3.5">
                       {getMotivoBadge(err.motivo_error)}
                       {err.notas && (
-                        <div className="text-xs text-slate-500 mt-1 max-w-[180px] truncate" title={err.notas}>
-                          {err.notas}
+                        <div className="text-[10px] font-bold text-slate-500 mt-1.5 max-w-[200px] truncate italic uppercase tracking-tight" title={err.notas}>
+                          "{err.notas}"
                         </div>
                       )}
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="font-medium text-slate-300">{err.sector}</div>
-                      <div className="text-xs text-slate-500">
+                      <div className="font-bold text-foreground text-xs uppercase tracking-tight">{err.sector}</div>
+                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">
                         {err.ot ? `OT: ${err.ot}` : "Sin OT"}{err.horario ? ` · ${err.horario}` : ""}
                       </div>
                     </td>
@@ -740,7 +741,7 @@ export default function Dashboard() {
                         {/* Always visible: Resolver/Reabrir */}
                         <button
                           onClick={() => toggleResuelto(err.id, err.resuelto)}
-                          className={`text-sm font-semibold transition-colors ${err.resuelto ? "text-slate-500 hover:text-white" : "text-amber-500 hover:text-amber-400"}`}
+                          className={`text-[10px] font-black uppercase tracking-widest transition-all ${err.resuelto ? "text-slate-500 hover:text-foreground" : "text-accent-gold hover:text-accent-gold-dark"}`}
                         >
                           {err.resuelto ? "Reabrir" : "Resolver"}
                         </button>
@@ -750,14 +751,14 @@ export default function Dashboard() {
                           <>
                             <button
                               onClick={() => openEdit(err)}
-                              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition"
+                              className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-slate-500 hover:text-foreground transition-all shadow-inner"
                               title="Editar"
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => setDeletingId(err.id)}
-                              className="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition"
+                              className="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-500 hover:text-red-500 transition-all shadow-inner"
                               title="Eliminar"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -773,19 +774,15 @@ export default function Dashboard() {
           </table>
         </div>
         {!loading && hasMore && errores.length > 0 && !searchQuery.trim() && (
-          <div className="border-t border-white/5 py-4 flex justify-center">
+          <div className="border-t border-border py-6 flex justify-center bg-black/5 dark:bg-white/5">
             <button
               type="button"
               onClick={loadMore}
               disabled={loadingMore}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/10 text-sm font-semibold text-slate-400 hover:bg-white/5 transition disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-2xl border border-border bg-background text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:bg-card hover:text-accent-gold transition-all disabled:opacity-50 active:scale-95 shadow-xl"
             >
-              {loadingMore ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-              {loadingMore ? "Cargando…" : "Cargar más"}
+              {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
+              {loadingMore ? "Cargando…" : "Cargar más registros"}
             </button>
           </div>
         )}
@@ -815,58 +812,101 @@ export default function Dashboard() {
 
       {/* Edit modal */}
       {editingError && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
-            <div className="flex items-center justify-between mb-5">
+        <div className="fixed inset-0 bg-background/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-card rounded-[2.5rem] shadow-2xl p-8 max-w-lg w-full border border-border overflow-hidden relative"
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent-gold to-accent-gold-dark" />
+            
+            <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className="font-bold text-slate-900">Editar Registro</h3>
-                <p className="text-xs text-slate-400 mt-0.5">{editingError.nombre_apellido} · Leg. {editingError.legajo}</p>
+                <h3 className="text-xl font-black text-foreground uppercase tracking-tight">Editar Registro</h3>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1 opacity-70">
+                  {editingError.nombre_apellido} · Leg. {editingError.legajo}
+                </p>
               </div>
-              <button onClick={() => setEditingError(null)} className="p-2 hover:bg-slate-100 rounded-xl transition">
-                <X className="w-4 h-4 text-slate-500" />
+              <button 
+                onClick={() => setEditingError(null)} 
+                className="p-2.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-2xl transition-all text-slate-500 hover:text-foreground"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1">Sector</label>
-                  <input type="text" value={editSector} onChange={(e) => setEditSector(e.target.value)}
-                    className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition" />
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Sector</label>
+                  <div className="relative group/input">
+                    <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-accent-gold transition-colors" />
+                    <input 
+                      type="text" 
+                      value={editSector} 
+                      onChange={(e) => setEditSector(e.target.value)}
+                      className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all" 
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1">OT (10 dígitos)</label>
-                  <input type="text" value={editOt}
-                    onChange={(e) => setEditOt(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition"
-                    placeholder="Opcional" maxLength={10} />
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">OT (10 dígitos)</label>
+                  <div className="relative group/input">
+                    <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-accent-gold transition-colors" />
+                    <input 
+                      type="text" 
+                      value={editOt}
+                      onChange={(e) => setEditOt(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all"
+                      placeholder="Opcional" 
+                      maxLength={10} 
+                    />
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Horario</label>
-                <input type="text" value={editHorario} onChange={(e) => setEditHorario(e.target.value)}
-                  className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition"
-                  placeholder="Ej: 06:00 a 14:00" />
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Horario</label>
+                <div className="relative group/input">
+                  <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-accent-gold transition-colors" />
+                  <input 
+                    type="text" 
+                    value={editHorario} 
+                    onChange={(e) => setEditHorario(e.target.value)}
+                    className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all"
+                    placeholder="Ej: 06:00 a 14:00" 
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Notas</label>
-                <textarea value={editNotas} onChange={(e) => setEditNotas(e.target.value)} rows={3}
-                  className="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition resize-none" />
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Notas Observaciones</label>
+                <textarea 
+                  value={editNotas} 
+                  onChange={(e) => setEditNotas(e.target.value)} 
+                  rows={4}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all resize-none" 
+                />
               </div>
             </div>
 
-            <div className="flex gap-3 justify-end mt-5">
-              <button onClick={() => setEditingError(null)}
-                className="px-5 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
+            <div className="flex gap-4 justify-end mt-10">
+              <button 
+                onClick={() => setEditingError(null)}
+                className="px-6 py-3 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all active:scale-95"
+              >
                 Cancelar
               </button>
-              <button onClick={saveEdit} disabled={editLoading}
-                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition shadow-sm disabled:opacity-50 active:scale-95">
-                {editLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              <button 
+                onClick={saveEdit} 
+                disabled={editLoading}
+                className="flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-accent-gold to-accent-gold-dark hover:from-accent-gold-dark hover:to-accent-gold text-black text-[10px] font-black uppercase tracking-widest transition-all shadow-2xl shadow-accent-gold/20 active:scale-95 disabled:opacity-50"
+              >
+                {editLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                 Guardar cambios
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

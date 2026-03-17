@@ -18,25 +18,25 @@ type HourMods = { insa: boolean; polu: boolean; noct: boolean };
 
 function HourInputRow({ label, val, setVal, mods, setMods }: { label: string, val: string, setVal: (v: string) => void, mods: HourMods, setMods: (m: HourMods) => void }) {
   return (
-    <div className="bg-black/40 p-3 rounded-2xl border border-white/5 space-y-2 shadow-inner group transition-all hover:border-amber-500/20">
+    <div className="bg-background/40 p-3 rounded-2xl border border-border space-y-2 shadow-inner group transition-all hover:border-accent-gold/20">
       <div className="flex items-center justify-between">
         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">{label}</label>
         <input 
           type="number" step="0.5" min="0" 
           value={val} onChange={(e) => setVal(e.target.value)} 
-          className="w-20 bg-black/50 border border-white/5 rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 outline-none text-xs font-bold text-slate-300 text-right appearance-none" 
+          className="w-20 bg-background border border-border rounded-xl px-3 py-1.5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none text-xs font-bold text-foreground text-right appearance-none" 
           placeholder="0" 
         />
       </div>
-      <div className="flex items-center justify-around pt-2 border-t border-white/5">
+      <div className="flex items-center justify-around pt-2 border-t border-border">
         {(["insa", "polu", "noct"] as const).map(m => (
-          <label key={m} className={`flex items-center gap-1.5 text-[9px] font-black cursor-pointer uppercase transition-all tracking-tighter ${mods[m] ? 'text-amber-500' : 'text-slate-600 hover:text-slate-400'}`}>
+          <label key={m} className={`flex items-center gap-1.5 text-[9px] font-black cursor-pointer uppercase transition-all tracking-tighter ${mods[m] ? 'text-accent-gold' : 'text-slate-500 hover:text-slate-400'}`}>
             <div className="relative flex items-center">
               <input 
                 type="checkbox" 
                 checked={mods[m]} 
                 onChange={(e) => setMods({...mods, [m]: e.target.checked})} 
-                className="w-3.5 h-3.5 rounded-lg border-white/10 bg-black/40 text-amber-500 focus:ring-amber-500/20 cursor-pointer transition-all"
+                className="w-3.5 h-3.5 rounded-lg border-border bg-background text-accent-gold focus:ring-accent-gold/20 cursor-pointer transition-all"
               />
             </div>
             {m === 'insa' ? 'INS' : m === 'polu' ? 'POL' : 'NOC'}
@@ -247,31 +247,31 @@ export default function MiniCargaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] p-4 pb-12 font-sans selection:bg-amber-500/30">
-      <div className="flex items-center justify-between mb-4 bg-slate-900/40 backdrop-blur-xl p-4 rounded-[2rem] border border-white/5 shadow-2xl sticky top-0 z-[60]">
+    <div className="min-h-screen bg-background p-4 pb-12 font-sans selection:bg-accent-gold/30">
+      <div className="flex items-center justify-between mb-4 bg-sidebar/80 backdrop-blur-xl p-4 rounded-[2rem] border border-border shadow-2xl sticky top-0 z-[60]">
         <div className="flex items-center gap-3">
-          <div className="w-1 h-6 bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+          <div className="w-1 h-6 bg-accent-gold rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
           <div>
-            <h1 className="text-xs font-black text-white tracking-tight uppercase">Mini Omisiones</h1>
-            <p className="text-[9px] text-slate-600 font-black uppercase tracking-[0.15em] mt-0.5">SJG Gestión</p>
+            <h1 className="text-xs font-black text-foreground tracking-tight uppercase">Mini Omisiones</h1>
+            <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.15em] mt-0.5">SJG Gestión</p>
           </div>
         </div>
         <button 
           onClick={() => window.close()}
-          className="p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all text-slate-500 hover:text-white"
+          className="p-2 rounded-xl bg-background/50 border border-border hover:bg-card transition-all text-slate-500 hover:text-foreground"
           title="Cerrar ventana"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="bg-slate-950/40 rounded-[2.5rem] border border-white/5 shadow-2xl overflow-hidden backdrop-blur-xl">
+      <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl overflow-hidden backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="p-6 space-y-6" noValidate>
           
           {/* Empleado */}
           <div ref={searchRef} className="space-y-1.5">
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-              <Search className="w-3 h-3 group-hover:text-amber-500 transition-colors" /> Empleado*
+              <Search className="w-3 h-3 group-hover:text-accent-gold transition-colors" /> Empleado*
             </label>
             <div className="relative group/input">
               <input
@@ -279,13 +279,13 @@ export default function MiniCargaPage() {
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                className={`w-full bg-black/40 border rounded-2xl pl-10 pr-10 py-3 text-xs font-medium text-slate-300 placeholder:text-slate-700 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 outline-none transition-all shadow-inner ${errors.empleado ? "border-red-500/50 bg-red-500/5" : "border-white/5"}`}
+                className={`w-full bg-background border rounded-2xl pl-10 pr-10 py-3 text-xs font-medium text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all shadow-inner ${errors.empleado ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
                 placeholder="Nombre o legajo..."
                 autoComplete="off"
               />
-              <Search className="w-4 h-4 text-slate-700 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none group-focus-within/input:text-amber-500/50 transition-colors" />
+              <Search className="w-4 h-4 text-slate-400 dark:text-slate-700 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none group-focus-within/input:text-accent-gold transition-colors" />
               {searchQuery && (
-                <button type="button" onClick={clearEmpleado} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 transition-colors">
+                <button type="button" onClick={clearEmpleado} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-foreground transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               )}
@@ -293,11 +293,11 @@ export default function MiniCargaPage() {
             {errors.empleado && <p className="text-red-500 text-[9px] ml-1 font-black uppercase tracking-widest leading-none mt-1">{errors.empleado}</p>}
 
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute z-50 left-0 right-0 top-[110%] bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300 backdrop-blur-xl max-h-60 overflow-y-auto custom-scrollbar">
+              <div className="absolute z-50 left-0 right-0 top-[110%] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300 backdrop-blur-xl max-h-60 overflow-y-auto custom-scrollbar">
                 {suggestions.map((emp) => (
                   <button key={emp.legajo} type="button" onClick={() => selectEmpleado(emp)}
-                    className="w-full text-left px-4 py-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 group/item">
-                    <p className="text-[11px] font-bold text-slate-200 uppercase tracking-tight group-hover/item:text-amber-400 transition-colors">{emp.nombre_apellido}</p>
+                    className="w-full text-left px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-b border-border last:border-0 group/item">
+                    <p className="text-[11px] font-bold text-foreground uppercase tracking-tight group-hover/item:text-accent-gold transition-colors">{emp.nombre_apellido}</p>
                     <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mt-0.5">Leg: {emp.legajo} · {emp.contrato}</p>
                   </button>
                 ))}
@@ -305,13 +305,13 @@ export default function MiniCargaPage() {
             )}
 
             {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && !searchLoading && (
-              <div className="p-4 bg-amber-500/5 rounded-2xl border border-dashed border-amber-500/20 space-y-2 animate-in fade-in zoom-in duration-300">
-                <p className="text-[9px] text-amber-500/80 font-black uppercase tracking-widest">Legajo Manual:</p>
+              <div className="p-4 bg-accent-gold/5 rounded-2xl border border-dashed border-accent-gold/20 space-y-2 animate-in fade-in zoom-in duration-300">
+                <p className="text-[9px] text-accent-gold/80 font-black uppercase tracking-widest">Legajo Manual:</p>
                 <input
                   type="text"
                   value={legajoManual}
                   onChange={(e) => setLegajoManual(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-[11px] font-bold text-slate-300 outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/50 transition-all"
+                  className="w-full bg-background border border-border rounded-xl px-3 py-2 text-[11px] font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all font-black"
                   placeholder="Ej: 60019454"
                 />
               </div>
@@ -322,15 +322,15 @@ export default function MiniCargaPage() {
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Fecha*</label>
               <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)}
-                className="w-full bg-black/40 border border-white/5 rounded-2xl px-3 py-3 text-xs font-medium text-slate-300 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 outline-none transition-all [color-scheme:dark]" />
+                className="w-full bg-background border border-border rounded-2xl px-3 py-3 text-xs font-medium text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]" />
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Contrato*</label>
               <select value={contrato} onChange={(e) => setContrato(e.target.value)}
-                className={`w-full bg-black/40 border rounded-2xl px-3 py-3 text-xs font-medium text-slate-300 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 outline-none transition-all appearance-none cursor-pointer ${errors.contrato ? "border-red-500/50 bg-red-500/5" : "border-white/5"}`}
+                className={`w-full bg-background border rounded-2xl px-3 py-3 text-xs font-black uppercase tracking-widest text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all appearance-none cursor-pointer ${errors.contrato ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
               >
-                <option value="" className="bg-slate-900 text-slate-500">Contrato...</option>
-                {CONTRATOS.map(c => <option key={c} value={c} className="bg-slate-900 text-slate-300">{c}</option>)}
+                <option value="" className="bg-card text-slate-500">Contrato...</option>
+                {CONTRATOS.map(c => <option key={c} value={c} className="bg-card text-foreground">{c}</option>)}
               </select>
             </div>
           </div>
@@ -338,10 +338,10 @@ export default function MiniCargaPage() {
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Motivo*</label>
             <select value={motivo} onChange={(e) => setMotivo(e.target.value)}
-              className={`w-full bg-black/40 border rounded-2xl px-3 py-3 text-xs font-medium text-slate-300 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 outline-none transition-all appearance-none cursor-pointer ${errors.motivo ? "border-red-500/50 bg-red-500/5" : "border-white/5"}`}
+              className={`w-full bg-background border rounded-2xl px-3 py-3 text-xs font-black uppercase tracking-widest text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all appearance-none cursor-pointer ${errors.motivo ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
             >
-              <option value="" className="bg-slate-900 text-slate-500">Seleccione motivo...</option>
-              {MOTIVOS.map(m => <option key={m} value={m} className="bg-slate-900 text-slate-300">{m}</option>)}
+              <option value="" className="bg-card text-slate-500">Seleccione motivo...</option>
+              {MOTIVOS.map(m => <option key={m} value={m} className="bg-card text-foreground">{m}</option>)}
             </select>
           </div>
 
@@ -349,7 +349,7 @@ export default function MiniCargaPage() {
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Sector*</label>
               <input type="text" value={sector} onChange={(e) => setSector(e.target.value)}
-                className={`w-full bg-black/40 border rounded-2xl px-4 py-3 text-xs font-medium text-slate-300 placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-all shadow-inner ${errors.sector ? "border-red-500/50 bg-red-500/5" : "border-white/5"}`}
+                className={`w-full bg-background border rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest  text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner ${errors.sector ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
                 placeholder="Ej: Planta A" list="mini-sectores" />
               <datalist id="mini-sectores"><option value="Planta A" /><option value="Planta B" /><option value="Mantenimiento" /></datalist>
             </div>
@@ -357,7 +357,7 @@ export default function MiniCargaPage() {
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">OT</label>
               <input type="text" value={ot} onChange={(e) => setOt(e.target.value.replace(/\D/g, "").slice(0, 10))}
                 disabled={motivo === "OT Inexistente"}
-                className={`w-full bg-black/40 border rounded-2xl px-4 py-3 text-xs font-medium text-slate-300 placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-all shadow-inner disabled:opacity-20 ${errors.ot ? "border-red-500/50 bg-red-500/5" : "border-white/5"}`}
+                className={`w-full bg-background border rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner disabled:opacity-20 ${errors.ot ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
                 placeholder="10 dígitos" maxLength={10} />
             </div>
           </div>
@@ -366,15 +366,15 @@ export default function MiniCargaPage() {
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Horario*</label>
             <div className="flex items-center gap-3">
               <input type="time" value={horarioDesde} onChange={(e) => setHorarioDesde(e.target.value)}
-                className="flex-1 bg-black/40 border border-white/5 rounded-2xl px-4 py-3 text-xs font-medium text-slate-300 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-all shadow-inner [color-scheme:dark]" />
-              <div className="w-4 h-[1px] bg-white/10" />
+                className="flex-1 bg-background border border-border rounded-2xl px-4 py-3 text-xs font-medium text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner [color-scheme:light] dark:[color-scheme:dark]" />
+              <div className="w-4 h-[1px] bg-border" />
               <input type="time" value={horarioHasta} onChange={(e) => setHorarioHasta(e.target.value)}
-                className="flex-1 bg-black/40 border border-white/5 rounded-2xl px-4 py-3 text-xs font-medium text-slate-300 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-all shadow-inner [color-scheme:dark]" />
+                className="flex-1 bg-background border border-border rounded-2xl px-4 py-3 text-xs font-medium text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner [color-scheme:light] dark:[color-scheme:dark]" />
             </div>
           </div>
 
-          <div className="space-y-3 pt-4 border-t border-white/5">
-            <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] text-center mb-1">Horas y Detalles</p>
+          <div className="space-y-3 pt-4 border-t border-border">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] text-center mb-1">Horas y Detalles</p>
             <div className="grid grid-cols-1 gap-3">
               <HourInputRow label="Normales" val={horasNormales} setVal={setHorasNormales} mods={hsNormalesMods} setMods={setHsNormalesMods} />
               <div className="grid grid-cols-2 gap-3">
@@ -386,12 +386,12 @@ export default function MiniCargaPage() {
 
           <div className="pt-2">
             <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2}
-              className="w-full bg-black/20 border border-white/5 rounded-2xl px-4 py-3 text-xs font-medium text-slate-400 outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 transition-all resize-none shadow-inner placeholder:text-slate-800"
+              className="w-full bg-background/50 border border-border rounded-2xl px-4 py-3 text-xs font-medium text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all resize-none shadow-inner placeholder:text-slate-400 dark:placeholder:text-slate-700"
               placeholder="Notas u observaciones adicionales..." />
           </div>
 
           <button type="submit" disabled={loading}
-            className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-black text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl transition-all hover:from-amber-400 hover:to-amber-500 active:scale-95 disabled:opacity-50 shadow-amber-900/40 relative overflow-hidden group focus:ring-4 focus:ring-amber-500/30"
+            className="w-full h-14 rounded-2xl bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black font-black text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl transition-all hover:from-accent-gold-dark hover:to-accent-gold active:scale-95 disabled:opacity-50 shadow-accent-gold/20 relative overflow-hidden group focus:ring-4 focus:ring-accent-gold/30"
           >
             <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700 skew-x-12" />
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 opacity-70" />}
@@ -400,7 +400,7 @@ export default function MiniCargaPage() {
         </form>
       </div>
       
-      <p className="text-center text-[9px] text-slate-700 mt-6 font-black uppercase tracking-[0.3em] opacity-40">
+      <p className="text-center text-[9px] text-slate-500 mt-6 font-black uppercase tracking-[0.3em] opacity-40">
         SJG Management Hub · v2.0
       </p>
     </div>

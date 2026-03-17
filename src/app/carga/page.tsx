@@ -22,24 +22,24 @@ type HourMods = { insa: boolean; polu: boolean; noct: boolean };
 
 function HourInputRow({ label, val, setVal, mods, setMods }: { label: string, val: string, setVal: (v: string) => void, mods: HourMods, setMods: (m: HourMods) => void }) {
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-card/40 p-3 rounded-xl border border-border">
       <div className="flex items-center gap-3 w-full sm:w-1/3">
-        <label className="text-sm font-medium text-slate-700 w-24">{label}</label>
+        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest w-24">{label}</label>
         <input 
           type="number" step="0.5" min="0" 
           value={val} onChange={(e) => setVal(e.target.value)} 
-          className="w-full border rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none text-sm border-slate-200" 
+          className="w-full bg-background border border-border rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-accent-gold outline-none text-sm text-foreground" 
           placeholder="Ej: 4.5" 
         />
       </div>
-      <div className="flex items-center gap-4 w-full sm:w-2/3 mt-2 sm:mt-0 pt-2 sm:pt-0 sm:border-l sm:pl-4 border-slate-200">
+      <div className="flex items-center gap-4 w-full sm:w-2/3 mt-2 sm:mt-0 pt-2 sm:pt-0 sm:border-l sm:pl-4 border-border">
         {(["insa", "polu", "noct"] as const).map(m => (
-          <label key={m} className="flex items-center gap-1.5 text-xs text-slate-600 font-medium cursor-pointer uppercase hover:text-indigo-600 transition">
+          <label key={m} className="flex items-center gap-1.5 text-[9px] font-black text-slate-500 cursor-pointer uppercase hover:text-accent-gold transition">
             <input 
               type="checkbox" 
               checked={mods[m]} 
               onChange={(e) => setMods({...mods, [m]: e.target.checked})} 
-              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+              className="rounded border-border bg-background text-accent-gold focus:ring-accent-gold cursor-pointer"
             />
             {m}
           </label>
@@ -201,8 +201,8 @@ export default function CargaPage() {
     const dias = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"];
     const horarioStr = horarioDesde && horarioHasta ? `${horarioDesde} a ${horarioHasta}` : null;
     const employeesToSave = selectedEmpleados.length > 0 
-      ? selectedEmpleados 
-      : [{ nombre_apellido: searchQuery.trim(), legajo: legajoManual.trim() }];
+    ? selectedEmpleados 
+    : [{ nombre_apellido: searchQuery.trim(), legajo: legajoManual.trim() }];
 
     const errorsToSave = employeesToSave.map(emp => ({
       fecha: fechaISO,
@@ -273,15 +273,15 @@ export default function CargaPage() {
     <div className="max-w-2xl mx-auto">
       <div className="mb-6 flex items-start justify-between">
         <div className="flex items-center gap-4">
-           <div className="w-1.5 h-8 bg-amber-500 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.5)]" />
+           <div className="w-1.5 h-8 bg-accent-gold rounded-full shadow-[0_0_12px_rgba(245,158,11,0.5)]" />
            <div>
-            <h1 className="text-2xl font-black text-white tracking-tight uppercase">Cargar Registro</h1>
-            <p className="text-slate-500 text-xs font-medium uppercase tracking-widest mt-0.5">Gestión de Omisiones y Errores SJG</p>
+            <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">Cargar Registro</h1>
+            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">Gestión de Omisiones y Errores SJG</p>
           </div>
         </div>
         <button
           onClick={() => window.open("/carga/mini", "MiniCarga", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-500 text-[10px] font-black uppercase tracking-wider hover:bg-amber-500/10 transition-all active:scale-95 shadow-lg"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-accent-gold/20 bg-accent-gold/5 text-accent-gold text-[10px] font-black uppercase tracking-wider hover:bg-accent-gold/10 transition-all active:scale-95 shadow-lg"
           title="Abrir como ventana flotante para multitarea"
         >
           <Maximize2 className="w-3.5 h-3.5" />
@@ -289,23 +289,23 @@ export default function CargaPage() {
         </button>
       </div>
 
-      <div className="bg-slate-950/40 rounded-[2.5rem] border border-white/5 shadow-2xl p-8 backdrop-blur-xl">
+      <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl p-8 backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
 
           {/* Employee search */}
           <div ref={searchRef} className="relative">
             <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
               Empleado <span className="text-slate-600 font-medium">(nombre o legajo)</span>
-              <span className="text-amber-500 ml-1 font-bold">*</span>
+              <span className="text-accent-gold ml-1 font-bold">*</span>
             </label>
             <div className="relative group">
-              <Search className="w-4 h-4 text-slate-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none group-focus-within:text-amber-500 transition-colors" />
+              <Search className="w-4 h-4 text-slate-400 dark:text-slate-600 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none group-focus-within:text-accent-gold transition-colors" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                className={`w-full bg-black/40 border rounded-2xl pl-11 pr-11 py-3.5 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 outline-none transition text-sm font-medium text-slate-200 ${errors.empleado ? "border-red-500/50 bg-red-500/5" : "border-white/5"}`}
+                className={`w-full bg-background border rounded-2xl pl-11 pr-11 py-3.5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-medium text-foreground ${errors.empleado ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
                 placeholder="Buscar por nombre o legajo..."
                 autoComplete="off"
               />
@@ -318,15 +318,15 @@ export default function CargaPage() {
                 <Loader2 className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 animate-spin" />
               )}
             </div>
-            {errors.empleado && <p className="text-red-500 text-xs mt-1">{errors.empleado}</p>}
+            {errors.empleado && <p className="text-red-500 text-xs mt-1 font-bold">{errors.empleado}</p>}
 
             {/* Dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute z-50 w-full mt-2 bg-[#0f1115] border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
+              <div className="absolute z-50 w-full mt-2 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
                 {suggestions.map((emp) => (
                   <button key={emp.legajo} type="button" onClick={() => selectEmpleado(emp)}
-                    className="w-full text-left px-5 py-4 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 group">
-                    <div className="font-bold text-slate-200 text-sm group-hover:text-amber-400 transition-colors">{emp.nombre_apellido}</div>
+                    className="w-full text-left px-5 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-b border-border last:border-0 group">
+                    <div className="font-bold text-foreground text-sm group-hover:text-accent-gold transition-colors">{emp.nombre_apellido}</div>
                     <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Leg: {emp.legajo} · {emp.contrato}{emp.categoria ? ` · ${emp.categoria}` : ""}</div>
                   </button>
                 ))}
@@ -334,13 +334,13 @@ export default function CargaPage() {
             )}
 
             {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && !searchLoading && (
-              <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl px-4 py-3 space-y-2">
+              <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-xl shadow-xl px-4 py-3 space-y-2">
                 <p className="text-sm text-slate-500">No se encontró "{searchQuery}". Ingresá el legajo manualmente:</p>
                 <input
                   type="text"
                   value={legajoManual}
                   onChange={(e) => setLegajoManual(e.target.value)}
-                  className={`w-full border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-indigo-500 ${errors.legajo ? "border-red-400" : "border-slate-300"}`}
+                  className={`w-full bg-background border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-accent-gold ${errors.legajo ? "border-red-400" : "border-border"}`}
                   placeholder="Ej: 60019454"
                 />
               </div>
@@ -355,11 +355,11 @@ export default function CargaPage() {
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.8 }}
-                      className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-wider shadow-[0_0_15px_rgba(245,158,11,0.1)]"
+                      className="inline-flex items-center gap-2 bg-accent-gold/10 border border-accent-gold/20 text-accent-gold rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-wider shadow-[0_0_15px_rgba(245,158,11,0.1)]"
                     >
-                      <div className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+                      <div className="w-1.5 h-1.5 bg-accent-gold rounded-full animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
                       {emp.nombre_apellido}
-                      <button type="button" onClick={() => removeEmpleado(emp.legajo)} className="ml-1 hover:text-white hover:bg-amber-500/20 p-0.5 rounded-md transition-all">
+                      <button type="button" onClick={() => removeEmpleado(emp.legajo)} className="ml-1 hover:text-foreground hover:bg-accent-gold/20 p-0.5 rounded-md transition-all">
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </motion.div>
@@ -372,8 +372,8 @@ export default function CargaPage() {
           {/* Contrato + Motivo */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-semibold mb-2 text-slate-700">
-                Fecha del Error <span className="text-red-500">*</span>
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
+                Fecha del Error <span className="text-accent-gold ml-1 font-bold">*</span>
               </label>
               <input
                 type="date"
@@ -383,7 +383,7 @@ export default function CargaPage() {
                   setFecha(e.target.value);
                   if (e.target.value) sessionStorage.setItem("sjg_working_date", e.target.value);
                 }}
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white text-sm"
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm text-foreground [color-scheme:light] dark:[color-scheme:dark]"
               />
             </div>
           </div>
@@ -391,13 +391,13 @@ export default function CargaPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
-                Contrato <span className="text-amber-500 ml-1 font-bold">*</span>
+                Contrato <span className="text-accent-gold ml-1 font-bold">*</span>
               </label>
               <select
                 required
                 value={contrato}
                 onChange={(e) => { setContrato(e.target.value); setErrors((err) => ({ ...err, contrato: "" })); }}
-                className={`w-full bg-black/40 border rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 outline-none transition text-sm font-medium text-slate-200 ${errors.contrato ? "border-red-500/50 bg-red-500/5" : "border-white/5"}`}
+                className={`w-full bg-background border rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black uppercase tracking-widest text-foreground appearance-none cursor-pointer ${errors.contrato ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
               >
                 <option value="">Seleccionar contrato...</option>
                 {CONTRATOS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -407,13 +407,13 @@ export default function CargaPage() {
 
             <div>
               <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
-                Motivo del Error <span className="text-amber-500 ml-1 font-bold">*</span>
+                Motivo del Error <span className="text-accent-gold ml-1 font-bold">*</span>
               </label>
               <select
                 required
                 value={motivo}
                 onChange={(e) => { setMotivo(e.target.value); setErrors((err) => ({ ...err, motivo: "", ot: "" })); }}
-                className={`w-full bg-black/40 border rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/50 outline-none transition text-sm font-medium text-slate-200 ${errors.motivo ? "border-red-500/50 bg-red-500/5" : "border-white/5"}`}
+                className={`w-full bg-background border rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black uppercase tracking-widest text-foreground appearance-none cursor-pointer ${errors.motivo ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
               >
                 <option value="">Seleccione un motivo...</option>
                 {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -425,14 +425,14 @@ export default function CargaPage() {
           {/* Sector + OT */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-semibold mb-2 text-slate-700">
-                Sector / Área <span className="text-red-500">*</span>
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
+                Sector / Área <span className="text-accent-gold ml-1 font-bold">*</span>
               </label>
               <input
                 type="text"
                 value={sector}
                 onChange={(e) => { setSector(e.target.value); setErrors((err) => ({ ...err, sector: "" })); }}
-                className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm ${errors.sector ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                className={`w-full bg-background border rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground ${errors.sector ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
                 placeholder="Ej: Planta A, Mantenimiento..."
                 list="sectores-comunes"
               />
@@ -441,13 +441,13 @@ export default function CargaPage() {
                 <option value="Mantenimiento" /><option value="Logística" />
                 <option value="Administración" />
               </datalist>
-              {errors.sector && <p className="text-red-500 text-xs mt-1">{errors.sector}</p>}
+              {errors.sector && <p className="text-red-500 text-xs mt-1 font-bold">{errors.sector}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2 text-slate-700">
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
                 Número de OT
-                {motivo && motivo !== "OT Inexistente" && <span className="text-red-500 ml-1">*</span>}
+                {motivo && motivo !== "OT Inexistente" && <span className="text-accent-gold ml-1 font-bold">*</span>}
                 <span className="text-slate-400 font-normal ml-1">(10 dígitos)</span>
               </label>
               <input
@@ -455,49 +455,49 @@ export default function CargaPage() {
                 value={ot}
                 onChange={(e) => { setOt(e.target.value.replace(/\D/g, "").slice(0, 10)); setErrors((err) => ({ ...err, ot: "" })); }}
                 disabled={motivo === "OT Inexistente"}
-                className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm disabled:bg-slate-50 disabled:text-slate-400 ${errors.ot ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                className={`w-full bg-background border rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black text-foreground disabled:opacity-20 ${errors.ot ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
                 placeholder={motivo === "OT Inexistente" ? "No aplica" : "Ej: 0012300456"}
                 maxLength={10}
               />
-              {ot && <p className="text-xs text-slate-400 mt-1">{ot.length}/10 dígitos</p>}
-              {errors.ot && <p className="text-red-500 text-xs mt-1">{errors.ot}</p>}
+              {ot && <p className="text-[10px] text-slate-500 mt-1 font-bold">{ot.length}/10 dígitos</p>}
+              {errors.ot && <p className="text-red-500 text-xs mt-1 font-bold">{errors.ot}</p>}
             </div>
           </div>
 
           {/* Horario time pickers */}
           <div>
-            <label className="block text-sm font-semibold mb-2 text-slate-700">
-              Horario de Fichaje <span className="text-red-500">*</span>
+            <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-500 ml-1">
+              Horario de Fichaje <span className="text-accent-gold ml-1 font-bold">*</span>
             </label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-slate-500 mb-1">Entrada</label>
+                <label className="block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest ml-1">Entrada</label>
                 <input
                   type="time"
                   value={horarioDesde}
                   onChange={(e) => { setHorarioDesde(e.target.value); setErrors((err) => ({ ...err, horarioDesde: "" })); }}
-                  className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm ${errors.horarioDesde ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                  className={`w-full bg-background border rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm text-foreground [color-scheme:light] dark:[color-scheme:dark] ${errors.horarioDesde ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
                 />
-                {errors.horarioDesde && <p className="text-red-500 text-xs mt-1">{errors.horarioDesde}</p>}
+                {errors.horarioDesde && <p className="text-red-500 text-xs mt-1 font-bold">{errors.horarioDesde}</p>}
               </div>
               <div>
-                <label className="block text-xs text-slate-500 mb-1">Salida</label>
+                <label className="block text-[10px] font-black text-slate-500 mb-1 uppercase tracking-widest ml-1">Salida</label>
                 <input
                   type="time"
                   value={horarioHasta}
                   onChange={(e) => { setHorarioHasta(e.target.value); setErrors((err) => ({ ...err, horarioHasta: "" })); }}
-                  className={`w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm ${errors.horarioHasta ? "border-red-400 bg-red-50" : "border-slate-300"}`}
+                  className={`w-full bg-background border rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm text-foreground [color-scheme:light] dark:[color-scheme:dark] ${errors.horarioHasta ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
                 />
-                {errors.horarioHasta && <p className="text-red-500 text-xs mt-1">{errors.horarioHasta}</p>}
+                {errors.horarioHasta && <p className="text-red-500 text-xs mt-1 font-bold">{errors.horarioHasta}</p>}
               </div>
             </div>
           </div>
 
           {/* Hours details (New requirement) */}
-          <div className="space-y-4 pt-4 border-t border-slate-100">
+          <div className="space-y-4 pt-4 border-t border-border">
             <div>
-              <h3 className="text-sm font-semibold text-slate-800">Detalle de Horas Trabajadas <span className="text-slate-400 font-normal ml-1">(Opcional)</span></h3>
-              <p className="text-xs text-slate-500 mt-0.5">Indique la cantidad de horas y defina si tienen modificadores adicionales.</p>
+              <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Detalle de Horas Trabajadas <span className="text-slate-400 font-normal ml-1">(Opcional)</span></h3>
+              <p className="text-[9px] text-slate-500 mt-0.5 font-bold uppercase tracking-wider ml-1">Indique la cantidad de horas y defina si tienen modificadores adicionales.</p>
             </div>
             
             <div className="space-y-3">
@@ -508,26 +508,26 @@ export default function CargaPage() {
           </div>
 
           {/* Notas */}
-          <div className="pt-2 border-t border-slate-100">
-            <label className="block text-sm font-semibold mb-2 text-slate-700">Notas adicionales</label>
+          <div className="pt-2 border-t border-border">
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 ml-1">Notas adicionales</label>
             <textarea
               value={notas}
               onChange={(e) => setNotas(e.target.value)}
               rows={3}
-              className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition resize-none text-sm"
+              className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition resize-none text-sm text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 font-medium"
               placeholder="Algún comentario sobre el error..."
             />
           </div>
 
-          <div className="pt-6 flex justify-end gap-3 border-t border-white/5">
+          <div className="pt-6 flex justify-end gap-3 border-t border-border">
             <button type="button" onClick={() => router.push("/")}
-              className="px-6 py-3.5 rounded-2xl border border-white/5 text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-white/5 hover:text-white transition-all active:scale-[0.98]">
+              className="px-6 py-3.5 rounded-2xl border border-border text-[11px] font-black uppercase tracking-widest text-slate-500 hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-all active:scale-[0.98]">
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="min-w-[200px] bg-gradient-to-r from-amber-500 to-amber-600 hover:shadow-[0_8px_25px_rgba(245,158,11,0.3)] text-black font-black py-4 px-8 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98] text-xs uppercase tracking-tighter"
+              className="min-w-[200px] bg-gradient-to-r from-accent-gold to-accent-gold-dark hover:shadow-[0_8px_30px_rgba(217,119,6,0.2)] text-black font-black py-4 px-8 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98] text-[11px] uppercase tracking-widest"
             >
               {loading ? (
                 <>

@@ -63,26 +63,26 @@ export function ViewerOnboarding({ show, onClose }: { show: boolean; onClose: ()
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-xl">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-background/60 backdrop-blur-xl">
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="bg-[#111418] rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-white/10 w-full max-w-md overflow-hidden relative"
+          className="bg-card rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.8)] border border-border w-full max-w-md overflow-hidden relative shadow-2xl"
         >
           {/* Progress bar */}
           <div className="absolute top-0 left-0 right-0 flex gap-1 p-2 px-12 pt-6">
             {steps.map((_, i) => (
               <div 
                 key={i} 
-                className={`h-1 flex-1 rounded-full transition-all duration-700 ${i <= currentStep ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-white/5'}`} 
+                className={`h-1 flex-1 rounded-full transition-all duration-700 ${i <= currentStep ? 'bg-accent-gold shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-black/5 dark:bg-white/5'}`} 
               />
             ))}
           </div>
 
           <button 
             onClick={onClose}
-            className="absolute top-8 right-8 p-2.5 text-slate-500 hover:text-white rounded-2xl hover:bg-white/5 transition-all"
+            className="absolute top-8 right-8 p-2.5 text-slate-500 hover:text-foreground rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-all"
           >
             <X className="w-5 h-5" />
           </button>
@@ -93,7 +93,7 @@ export function ViewerOnboarding({ show, onClose }: { show: boolean; onClose: ()
                 key={currentStep}
                 initial={{ opacity: 0, scale: 0.5, rotate: -15 }}
                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                className="w-20 h-20 bg-amber-500/10 text-amber-500 rounded-3xl flex items-center justify-center mb-8 border border-amber-500/20 shadow-inner"
+                className="w-20 h-20 bg-accent-gold/10 text-accent-gold rounded-3xl flex items-center justify-center mb-8 border border-accent-gold/20 shadow-inner"
               >
                 {(() => {
                   const Icon = steps[currentStep].icon;
@@ -105,7 +105,7 @@ export function ViewerOnboarding({ show, onClose }: { show: boolean; onClose: ()
                 key={`t-${currentStep}`}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="text-2xl font-black text-white tracking-tight uppercase"
+                className="text-2xl font-black text-foreground tracking-tight uppercase"
               >
                 {steps[currentStep].title}
               </motion.h2>
@@ -115,7 +115,7 @@ export function ViewerOnboarding({ show, onClose }: { show: boolean; onClose: ()
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-slate-500 mt-4 text-[13px] leading-relaxed font-medium"
+                className="text-slate-500 mt-4 text-[13px] leading-relaxed font-black uppercase tracking-tight"
               >
                 {steps[currentStep].description}
               </motion.p>
@@ -124,7 +124,7 @@ export function ViewerOnboarding({ show, onClose }: { show: boolean; onClose: ()
             <div className="mt-12">
               <button
                 onClick={next}
-                className="w-full group flex items-center justify-center gap-3 py-5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95 shadow-amber-900/40"
+                className="w-full group flex items-center justify-center gap-3 py-5 px-6 rounded-2xl bg-gradient-to-r from-accent-gold to-accent-gold-dark hover:from-accent-gold-dark hover:to-accent-gold text-black font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95 shadow-accent-gold/40"
               >
                 <span>{currentStep === steps.length - 1 ? "Comenzar" : "Siguiente"}</span>
                 {currentStep === steps.length - 1 ? (
@@ -134,7 +134,7 @@ export function ViewerOnboarding({ show, onClose }: { show: boolean; onClose: ()
                 )}
               </button>
               
-              <div className="mt-4 flex justify-between items-center text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">
+              <div className="mt-4 flex justify-between items-center text-[11px] font-black text-slate-500 uppercase tracking-widest px-2">
                 <div className="flex items-center gap-1.5">
                   <Eye className="w-3.5 h-3.5" />
                   <span>Modo Visor</span>
