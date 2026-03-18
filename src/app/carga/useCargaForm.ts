@@ -252,6 +252,29 @@ export function useCargaForm() {
       return;
     }
 
+    // ─── Duplicate Detection ────────────────────────────────────────────────
+    try {
+      const { data: existing } = await supabase
+        .from("error_carga")
+        .select("nombre_apellido")
+        .in("legajo", employeesToSave.map(e => e.legajo))
+        .eq("fecha", fechaISO);
+
+      if (existing && existing.length > 0) {
+        const names = Array.from(new Set(existing.map(e => e.nombre_apellido))).join(", ");
+        const msg = existing.length === 1 
+          ? `Atención: ${names} ya tiene un registro cargado para esta fecha. ¿Desea cargar otro de todos modos?`
+          : `Atención: Hay ${existing.length} registros existentes para estos empleados en la fecha seleccionada. ¿Desea continuar?`;
+        
+        if (!confirm(msg)) {
+          setLoading(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("Error checking duplicates:", err);
+    }
+
     const records: any[] = [];
     
     employeesToSave.forEach((emp) => {

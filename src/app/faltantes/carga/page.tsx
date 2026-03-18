@@ -8,10 +8,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { CONTRATOS, SECTORES_FALTANTES, MOTIVOS_FALTANTES } from "@/types";
 
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+
 type Empleado = {
   nombre_apellido: string;
   legajo: string;
   contrato: string;
+};
+
+type RecentFaltante = {
+  id: number;
+  nombre_apellido: string;
+  fecha: string;
+  sector: string | null;
+  motivo: string | null;
 };
 
 export default function CargaFaltantePage() {
@@ -34,6 +45,10 @@ export default function CargaFaltantePage() {
   const [motivo, setMotivo] = useState("");
   const [legajoManual, setLegajoManual] = useState("");
 
+  // Recent entries
+  const [recentFaltantes, setRecentFaltantes] = useState<RecentFaltante[]>([]);
+  const [fetchingRecent, setFetchingRecent] = useState(false);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -46,8 +61,20 @@ export default function CargaFaltantePage() {
       }
     };
     document.addEventListener("mousedown", handler);
+    fetchRecent();
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const fetchRecent = async () => {
+    setFetchingRecent(true);
+    const { data } = await supabase
+      .from("faltantes")
+      .select("id, nombre_apellido, fecha, sector, motivo")
+      .order("created_at", { ascending: false })
+      .limit(5);
+    if (data) setRecentFaltantes(data);
+    setFetchingRecent(false);
+  };
 
   const updateFecha = (val: string) => {
     setFecha(val);
@@ -186,6 +213,7 @@ export default function CargaFaltantePage() {
     setSector("");
     setMotivo("");
     setErrors({});
+    fetchRecent();
     setLoading(false);
   };
 
@@ -408,6 +436,55 @@ export default function CargaFaltantePage() {
         </form>
       </div>
       
+      <div className="mt-12 space-y-4">
+        <div className="flex items-center gap-3 ml-2">
+           <div className="w-1.5 h-4 bg-accent-gold/40 rounded-full" />
+           <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Últimos cargados</h3>
+        </div>
+        
+        <div className="space-y-3">
+          {fetchingRecent ? (
+            <div className="h-20 bg-card/20 rounded-3xl border border-border/50 animate-pulse" />
+          ) : recentFaltantes.length === 0 ? (
+            <div className="p-8 text-center bg-card/20 rounded-3xl border border-border/50 border-dashed">
+              <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">Aún no hay registros recientes</p>
+            </div>
+          ) : (
+            recentFaltantes.map((f, i) => (
+              <motion.div 
+                key={f.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="group bg-card/40 hover:bg-card/60 rounded-2xl border border-border p-4 flex items-center justify-between transition-all backdrop-blur-sm"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-background flex flex-col items-center justify-center text-[8px] font-black text-slate-500 border border-border">
+                     <span className="text-accent-gold">{format(new Date(f.fecha), "dd")}</span>
+                     <span className="opacity-50 uppercase">{format(new Date(f.fecha), "MMM", { locale: es })}</span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-foreground uppercase tracking-tight group-hover:text-accent-gold transition-colors">{f.nombre_apellido}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{f.sector || "S/Sector"}</span>
+                      {f.motivo && (
+                         <>
+                           <span className="w-1 h-1 rounded-full bg-slate-700" />
+                           <span className="text-[9px] font-bold text-accent-gold/60 uppercase tracking-widest">{f.motivo}</span>
+                         </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                   <CheckCircle2 className="w-4 h-4 text-emerald-500/50" />
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
+      </div>
+
       <p className="mt-8 text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500 opacity-60">
         SJG Montajes Industriales · Sistema de Gestión
       </p>
