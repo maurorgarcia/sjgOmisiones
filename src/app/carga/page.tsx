@@ -196,17 +196,17 @@ export default function CargaPage() {
                 <label className={labelCls}>
                   OT {f.splitOT ? "1" : ""}
                   {f.motivo && f.motivo !== "OT Inexistente" && (
-                    <span className="text-accent-gold ml-1 font-bold">*</span>
+                    <span className="text-slate-400 font-normal ml-1">(8-12 dígitos)</span>
                   )}
                 </label>
                 <input
                   type="text"
                   value={f.ot}
-                  onChange={(e) => { f.setOt(e.target.value.replace(/\D/g, "").slice(0, 10)); f.setErrors((err) => ({ ...err, ot: "" })); }}
+                  onChange={(e) => { f.setOt(e.target.value.replace(/\D/g, "").slice(0, 12)); f.setErrors((err) => ({ ...err, ot: "" })); }}
                   disabled={f.motivo === "OT Inexistente"}
                   className={`${inputCls(!!f.errors.ot)} disabled:opacity-20`}
-                  placeholder="10 dígitos"
-                  maxLength={10}
+                  placeholder={f.motivo === "OT Inexistente" ? "No aplica" : "Ej: 0012300456"}
+                  maxLength={12}
                 />
                 <FieldError msg={f.errors.ot} />
               </div>
@@ -222,8 +222,8 @@ export default function CargaPage() {
                     onChange={(e) => { f.setOt2(e.target.value.replace(/\D/g, "").slice(0, 10)); f.setErrors((err) => ({ ...err, ot2: "" })); }}
                     disabled={f.motivo2 === "OT Inexistente"}
                     className={`${inputCls(!!f.errors.ot2)} border-emerald-500/30 bg-emerald-500/5 disabled:opacity-20`}
-                    placeholder="10 dígitos (2da OT)"
-                    maxLength={10}
+                    placeholder="8-12 dígitos (2da OT)"
+                    maxLength={12}
                   />
                   <FieldError msg={f.errors.ot2} />
                 </motion.div>

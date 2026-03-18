@@ -176,11 +176,11 @@ export function useCargaForm() {
     if (motivo && motivo !== "OT Inexistente") {
       if (!ot.trim()) {
         newErrors.ot = "El número de OT es requerido para este motivo.";
-      } else if (!/^\d{10}$/.test(ot.trim())) {
-        newErrors.ot = "La OT debe tener exactamente 10 dígitos numéricos.";
+      } else if (!/^\d{8,12}$/.test(ot.trim())) {
+        newErrors.ot = "La OT debe tener entre 8 y 12 dígitos.";
       }
-    } else if (ot.trim() && !/^\d{10}$/.test(ot.trim())) {
-      newErrors.ot = "La OT debe tener exactamente 10 dígitos numéricos.";
+    } else if (ot.trim() && !/^\d{8,12}$/.test(ot.trim())) {
+      newErrors.ot = "La OT debe tener entre 8 y 12 dígitos.";
     }
 
     if (!horarioDesde) newErrors.horarioDesde = "La hora de entrada es requerida.";
@@ -188,7 +188,11 @@ export function useCargaForm() {
 
     if (splitOT) {
       if (!motivo2) newErrors.motivo2 = "Seleccione motivo para la 2da OT.";
-      if (!ot2.trim() && motivo2 !== "OT Inexistente") newErrors.ot2 = "La 2da OT es requerida.";
+      if (!ot2.trim() && motivo2 !== "OT Inexistente") {
+        newErrors.ot2 = "La 2da OT es requerida.";
+      } else if (ot2.trim() && !/^\d{8,12}$/.test(ot2.trim())) {
+        newErrors.ot2 = "La 2da OT debe tener entre 8 y 12 dígitos.";
+      }
     }
 
     setErrors(newErrors);

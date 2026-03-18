@@ -199,11 +199,11 @@ export default function MiniCargaPage() {
     if (motivo && motivo !== "OT Inexistente") {
       if (!ot.trim()) {
         newErrors.ot = "Requerido";
-      } else if (!/^\d{10}$/.test(ot.trim())) {
-        newErrors.ot = "Debe tener 10 dígitos";
+      } else if (!/^\d{8,12}$/.test(ot.trim())) {
+        newErrors.ot = "8-12 dígitos";
       }
-    } else if (ot.trim() && !/^\d{10}$/.test(ot.trim())) {
-      newErrors.ot = "Debe tener 10 dígitos";
+    } else if (ot.trim() && !/^\d{8,12}$/.test(ot.trim())) {
+      newErrors.ot = "8-12 dígitos";
     }
 
     if (!horarioDesde) newErrors.horarioDesde = "Requerido";
@@ -527,10 +527,10 @@ export default function MiniCargaPage() {
               <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
                 {splitOT ? "OT 1*" : "OT"}
               </label>
-              <input type="text" value={ot} onChange={(e) => setOt(e.target.value.replace(/\D/g, "").slice(0, 10))}
+              <input type="text" value={ot} onChange={(e) => setOt(e.target.value.replace(/\D/g, "").slice(0, 12))}
                 disabled={motivo === "OT Inexistente" && !splitOT}
                 className={`w-full bg-background border rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner disabled:opacity-20 ${errors.ot ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
-                placeholder="10 dígitos" maxLength={10} />
+                placeholder="8 - 12 dígitos" maxLength={12} />
             </div>
           </div>
 
@@ -541,10 +541,10 @@ export default function MiniCargaPage() {
                 <input 
                   type="text" 
                   value={ot2} 
-                  onChange={(e) => setOt2(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  onChange={(e) => setOt2(e.target.value.replace(/\D/g, "").slice(0, 12))}
                   className="w-full bg-background border border-emerald-500/20 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
-                  placeholder="OT con saldo u otro motivo" 
-                  maxLength={10} 
+                  placeholder="OT con 8-12 dígitos" 
+                  maxLength={12} 
                 />
               </div>
               <div>
