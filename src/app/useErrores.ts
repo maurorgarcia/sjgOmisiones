@@ -23,6 +23,7 @@ export function useErrores({ defaultFiltro = "pendientes", persistFilters = fals
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [search, setSearchRaw] = useState("");
 
   const [filtro, setFiltroRaw] = useState<FilterStatus>(() => {
     if (!persistFilters || typeof window === "undefined") return defaultFiltro;
@@ -78,6 +79,10 @@ export function useErrores({ defaultFiltro = "pendientes", persistFilters = fals
     else sessionStorage.removeItem("sjg_fecha_hasta");
   }, []);
 
+  const setSearch = useCallback((val: string) => {
+    setSearchRaw(val);
+  }, []);
+
   const handleSort = useCallback((key: string) => {
     setSortConfig((prev) => ({
       key,
@@ -108,6 +113,12 @@ export function useErrores({ defaultFiltro = "pendientes", persistFilters = fals
     if (filtroMotivo !== "todos") query = query.eq("motivo_error", filtroMotivo);
     if (filtroSector.trim()) query = query.ilike("sector", `%${filtroSector.trim()}%`);
 
+    if (search.trim()) {
+      const q = search.trim();
+      // Search in name or legajo or OT using or filters
+      query = query.or(`nombre_apellido.ilike.%${q}%,legajo.ilike.%${q}%,ot.ilike.%${q}%`);
+    }
+
     return query;
   }, [sortConfig, fechaFiltro, fechaHasta, filtro, filtroMotivo, filtroSector]);
 
@@ -137,7 +148,7 @@ export function useErrores({ defaultFiltro = "pendientes", persistFilters = fals
 
   useEffect(() => {
     fetchErrores();
-  }, [fetchErrores]);
+  }, [fetchErrores, search]);
 
   useEffect(() => {
     const channel = supabase
@@ -179,6 +190,8 @@ export function useErrores({ defaultFiltro = "pendientes", persistFilters = fals
     setFiltroSector,
     setFechaFiltro,
     setFechaHasta,
+    search,
+    setSearch,
     handleSort,
     fetchErrores,
     loadMore,

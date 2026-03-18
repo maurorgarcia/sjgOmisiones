@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, memo } from "react";
+import { useState, useMemo, useCallback, useEffect, memo } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Copy,
@@ -65,19 +65,21 @@ export default function Dashboard() {
     filtroSector,
     fechaFiltro,
     fechaHasta,
+    search,
     sortConfig,
     setFiltro,
     setFiltroMotivo,
     setFiltroSector,
     setFechaFiltro,
     setFechaHasta,
+    setSearch,
     handleSort,
     fetchErrores,
     loadMore,
   } = useErrores({ defaultFiltro: "todos", persistFilters: true });
 
   const [sending, setSending] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchTyped, setSearchTyped] = useState("");
 
   const [editingError, setEditingError] = useState<ErrorCarga | null>(null);
   const [editNotas, setEditNotas] = useState("");
@@ -96,16 +98,14 @@ export default function Dashboard() {
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
-  const filteredErrores = useMemo(() => {
-    if (!searchQuery.trim()) return errores;
-    const q = searchQuery.trim().toLowerCase();
-    return errores.filter(
-      (e) =>
-        e.nombre_apellido.toLowerCase().includes(q) ||
-        e.legajo.includes(searchQuery.trim()) ||
-        (e.ot && e.ot.includes(searchQuery.trim()))
-    );
-  }, [errores, searchQuery]);
+  const filteredErrores = errores;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchTyped);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTyped, setSearch]);
 
   const toggleNameHighlight = useCallback((name: string) => {
     setCheckedNames((prev) => {
@@ -139,6 +139,16 @@ export default function Dashboard() {
     setSelectedIds([]);
     setIsBulkDeleting(false);
     toast.success(`${selectedIds.length} registros eliminados correctamente.`);
+    fetchErrores();
+  }, [selectedIds, fetchErrores]);
+
+  const handleBulkResolve = useCallback(async () => {
+    await supabase
+      .from("error_carga")
+      .update({ resuelto: true })
+      .in("id", selectedIds);
+    setSelectedIds([]);
+    toast.success(`${selectedIds.length} registros marcados como resueltos.`);
     fetchErrores();
   }, [selectedIds, fetchErrores]);
 
@@ -326,13 +336,22 @@ export default function Dashboard() {
           {isAdmin && (
             <>
               {selectedIds.length > 0 && (
-                <button
-                  onClick={() => setIsBulkDeleting(true)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-red-50 text-red-600 px-4 py-2.5 border border-red-200 text-sm font-semibold hover:bg-red-100 transition shadow-sm"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Eliminar ({selectedIds.length})
-                </button>
+                <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <button
+                    onClick={handleBulkResolve}
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 text-emerald-600 px-4 py-2.5 border border-emerald-200 text-sm font-semibold hover:bg-emerald-100 transition shadow-sm"
+                  >
+                    <CheckCheck className="w-4 h-4" />
+                    Resolver ({selectedIds.length})
+                  </button>
+                  <button
+                    onClick={() => setIsBulkDeleting(true)}
+                    className="inline-flex items-center gap-2 rounded-xl bg-red-50 text-red-600 px-4 py-2.5 border border-red-200 text-sm font-semibold hover:bg-red-100 transition shadow-sm"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Eliminar ({selectedIds.length})
+                  </button>
+                </div>
               )}
               <Link
                 href="/carga"
@@ -507,14 +526,14 @@ export default function Dashboard() {
           <Search className="w-4 h-4 text-slate-600" />
           <input
             type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar por nombre, legajo o OT..."
+            value={searchTyped}
+            onChange={(e) => setSearchTyped(e.target.value)}
+            placeholder="Buscar por nombre, legajo o OT (Toda la base)..."
             className="flex-1 max-w-xs border border-border rounded-xl pl-4 py-2 text-xs font-medium text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 dark:placeholder:opacity-50 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner"
           />
-          {searchQuery.trim() && (
-            <span className="text-xs text-slate-600 dark:text-slate-500">
-              Mostrando {filteredErrores.length} de {errores.length}
+          {searchTyped.trim() && (
+            <span className="text-xs text-slate-600 dark:text-slate-500 uppercase font-black tracking-widest text-[10px]">
+              {loading ? "Buscando..." : `Encontrados: ${errores.length}`}
             </span>
           )}
         </div>
@@ -772,7 +791,7 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
-        {!loading && hasMore && errores.length > 0 && !searchQuery.trim() && (
+        {!loading && hasMore && errores.length > 0 && !searchTyped.trim() && (
           <div className="border-t border-border py-6 flex justify-center bg-black/5 dark:bg-white/5">
             <button
               type="button"

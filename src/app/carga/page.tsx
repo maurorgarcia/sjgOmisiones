@@ -6,6 +6,11 @@ import { MOTIVOS, CONTRATOS } from "@/types";
 import { useCargaForm } from "./useCargaForm";
 import { EmpleadoSearch } from "@/components/EmpleadoSearch";
 import { HorasDetalle } from "@/components/HorasDetalle";
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
+import { ErrorCarga } from "@/types";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 // Shared input/select class helpers — keeps JSX clean and styles consistent
 const inputCls = (hasError?: boolean) =>
@@ -27,6 +32,23 @@ const FieldError = ({ msg }: { msg?: string }) =>
 
 export default function CargaPage() {
   const f = useCargaForm();
+  const [recentEntries, setRecentEntries] = useState<ErrorCarga[]>([]);
+  const [loadingRecent, setLoadingRecent] = useState(true);
+
+  const fetchRecent = useCallback(async () => {
+    setLoadingRecent(true);
+    const { data } = await supabase
+      .from("error_carga")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(5);
+    if (data) setRecentEntries(data);
+    setLoadingRecent(false);
+  }, []);
+
+  useEffect(() => {
+    fetchRecent();
+  }, [fetchRecent, f.loading]); // Refetch when loading changes (after save)
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -339,8 +361,57 @@ export default function CargaPage() {
               )}
             </button>
           </div>
-
         </form>
+      </div>
+
+      {/* ── Recent entries section ────────────────────────────────────── */}
+      <div className="mt-12 mb-20">
+        <div className="flex items-center gap-3 mb-6 px-1">
+          <div className="bg-accent-gold/10 p-2 rounded-xl">
+            <CheckCircle2 className="w-5 h-5 text-accent-gold" />
+          </div>
+          <h2 className="text-lg font-black text-foreground uppercase tracking-tight">Cargados Recientemente</h2>
+        </div>
+
+        <div className="space-y-3">
+          {loadingRecent ? (
+            <div className="bg-card/20 rounded-3xl p-8 border border-border flex flex-col items-center gap-4">
+               <Loader2 className="w-6 h-6 animate-spin text-slate-500" />
+               <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Buscando historial...</p>
+            </div>
+          ) : recentEntries.length === 0 ? (
+            <div className="bg-card/20 rounded-3xl p-8 border border-border text-center">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">No hay registros recientes.</p>
+            </div>
+          ) : (
+            recentEntries.map((err) => (
+              <motion.div
+                key={err.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card/30 hover:bg-card/50 border border-border hover:border-accent-gold/20 rounded-2xl p-4 flex items-center justify-between group transition-all"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center font-black text-slate-500 text-xs shadow-inner uppercase">
+                    {err.nombre_apellido.slice(0, 2)}
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-foreground uppercase tracking-tight">{err.nombre_apellido}</h4>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] font-black text-accent-gold uppercase tracking-widest">{err.motivo_error}</span>
+                      <span className="text-slate-400 text-[10px]">·</span>
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{format(new Date(err.fecha), 'dd MMM', { locale: es })}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                   <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">OT: {err.ot || '---'}</div>
+                   <div className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase">{err.sector}</div>
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
