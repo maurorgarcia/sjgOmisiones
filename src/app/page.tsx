@@ -74,7 +74,7 @@ export default function Dashboard() {
     handleSort,
     fetchErrores,
     loadMore,
-  } = useErrores({ defaultFiltro: "pendientes", persistFilters: true });
+  } = useErrores({ defaultFiltro: "todos", persistFilters: true });
 
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -431,29 +431,7 @@ export default function Dashboard() {
 
       {/* Filters */}
       <div className="bg-sidebar/50 px-4 py-3 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex gap-1 p-1 bg-background/60 rounded-xl w-full md:w-auto overflow-x-auto border border-border">
-          {(["pendientes", "resueltos", "todos"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => {
-                setFiltro(f);
-                if (
-                  f !== "todos" ||
-                  (fechaFiltro &&
-                    fechaFiltro !== new Date().toISOString().split("T")[0])
-                )
-                  return;
-              }}
-              className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap active:scale-95 ${
-                filtro === f
-                  ? "bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black shadow-lg"
-                  : "text-slate-600 dark:text-slate-500 hover:text-foreground hover:bg-white/5 dark:hover:bg-white/5"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
+        {/* Filtros de motivos y fechas */}
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
           <select
