@@ -58,7 +58,7 @@ export default function ReportePage() {
     setFechaHasta,
     handleSort,
     loadMore,
-  } = useErrores();
+  } = useErrores({ defaultFiltro: "todos", persistFilters: true });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [checkedNames, setCheckedNames] = useState<Set<string>>(() => {
@@ -135,6 +135,33 @@ export default function ReportePage() {
     }
   }, [filtro, filtroMotivo, fechaFiltro, fechaHasta, filtroSector]);
 
+  const handleDownloadIncompletos = useCallback(async () => {
+    try {
+      const params = new URLSearchParams({
+        subgroup: "omisiones_fichadas",
+        ...(fechaFiltro && { fecha: fechaFiltro }),
+        ...(fechaHasta && { fechaHasta }),
+      });
+      const res = await fetch(`/api/exportar?${params}`);
+      if (!res.ok) {
+        toast.error("No hay registros de Omisiones/Fichadas en este periodo.");
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Reporte_Omisiones_y_Fichadas_${fechaFiltro || 'Historico'}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Excel de Omisiones/Fichadas generado.");
+    } catch {
+      toast.error("Error al descargar omisiones.");
+    }
+  }, [fechaFiltro, fechaHasta]);
+
   return (
     <div className="space-y-6 max-w-7xl">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -149,14 +176,25 @@ export default function ReportePage() {
             </p>
           </div>
         </div>
-        <button
-          onClick={handleDownload}
-          disabled={loading}
-          className="inline-flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-accent-gold transition-all shadow-xl active:scale-95 disabled:opacity-50"
-        >
-          <ExternalLink className="w-4 h-4" />
-          Descargar Excel
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleDownloadIncompletos}
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-xl bg-orange-500/10 border border-orange-500/20 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-orange-600 hover:bg-orange-500/20 transition-all shadow-xl active:scale-95 disabled:opacity-50"
+          >
+            <AlertTriangle className="w-4 h-4" />
+            Omisiones / Fichadas
+          </button>
+          
+          <button
+            onClick={handleDownload}
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-accent-gold transition-all shadow-xl active:scale-95 disabled:opacity-50"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Todo (Excel)
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -220,21 +258,7 @@ export default function ReportePage() {
 
       {/* Filters */}
       <div className="bg-card px-4 py-3 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex gap-1 p-1 bg-background rounded-xl w-full md:w-auto overflow-x-auto border border-border shadow-inner">
-          {(["pendientes", "resueltos", "todos"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFiltro(f)}
-              className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap active:scale-95 ${
-                filtro === f
-                  ? "bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black shadow-lg"
-                  : "text-slate-600 dark:text-slate-500 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
+        {/* Filtros de motives y fechas */}
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
           <select

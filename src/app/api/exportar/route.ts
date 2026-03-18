@@ -18,6 +18,7 @@ export async function GET(request: Request) {
   const fecha = searchParams.get("fecha");
   const fechaHasta = searchParams.get("fechaHasta");
   const sector = searchParams.get("sector");
+  const subgroup = searchParams.get("subgroup");
 
   try {
     let query = supabase
@@ -39,6 +40,14 @@ export async function GET(request: Request) {
     if (motivo !== "todos") query = query.eq("motivo_error", motivo);
     if (sector?.trim()) query = query.ilike("sector", `%${sector.trim()}%`);
 
+    if (subgroup === "omisiones_fichadas") {
+      query = query.in("motivo_error", [
+        "Omisión",
+        "Par de fichada incompleto",
+        "OT Inexistente",
+      ]);
+    }
+
     const { data, error } = await query;
 
     if (error) {
@@ -53,9 +62,13 @@ export async function GET(request: Request) {
     const buffer = await generateExcelBuffer(data);
 
     const dateStr = fecha || new Date().toISOString().split("T")[0];
-    const filename = fechaHasta
+    let filename = fechaHasta
       ? `Omisiones_${dateStr}_a_${fechaHasta}.xlsx`
       : `Omisiones_${dateStr}.xlsx`;
+
+    if (subgroup === "omisiones_fichadas") {
+      filename = `Omisiones_Incompletos_${dateStr}.xlsx`;
+    }
 
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,
