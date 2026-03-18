@@ -134,11 +134,11 @@ export default function MiniCargaPage() {
         
         if (error) throw error;
         setSuggestions(data || []);
-        setShowSuggestions(true);
       } catch (err) {
         console.error("Search error:", err);
         setSuggestions([]);
       } finally {
+        setShowSuggestions(true);
         setSearchLoading(false);
       }
     }, 400);
@@ -379,11 +379,11 @@ export default function MiniCargaPage() {
         </button>
       </div>
 
-      <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl overflow-hidden backdrop-blur-xl">
+      <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="p-6 space-y-6" noValidate>
           
           {/* Empleado */}
-          <div ref={searchRef} className="space-y-1.5">
+          <div ref={searchRef} className="space-y-1.5 relative">
             <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
               <Search className="w-3 h-3 group-hover:text-accent-gold transition-colors" /> Empleado*
             </label>
