@@ -14,12 +14,34 @@ import {
   ClipboardList,
   Menu,
   X,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "./ThemeToggle";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+
+function useRealtimeStatus() {
+  const [status, setStatus] = useState<"connecting" | "connected" | "disconnected">("connecting");
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("sidebar-health")
+      .on("postgres_changes", { event: "*", schema: "public", table: "error_carga" }, () => {})
+      .subscribe((s) => {
+        if (s === "SUBSCRIBED") setStatus("connected");
+        else if (s === "CHANNEL_ERROR" || s === "TIMED_OUT" || s === "CLOSED") setStatus("disconnected");
+        else setStatus("connecting");
+      });
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  return status;
+}
 
 const navItems = [
   { href: "/", label: "Gestión Administrativa", icon: LayoutDashboard, adminOnly: true },
@@ -43,6 +65,7 @@ export function Sidebar() {
   const { theme } = useTheme();
   const isAdmin = session?.user?.role === "admin";
   const [mobileOpen, setMobileOpen] = useState(false);
+  const realtimeStatus = useRealtimeStatus();
 
   useEffect(() => {
     setMobileOpen(false);
@@ -133,6 +156,31 @@ export function Sidebar() {
 
       {/* User info + Logout */}
       <div className="px-3 py-4 border-t border-border bg-sidebar/50">
+        {/* Realtime status */}
+        <div className="flex items-center gap-2 px-3 mb-3">
+          {realtimeStatus === "connected" ? (
+            <Wifi className="w-3 h-3 text-emerald-500" />
+          ) : realtimeStatus === "connecting" ? (
+            <Wifi className="w-3 h-3 text-amber-400 animate-pulse" />
+          ) : (
+            <WifiOff className="w-3 h-3 text-red-400" />
+          )}
+          <span
+            className={`text-[9px] font-black uppercase tracking-widest ${
+              realtimeStatus === "connected"
+                ? "text-emerald-500"
+                : realtimeStatus === "connecting"
+                  ? "text-amber-400"
+                  : "text-red-400"
+            }`}
+          >
+            {realtimeStatus === "connected"
+              ? "En vivo"
+              : realtimeStatus === "connecting"
+                ? "Conectando…"
+                : "Sin conexión"}
+          </span>
+        </div>
         <div className="flex items-center gap-3 px-3 py-2.5 mb-2 rounded-xl bg-card border border-border shadow-sm">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-xs font-bold text-black uppercase flex-shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
             {(session.user?.name || session.user?.email || "U")[0]}

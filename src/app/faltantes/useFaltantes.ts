@@ -3,13 +3,15 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { Faltante } from "@/types";
+import { Faltante, PAGE_SIZE } from "@/types";
 
 type SortConfig = { key: string; direction: "asc" | "desc" } | null;
 
 export function useFaltantes() {
   const [data, setData] = useState<Faltante[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: "nombre_apellido",
     direction: "asc",
@@ -30,8 +32,7 @@ export function useFaltantes() {
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
-  const fetchFaltantes = useCallback(async () => {
-    setLoading(true);
+  const buildQuery = useCallback(() => {
     let query = supabase.from("faltantes").select("*");
 
     if (fechaDesde) {
@@ -51,14 +52,35 @@ export function useFaltantes() {
       query = query.order("nombre_apellido", { ascending: true });
     }
 
-    const { data: res, error } = await query;
-    if (res) setData(res);
+    return query;
+  }, [fechaDesde, fechaHasta, sortConfig]);
+
+  const fetchFaltantes = useCallback(async () => {
+    setLoading(true);
+    const { data: res, error } = await buildQuery().range(0, PAGE_SIZE - 1);
+    if (res) {
+      setData(res);
+      setHasMore(res.length === PAGE_SIZE);
+    }
     if (error) {
       console.error(error);
       toast.error("Error al cargar los datos. Verifique la conexión.");
     }
     setLoading(false);
-  }, [fechaDesde, fechaHasta, sortConfig]);
+  }, [buildQuery]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const from = data.length;
+    const { data: res, error } = await buildQuery().range(from, from + PAGE_SIZE - 1);
+    if (res) {
+      setData((prev) => [...prev, ...res]);
+      setHasMore(res.length === PAGE_SIZE);
+    }
+    if (error) console.error(error);
+    setLoadingMore(false);
+  }, [loadingMore, hasMore, data.length, buildQuery]);
 
   useEffect(() => {
     fetchFaltantes();
@@ -115,6 +137,8 @@ export function useFaltantes() {
     data,
     filtered,
     loading,
+    loadingMore,
+    hasMore,
     sortConfig,
     fechaDesde,
     fechaHasta,
@@ -123,6 +147,7 @@ export function useFaltantes() {
     handleSort,
     toggleNameHighlight,
     resetFilters,
+    loadMore,
     refetch: fetchFaltantes,
     setSearchQuery,
     updateFechaDesde,

@@ -15,6 +15,7 @@ import {
   FileText,
   AlertCircle,
   FilterX,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -26,6 +27,8 @@ export default function FaltantesDashboard() {
   const {
     filtered,
     loading,
+    loadingMore,
+    hasMore,
     sortConfig,
     fechaDesde,
     fechaHasta,
@@ -34,6 +37,7 @@ export default function FaltantesDashboard() {
     handleSort,
     toggleNameHighlight,
     resetFilters,
+    loadMore,
     refetch,
     setSearchQuery,
     updateFechaDesde,
@@ -276,6 +280,23 @@ export default function FaltantesDashboard() {
             </tbody>
           </table>
         </div>
+        {!loading && hasMore && filtered.length > 0 && !searchQuery.trim() && (
+          <div className="border-t border-border py-6 flex justify-center bg-black/5 dark:bg-white/5">
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-2xl border border-border bg-background text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:bg-card hover:text-accent-gold transition-all disabled:opacity-50 active:scale-95 shadow-xl"
+            >
+              {loadingMore ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+              {loadingMore ? "Cargando…" : "Cargar más registros"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

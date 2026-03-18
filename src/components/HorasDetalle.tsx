@@ -15,6 +15,7 @@ interface HorasDetalleProps {
   setHoras100: (v: string) => void;
   hs100Mods: HourMods;
   setHs100Mods: (v: HourMods) => void;
+  isSecondary?: boolean;
 }
 
 const labelCls =
@@ -81,12 +82,15 @@ export function HorasDetalle({
   setHoras100,
   hs100Mods,
   setHs100Mods,
+  isSecondary,
 }: HorasDetalleProps) {
   return (
-    <div className="pt-2 border-t border-border space-y-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500 ml-1">
-        Detalle de Horas
-      </p>
+    <div className={`pt-2 ${!isSecondary ? 'border-t border-border' : ''} space-y-4`}>
+      {!isSecondary && (
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500 ml-1">
+          Detalle de Horas
+        </p>
+      )}
 
       {/* Horas Normales */}
       <div>

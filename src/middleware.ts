@@ -1,18 +1,32 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
+const ADMIN_ONLY_PATHS = [
+  "/carga",
+  "/importar",
+  "/faltantes/carga",
+];
+
 export default withAuth(
   function middleware(req) {
     const role = req.nextauth.token?.role;
     const path = req.nextUrl.pathname;
 
-    // Viewers cannot access /carga, /reportes, or /importar
     if (role === "viewer") {
       if (path === "/") {
         return NextResponse.redirect(new URL("/reporte", req.url));
       }
-      if (path.startsWith("/carga") || path.startsWith("/reporte/") || path.startsWith("/importar")) {
+
+      const isAdminOnly = ADMIN_ONLY_PATHS.some(
+        (p) => path === p || path.startsWith(p + "/")
+      );
+
+      if (isAdminOnly) {
         return NextResponse.redirect(new URL("/reporte", req.url));
+      }
+
+      if (path === "/faltantes") {
+        return NextResponse.redirect(new URL("/faltantes/reporte", req.url));
       }
     }
   },
@@ -27,6 +41,7 @@ export default withAuth(
 );
 
 export const config = {
-  // Protect all routes except login, public assets, and common static files
-  matcher: ["/((?!login|_next|api/auth|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico)).*)"],
+  matcher: [
+    "/((?!login|_next|api/auth|favicon\\.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico)).*)",
+  ],
 };

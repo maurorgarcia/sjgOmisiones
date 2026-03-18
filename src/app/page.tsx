@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, memo } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Copy,
@@ -23,7 +23,6 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Info,
   FileText,
 } from "lucide-react";
 import Link from "next/link";
@@ -31,18 +30,22 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { ErrorCarga, MOTIVO_COLORS, PAGE_SIZE } from "@/types";
+import { ErrorCarga, MOTIVO_COLORS } from "@/types";
 import { StatsCharts as StatsChartsBase } from "@/components/StatsCharts";
 const StatsCharts = memo(StatsChartsBase);
 import { Modal } from "@/components/Modal";
-import { Skeleton, TableSkeleton, CardSkeleton } from "@/components/Skeleton";
-import { motion, AnimatePresence } from "framer-motion";
-
+import { Skeleton, TableSkeleton } from "@/components/Skeleton";
+import { motion } from "framer-motion";
+import { useErrores } from "./useErrores";
 
 function getMotivoBadge(motivo: string) {
-  const classes = MOTIVO_COLORS[motivo] ?? "bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20";
+  const classes =
+    MOTIVO_COLORS[motivo] ??
+    "bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20";
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-widest ${classes} shadow-sm`}>
+    <span
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-widest ${classes} shadow-sm`}
+    >
       {motivo}
     </span>
   );
@@ -52,49 +55,30 @@ export default function Dashboard() {
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
 
-  const [errores, setErrores] = useState<ErrorCarga[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const {
+    errores,
+    loading,
+    loadingMore,
+    hasMore,
+    filtro,
+    filtroMotivo,
+    filtroSector,
+    fechaFiltro,
+    fechaHasta,
+    sortConfig,
+    setFiltro,
+    setFiltroMotivo,
+    setFiltroSector,
+    setFechaFiltro,
+    setFechaHasta,
+    handleSort,
+    fetchErrores,
+    loadMore,
+  } = useErrores({ defaultFiltro: "pendientes", persistFilters: true });
+
   const [sending, setSending] = useState(false);
-
-  // Helper to get today's local date in YYYY-MM-DD
-  const getTodayLocal = () => {
-    const d = new Date();
-    const offset = d.getTimezoneOffset();
-    const localDate = new Date(d.getTime() - (offset * 60 * 1000));
-    return localDate.toISOString().split("T")[0];
-  };
-
-  const [filtro, setFiltro] = useState<"todos" | "pendientes" | "resueltos">(() => {
-    if (typeof window === "undefined") return "pendientes";
-    const saved = sessionStorage.getItem("sjg_filtro");
-    return (saved === "todos" || saved === "pendientes" || saved === "resueltos") ? saved : "pendientes";
-  });
-
-  const [filtroMotivo, setFiltroMotivo] = useState<string>(() => {
-    if (typeof window === "undefined") return "todos";
-    return sessionStorage.getItem("sjg_filtro_motivo") || "todos";
-  });
-
-  const [filtroSector, setFiltroSector] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    return sessionStorage.getItem("sjg_filtro_sector") || "";
-  });
-
-  const [fechaFiltro, setFechaFiltro] = useState<string>(() => {
-    if (typeof window === "undefined") return getTodayLocal();
-    return sessionStorage.getItem("sjg_working_date") || getTodayLocal();
-  });
-
-  const [fechaHasta, setFechaHasta] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    return sessionStorage.getItem("sjg_fecha_hasta") || "";
-  });
-
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Edit modal
   const [editingError, setEditingError] = useState<ErrorCarga | null>(null);
   const [editNotas, setEditNotas] = useState("");
   const [editSector, setEditSector] = useState("");
@@ -102,59 +86,52 @@ export default function Dashboard() {
   const [editHorario, setEditHorario] = useState("");
   const [editLoading, setEditLoading] = useState(false);
 
-  // Delete confirm and Bulk Selection
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  // Sorting
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'nombre_apellido', direction: 'asc' });
-
-  // Búsqueda en tabla (client-side) - Moved up to resolve dependency
-  const filteredErrores = useMemo(() => {
-    if (!searchQuery.trim()) return errores;
-    const q = searchQuery.trim().toLowerCase();
-    return errores.filter((e) =>
-      e.nombre_apellido.toLowerCase().includes(q) ||
-      e.legajo.includes(searchQuery.trim()) ||
-      (e.ot && e.ot.includes(searchQuery.trim()))
-    );
-  }, [errores, searchQuery]);
-
-  // Highlighting (Progress tracking)
   const [checkedNames, setCheckedNames] = useState<Set<string>>(() => {
     if (typeof window === "undefined") return new Set();
     const saved = sessionStorage.getItem("sjg_checked_names");
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
+  const filteredErrores = useMemo(() => {
+    if (!searchQuery.trim()) return errores;
+    const q = searchQuery.trim().toLowerCase();
+    return errores.filter(
+      (e) =>
+        e.nombre_apellido.toLowerCase().includes(q) ||
+        e.legajo.includes(searchQuery.trim()) ||
+        (e.ot && e.ot.includes(searchQuery.trim()))
+    );
+  }, [errores, searchQuery]);
+
   const toggleNameHighlight = useCallback((name: string) => {
-    setCheckedNames(prev => {
+    setCheckedNames((prev) => {
       const newChecked = new Set(prev);
       if (newChecked.has(name)) newChecked.delete(name);
       else newChecked.add(name);
-      sessionStorage.setItem("sjg_checked_names", JSON.stringify(Array.from(newChecked)));
+      sessionStorage.setItem(
+        "sjg_checked_names",
+        JSON.stringify(Array.from(newChecked))
+      );
       return newChecked;
     });
   }, []);
 
-  const handleSort = useCallback((key: string) => {
-    setSortConfig(prev => {
-      let direction: 'asc' | 'desc' = 'asc';
-      if (prev && prev.key === key && prev.direction === 'asc') {
-        direction = 'desc';
-      }
-      return { key, direction };
-    });
-  }, []);
-
-  const handleSelectAll = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) setSelectedIds(filteredErrores.map((err) => err.id));
-    else setSelectedIds([]);
-  }, [filteredErrores]);
+  const handleSelectAll = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.checked) setSelectedIds(filteredErrores.map((err) => err.id));
+      else setSelectedIds([]);
+    },
+    [filteredErrores]
+  );
 
   const handleSelectOne = useCallback((id: number) => {
-    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
   }, []);
 
   const confirmBulkDelete = useCallback(async () => {
@@ -163,80 +140,43 @@ export default function Dashboard() {
     setIsBulkDeleting(false);
     toast.success(`${selectedIds.length} registros eliminados correctamente.`);
     fetchErrores();
-  }, [selectedIds]);
+  }, [selectedIds, fetchErrores]);
 
-  useEffect(() => {
-    fetchErrores();
-  }, [filtro, filtroMotivo, filtroSector, fechaFiltro, fechaHasta, sortConfig]);
+  const toggleResuelto = useCallback(
+    async (id: number, currentStatus: boolean) => {
+      const newStatus = !currentStatus;
+      const label = currentStatus ? "reabierto" : "resuelto";
 
-  const buildQuery = useCallback(() => {
-    let query = supabase
-      .from("error_carga")
-      .select("*");
+      // Optimistic update
+      const prevErrores = [...errores];
+      fetchErrores();
 
-    if (sortConfig) {
-      query = query.order(sortConfig.key, { ascending: sortConfig.direction === 'asc' });
-      // Add secondary sort by fecha desc to keep it stable
-      if (sortConfig.key !== 'fecha') {
-        query = query.order('fecha', { ascending: false });
+      const { error } = await supabase
+        .from("error_carga")
+        .update({ resuelto: newStatus })
+        .eq("id", id);
+
+      if (error) {
+        toast.error("Error al actualizar el estado.");
+        fetchErrores();
+        return;
       }
-    } else {
-      query = query.order("nombre_apellido", { ascending: true });
-    }
 
-    if (fechaFiltro) {
-      const startIso = `${fechaFiltro}T00:00:00.000Z`;
-      const endIso = fechaHasta
-        ? `${fechaHasta}T23:59:59.999Z`
-        : `${fechaFiltro}T23:59:59.999Z`;
-      query = query.gte("fecha", startIso).lte("fecha", endIso);
-    }
-    if (filtro === "pendientes") query = query.eq("resuelto", false);
-    if (filtro === "resueltos") query = query.eq("resuelto", true);
-    if (filtroMotivo !== "todos") query = query.eq("motivo_error", filtroMotivo);
-    if (filtroSector.trim()) query = query.ilike("sector", `%${filtroSector.trim()}%`);
-    return query;
-  }, [filtro, filtroMotivo, filtroSector, fechaFiltro, fechaHasta, sortConfig]);
-
-  const fetchErrores = useCallback(async () => {
-    setLoading(true);
-    const query = buildQuery().range(0, PAGE_SIZE - 1);
-    const { data, error } = await query;
-    if (data) {
-      setErrores(data);
-      setHasMore(data.length === PAGE_SIZE);
-    }
-    if (error) console.error(error);
-    setLoading(false);
-  }, [buildQuery]);
-
-  const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMore) return;
-    setLoadingMore(true);
-    const from = errores.length;
-    const query = buildQuery().range(from, from + PAGE_SIZE - 1);
-    const { data, error } = await query;
-    if (data) {
-      setErrores((prev) => [...prev, ...data]);
-      setHasMore(data.length === PAGE_SIZE);
-    }
-    if (error) console.error(error);
-    setLoadingMore(false);
-  }, [loadingMore, hasMore, errores.length, buildQuery]);
-
-
-  const toggleResuelto = useCallback(async (id: number, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from("error_carga")
-      .update({ resuelto: !currentStatus })
-      .eq("id", id);
-    if (!error) {
-       toast.success(currentStatus ? "Registro reabierto." : "Registro resuelto.");
-       fetchErrores();
-    } else {
-       toast.error("Error al actualizar el estado.");
-    }
-  }, [fetchErrores]);
+      toast.success(`Registro ${label}.`, {
+        action: {
+          label: "Deshacer",
+          onClick: async () => {
+            await supabase
+              .from("error_carga")
+              .update({ resuelto: currentStatus })
+              .eq("id", id);
+            fetchErrores();
+          },
+        },
+      });
+    },
+    [errores, fetchErrores]
+  );
 
   const openEdit = useCallback((err: ErrorCarga) => {
     setEditingError(err);
@@ -249,72 +189,37 @@ export default function Dashboard() {
   const saveEdit = useCallback(async () => {
     if (!editingError) return;
     setEditLoading(true);
-    await supabase.from("error_carga").update({
-      notas: editNotas || null,
-      sector: editSector,
-      ot: editOt || null,
-      horario: editHorario || null,
-    }).eq("id", editingError.id);
+    await supabase
+      .from("error_carga")
+      .update({
+        notas: editNotas || null,
+        sector: editSector,
+        ot: editOt || null,
+        horario: editHorario || null,
+      })
+      .eq("id", editingError.id);
     setEditLoading(false);
     setEditingError(null);
     toast.success("Registro actualizado correctamente.");
     fetchErrores();
   }, [editingError, editNotas, editSector, editOt, editHorario, fetchErrores]);
 
-  const confirmDelete = useCallback(async (id: number) => {
-    const { error } = await supabase.from("error_carga").delete().eq("id", id);
-    if (!error) {
-      toast.success("Registro eliminado.");
-    } else {
-      toast.error("Error al eliminar.");
-    }
-    setDeletingId(null);
-    fetchErrores();
-  }, [fetchErrores]);
-
-  // Realtime subscription (INSERT, UPDATE, DELETE)
-  useEffect(() => {
-    const channel = supabase
-      .channel("changes")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "error_carga" },
-        (payload) => {
-          const newRow = payload.new as ErrorCarga;
-          const isPendiente = !newRow.resuelto;
-          const matchesStatus =
-            filtro === "todos" ||
-            (filtro === "pendientes" && isPendiente) ||
-            (filtro === "resueltos" && !isPendiente);
-          if (matchesStatus) {
-            setErrores((prev) => [newRow, ...prev]);
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "error_carga" },
-        (payload) => {
-          const updated = payload.new as ErrorCarga;
-          setErrores((prev) =>
-            prev.map((e) => (e.id === updated.id ? updated : e))
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "error_carga" },
-        (payload) => {
-          const deleted = payload.old as { id: number };
-          setErrores((prev) => prev.filter((e) => e.id !== deleted.id));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [filtro]);
+  const confirmDelete = useCallback(
+    async (id: number) => {
+      const { error } = await supabase
+        .from("error_carga")
+        .delete()
+        .eq("id", id);
+      if (!error) {
+        toast.success("Registro eliminado.");
+      } else {
+        toast.error("Error al eliminar.");
+      }
+      setDeletingId(null);
+      fetchErrores();
+    },
+    [fetchErrores]
+  );
 
   const handleDownload = useCallback(async () => {
     try {
@@ -326,21 +231,24 @@ export default function Dashboard() {
         ...(filtroSector.trim() && { sector: filtroSector.trim() }),
       });
       const res = await fetch(`/api/exportar?${params}`);
-      if (!res.ok) { 
-        toast.error("No hay datos o hubo un error al exportar."); 
-        return; 
+      if (!res.ok) {
+        toast.error("No hay datos o hubo un error al exportar.");
+        return;
       }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       const cd = res.headers.get("content-disposition");
-      a.download = cd?.includes("filename=") ? cd.split("filename=")[1].replace(/"/g, "") : `omisiones_${filtro}.xlsx`;
+      a.download =
+        cd?.includes("filename=")
+          ? cd.split("filename=")[1].replace(/"/g, "")
+          : `omisiones_${filtro}.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-    } catch (err) {
+    } catch {
       toast.error("Ocurrió un error al descargar el archivo.");
     }
   }, [filtro, filtroMotivo, fechaFiltro, fechaHasta, filtroSector]);
@@ -361,15 +269,14 @@ export default function Dashboard() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al enviar el correo");
-      toast.success("✅ Correo enviado exitosamente a los responsables.");
-    } catch (err: any) {
-      toast.error(`❌ Error: ${err.message}`);
+      toast.success("Correo enviado exitosamente a los responsables.");
+    } catch (err: unknown) {
+      toast.error(`Error: ${err instanceof Error ? err.message : "Desconocido"}`);
     } finally {
       setSending(false);
     }
   }, [filtro, filtroMotivo, fechaFiltro, fechaHasta, filtroSector]);
 
-  // KPI stats (memoized)
   const stats = useMemo(() => {
     const total = filteredErrores.length;
     const pendientes = filteredErrores.filter((e) => !e.resuelto).length;
@@ -382,7 +289,11 @@ export default function Dashboard() {
     if (!fechaFiltro) return "Todos los registros";
     return fechaHasta
       ? `${format(new Date(fechaFiltro + "T12:00:00"), "d/M/yyyy", { locale: es })} – ${format(new Date(fechaHasta + "T12:00:00"), "d/M/yyyy", { locale: es })}`
-      : format(new Date(fechaFiltro + "T12:00:00"), "EEEE d 'de' MMMM", { locale: es });
+      : format(
+          new Date(fechaFiltro + "T12:00:00"),
+          "EEEE d 'de' MMMM",
+          { locale: es }
+        );
   }, [fechaFiltro, fechaHasta]);
 
   return (
@@ -395,12 +306,15 @@ export default function Dashboard() {
             <div className="absolute inset-0 w-2.5 h-2.5 bg-green-500 rounded-full animate-ping opacity-30" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">Gestión de Omisiones</h1>
-            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">{dateLabel}</p>
+            <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">
+              Gestión de Omisiones
+            </h1>
+            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">
+              {dateLabel}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Descargar: available to all users (admin + viewer) */}
           <button
             onClick={handleDownload}
             disabled={loading}
@@ -409,7 +323,6 @@ export default function Dashboard() {
             <ExternalLink className="w-4 h-4" />
           </button>
 
-          {/* Admin-only actions */}
           {isAdmin && (
             <>
               {selectedIds.length > 0 && (
@@ -433,7 +346,11 @@ export default function Dashboard() {
                 disabled={sending || loading}
                 className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-5 py-2.5 text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all disabled:opacity-50 active:scale-95 shadow-lg"
               >
-                {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {sending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
                 Enviar Reporte
               </button>
             </>
@@ -449,7 +366,9 @@ export default function Dashboard() {
               <AlertTriangle className="w-5 h-5 text-amber-500/70" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                Total
+              </p>
               <p className="text-2xl font-black text-foreground">{stats.total}</p>
             </div>
           </div>
@@ -460,8 +379,12 @@ export default function Dashboard() {
               <Clock className="w-5 h-5 text-amber-500" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Pendientes</p>
-              <p className="text-2xl font-black text-foreground">{stats.pendientes}</p>
+              <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">
+                Pendientes
+              </p>
+              <p className="text-2xl font-black text-foreground">
+                {stats.pendientes}
+              </p>
             </div>
           </div>
         </div>
@@ -471,8 +394,12 @@ export default function Dashboard() {
               <CheckCheck className="w-5 h-5 text-emerald-500" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Resueltos</p>
-              <p className="text-2xl font-black text-foreground">{stats.resueltos}</p>
+              <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
+                Resueltos
+              </p>
+              <p className="text-2xl font-black text-foreground">
+                {stats.resueltos}
+              </p>
             </div>
           </div>
         </div>
@@ -482,7 +409,9 @@ export default function Dashboard() {
               <TrendingDown className="w-5 h-5 text-slate-400" />
             </div>
             <div>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Resolución</p>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                Resolución
+              </p>
               <p className="text-2xl font-black text-foreground">{stats.pct}%</p>
             </div>
           </div>
@@ -508,7 +437,12 @@ export default function Dashboard() {
               key={f}
               onClick={() => {
                 setFiltro(f);
-                sessionStorage.setItem("sjg_filtro", f);
+                if (
+                  f !== "todos" ||
+                  (fechaFiltro &&
+                    fechaFiltro !== new Date().toISOString().split("T")[0])
+                )
+                  return;
               }}
               className={`px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap active:scale-95 ${
                 filtro === f
@@ -524,15 +458,16 @@ export default function Dashboard() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
           <select
             value={filtroMotivo}
-            onChange={(e) => {
-              setFiltroMotivo(e.target.value);
-              sessionStorage.setItem("sjg_filtro_motivo", e.target.value);
-            }}
+            onChange={(e) => setFiltroMotivo(e.target.value)}
             className="px-4 py-2 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-500 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card cursor-pointer shadow-inner appearance-none"
           >
-            <option value="todos" className="bg-card font-black uppercase">Todos los motivos</option>
+            <option value="todos" className="bg-card font-black uppercase">
+              Todos los motivos
+            </option>
             {Object.keys(MOTIVO_COLORS).map((m) => (
-              <option key={m} value={m}>{m}</option>
+              <option key={m} value={m}>
+                {m}
+              </option>
             ))}
           </select>
 
@@ -541,10 +476,7 @@ export default function Dashboard() {
             <input
               type="text"
               value={filtroSector}
-              onChange={(e) => {
-                setFiltroSector(e.target.value);
-                sessionStorage.setItem("sjg_filtro_sector", e.target.value);
-              }}
+              onChange={(e) => setFiltroSector(e.target.value)}
               placeholder="Sector..."
               className="w-full pl-9 pr-4 py-2 rounded-xl border border-border text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 dark:placeholder:opacity-50 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner"
             />
@@ -558,27 +490,22 @@ export default function Dashboard() {
               onChange={(e) => {
                 const newDate = e.target.value;
                 setFechaFiltro(newDate);
-                if (newDate) sessionStorage.setItem("sjg_working_date", newDate);
                 const today = new Date().toISOString().split("T")[0];
                 if (newDate !== today) {
                   setFiltro("todos");
-                  sessionStorage.setItem("sjg_filtro", "todos");
                 }
               }}
               className="w-full sm:w-auto pl-9 pr-4 py-2 rounded-xl border border-border text-xs font-medium text-foreground focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
             />
           </div>
           <div className="flex items-center gap-1.5 flex-grow sm:flex-grow-0">
-            <span className="text-xs text-slate-600 dark:text-slate-500 hidden sm:inline">a</span>
+            <span className="text-xs text-slate-600 dark:text-slate-500 hidden sm:inline">
+              a
+            </span>
             <input
               type="date"
               value={fechaHasta}
-              onChange={(e) => {
-                const v = e.target.value;
-                setFechaHasta(v);
-                if (v) sessionStorage.setItem("sjg_fecha_hasta", v);
-                else sessionStorage.removeItem("sjg_fecha_hasta");
-              }}
+              onChange={(e) => setFechaHasta(e.target.value)}
               className="w-full sm:w-auto pl-4 py-2 rounded-xl border border-border text-xs font-medium text-foreground focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
               title="Hasta (opcional, para rango)"
             />
@@ -588,9 +515,6 @@ export default function Dashboard() {
               setFechaFiltro("");
               setFechaHasta("");
               setFiltro("todos");
-              sessionStorage.removeItem("sjg_working_date");
-              sessionStorage.removeItem("sjg_fecha_hasta");
-              sessionStorage.setItem("sjg_filtro", "todos");
             }}
             className="text-[10px] text-accent-gold hover:text-accent-gold-dark font-black uppercase tracking-widest whitespace-nowrap px-4 py-2 rounded-xl border border-accent-gold/10 hover:bg-accent-gold/5 transition-all shadow-inner active:scale-95"
           >
@@ -619,54 +543,105 @@ export default function Dashboard() {
       )}
 
       {/* Table */}
-        <div className="bg-card/40 rounded-2xl border border-border shadow-2xl overflow-hidden backdrop-blur-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-[10px] text-slate-600 dark:text-slate-500 uppercase bg-sidebar/60 border-b border-border tracking-[0.2em] font-black">
+      <div className="bg-card/40 rounded-2xl border border-border shadow-2xl overflow-hidden backdrop-blur-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="text-[10px] text-slate-600 dark:text-slate-500 uppercase bg-sidebar/60 border-b border-border tracking-[0.2em] font-black">
               <tr>
                 {isAdmin && (
                   <th className="px-5 py-3.5 w-12 text-center">
-                    <input 
-                      type="checkbox" 
-                      onChange={handleSelectAll} 
-                      checked={filteredErrores.length > 0 && selectedIds.length === filteredErrores.length} 
-                      className="rounded border-border bg-card text-accent-gold focus:ring-accent-gold cursor-pointer" 
+                    <input
+                      type="checkbox"
+                      onChange={handleSelectAll}
+                      checked={
+                        filteredErrores.length > 0 &&
+                        selectedIds.length === filteredErrores.length
+                      }
+                      className="rounded border-border bg-card text-accent-gold focus:ring-accent-gold cursor-pointer"
                     />
                   </th>
                 )}
                 <th className="px-5 py-3.5 font-semibold">
-                  <button onClick={() => handleSort('resuelto')} className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider">
+                  <button
+                    onClick={() => handleSort("resuelto")}
+                    className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider"
+                  >
                     Estado
-                    {sortConfig?.key === 'resuelto' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
+                    {sortConfig?.key === "resuelto" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-3 h-3" />
+                      ) : (
+                        <ArrowDown className="w-3 h-3" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 opacity-30" />
+                    )}
                   </button>
                 </th>
                 <th className="px-5 py-3.5 font-semibold">
-                  <button onClick={() => handleSort('fecha')} className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider">
+                  <button
+                    onClick={() => handleSort("fecha")}
+                    className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider"
+                  >
                     Fecha
-                    {sortConfig?.key === 'fecha' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
+                    {sortConfig?.key === "fecha" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-3 h-3" />
+                      ) : (
+                        <ArrowDown className="w-3 h-3" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 opacity-30" />
+                    )}
                   </button>
                 </th>
                 <th className="px-5 py-3.5 font-semibold">
-                  <button onClick={() => handleSort('nombre_apellido')} className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider">
+                  <button
+                    onClick={() => handleSort("nombre_apellido")}
+                    className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider"
+                  >
                     Empleado
-                    {sortConfig?.key === 'nombre_apellido' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
+                    {sortConfig?.key === "nombre_apellido" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-3 h-3" />
+                      ) : (
+                        <ArrowDown className="w-3 h-3" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 opacity-30" />
+                    )}
                   </button>
                 </th>
                 <th className="px-5 py-3.5 font-semibold">
-                  <button onClick={() => handleSort('motivo_error')} className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider">
+                  <button
+                    onClick={() => handleSort("motivo_error")}
+                    className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider"
+                  >
                     Motivo
-                    {sortConfig?.key === 'motivo_error' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
+                    {sortConfig?.key === "motivo_error" ? (
+                      sortConfig.direction === "asc" ? (
+                        <ArrowUp className="w-3 h-3" />
+                      ) : (
+                        <ArrowDown className="w-3 h-3" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 opacity-30" />
+                    )}
                   </button>
                 </th>
-                <th className="px-5 py-3.5 font-black uppercase tracking-widest text-slate-500">OT / Sector</th>
-                <th className="px-5 py-3.5 font-black uppercase tracking-widest text-right text-slate-500">Acción</th>
+                <th className="px-5 py-3.5 font-black uppercase tracking-widest text-slate-500">
+                  OT / Sector
+                </th>
+                <th className="px-5 py-3.5 font-black uppercase tracking-widest text-right text-slate-500">
+                  Acción
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
                   <td colSpan={7} className="py-12">
-                     <TableSkeleton rows={8} />
+                    <TableSkeleton rows={8} />
                   </td>
                 </tr>
               ) : filteredErrores.length === 0 ? (
@@ -686,7 +661,7 @@ export default function Dashboard() {
                           ? filtro === "pendientes"
                             ? "¡Todo al día! No hay nada pendiente."
                             : "No se encontraron registros con este filtro."
-                          : `Hay ${errores.length} registro(s) con los filtros de fecha/motivo/sector. Probá otro término.`}
+                          : `Hay ${errores.length} registro(s) con los filtros activos. Probá otro término.`}
                       </p>
                     </div>
                   </td>
@@ -699,11 +674,11 @@ export default function Dashboard() {
                   >
                     {isAdmin && (
                       <td className="px-5 py-3.5 text-center">
-                        <input 
-                          type="checkbox" 
-                          onChange={() => handleSelectOne(err.id)} 
-                          checked={selectedIds.includes(err.id)} 
-                          className="rounded border-border bg-card text-accent-gold focus:ring-accent-gold cursor-pointer" 
+                        <input
+                          type="checkbox"
+                          onChange={() => handleSelectOne(err.id)}
+                          checked={selectedIds.includes(err.id)}
+                          className="rounded border-border bg-card text-accent-gold focus:ring-accent-gold cursor-pointer"
                         />
                       </td>
                     )}
@@ -722,14 +697,24 @@ export default function Dashboard() {
                     </td>
                     <td className="px-5 py-3.5 whitespace-nowrap">
                       <div className="font-bold text-foreground text-sm">
-                        {format(new Date(err.fecha), "dd MMM yyyy", { locale: es })}
+                        {format(new Date(err.fecha), "dd MMM yyyy", {
+                          locale: es,
+                        })}
                       </div>
-                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{err.dia_semana}</div>
+                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        {err.dia_semana}
+                      </div>
                     </td>
                     <td className="px-5 py-3.5">
-                      <div 
-                        onClick={() => toggleNameHighlight(err.nombre_apellido)}
-                        className={`font-bold text-sm cursor-pointer transition-all ${checkedNames.has(err.nombre_apellido) ? "text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-xl border border-emerald-500/20 shadow-lg scale-[1.02]" : "text-foreground hover:text-accent-gold"}`}
+                      <div
+                        onClick={() =>
+                          toggleNameHighlight(err.nombre_apellido)
+                        }
+                        className={`font-bold text-sm cursor-pointer transition-all ${
+                          checkedNames.has(err.nombre_apellido)
+                            ? "text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-xl border border-emerald-500/20 shadow-lg scale-[1.02]"
+                            : "text-foreground hover:text-accent-gold"
+                        }`}
                         title="Click para marcar/desmarcar progreso"
                       >
                         {err.nombre_apellido}
@@ -737,7 +722,10 @@ export default function Dashboard() {
                       <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 mt-1">
                         Leg: {err.legajo}
                         <button
-                          onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(err.legajo); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(err.legajo);
+                          }}
                           className="hover:text-accent-gold transition-colors"
                           title="Copiar legajo"
                         >
@@ -748,28 +736,38 @@ export default function Dashboard() {
                     <td className="px-5 py-3.5">
                       {getMotivoBadge(err.motivo_error)}
                       {err.notas && (
-                        <div className="text-[10px] font-bold text-slate-500 mt-1.5 max-w-[200px] truncate italic uppercase tracking-tight" title={err.notas}>
-                          "{err.notas}"
+                        <div
+                          className="text-[10px] font-bold text-slate-500 mt-1.5 max-w-[200px] truncate italic uppercase tracking-tight"
+                          title={err.notas}
+                        >
+                          &ldquo;{err.notas}&rdquo;
                         </div>
                       )}
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="font-bold text-foreground text-xs uppercase tracking-tight">{err.sector}</div>
+                      <div className="font-bold text-foreground text-xs uppercase tracking-tight">
+                        {err.sector}
+                      </div>
                       <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">
-                        {err.ot ? `OT: ${err.ot}` : "Sin OT"}{err.horario ? ` · ${err.horario}` : ""}
+                        {err.ot ? `OT: ${err.ot}` : "Sin OT"}
+                        {err.horario ? ` · ${err.horario}` : ""}
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {/* Always visible: Resolver/Reabrir */}
                         <button
-                          onClick={() => toggleResuelto(err.id, err.resuelto)}
-                          className={`text-[10px] font-black uppercase tracking-widest transition-all ${err.resuelto ? "text-slate-500 hover:text-foreground" : "text-accent-gold hover:text-accent-gold-dark"}`}
+                          onClick={() =>
+                            toggleResuelto(err.id, err.resuelto)
+                          }
+                          className={`text-[10px] font-black uppercase tracking-widest transition-all ${
+                            err.resuelto
+                              ? "text-slate-500 hover:text-foreground"
+                              : "text-accent-gold hover:text-accent-gold-dark"
+                          }`}
                         >
                           {err.resuelto ? "Reabrir" : "Resolver"}
                         </button>
-                        
-                        {/* Admin only: Editar & Eliminar */}
+
                         {isAdmin && (
                           <>
                             <button
@@ -804,7 +802,11 @@ export default function Dashboard() {
               disabled={loadingMore}
               className="inline-flex items-center gap-2 px-8 py-3 rounded-2xl border border-border bg-background text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:bg-card hover:text-accent-gold transition-all disabled:opacity-50 active:scale-95 shadow-xl"
             >
-              {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
+              {loadingMore ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
               {loadingMore ? "Cargando…" : "Cargar más registros"}
             </button>
           </div>
@@ -836,22 +838,24 @@ export default function Dashboard() {
       {/* Edit modal */}
       {editingError && (
         <div className="fixed inset-0 bg-background/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className="bg-card rounded-[2.5rem] shadow-2xl p-8 max-w-lg w-full border border-border overflow-hidden relative"
           >
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent-gold to-accent-gold-dark" />
-            
+
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className="text-xl font-black text-foreground uppercase tracking-tight">Editar Registro</h3>
+                <h3 className="text-xl font-black text-foreground uppercase tracking-tight">
+                  Editar Registro
+                </h3>
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1 opacity-70">
                   {editingError.nombre_apellido} · Leg. {editingError.legajo}
                 </p>
               </div>
-              <button 
-                onClick={() => setEditingError(null)} 
+              <button
+                onClick={() => setEditingError(null)}
                 className="p-2.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-2xl transition-all text-slate-500 hover:text-foreground"
               >
                 <X className="w-5 h-5" />
@@ -861,71 +865,85 @@ export default function Dashboard() {
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Sector</label>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                    Sector
+                  </label>
                   <div className="relative group/input">
                     <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-accent-gold transition-colors" />
-                    <input 
-                      type="text" 
-                      value={editSector} 
+                    <input
+                      type="text"
+                      value={editSector}
                       onChange={(e) => setEditSector(e.target.value)}
-                      className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all" 
+                      className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all"
                     />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">OT (10 dígitos)</label>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                    OT (10 dígitos)
+                  </label>
                   <div className="relative group/input">
                     <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-accent-gold transition-colors" />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={editOt}
-                      onChange={(e) => setEditOt(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      onChange={(e) =>
+                        setEditOt(e.target.value.replace(/\D/g, "").slice(0, 10))
+                      }
                       className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all"
-                      placeholder="Opcional" 
-                      maxLength={10} 
+                      placeholder="Opcional"
+                      maxLength={10}
                     />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Horario</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                  Horario
+                </label>
                 <div className="relative group/input">
                   <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-accent-gold transition-colors" />
-                  <input 
-                    type="text" 
-                    value={editHorario} 
+                  <input
+                    type="text"
+                    value={editHorario}
                     onChange={(e) => setEditHorario(e.target.value)}
                     className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all"
-                    placeholder="Ej: 06:00 a 14:00" 
+                    placeholder="Ej: 06:00 a 14:00"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Notas Observaciones</label>
-                <textarea 
-                  value={editNotas} 
-                  onChange={(e) => setEditNotas(e.target.value)} 
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                  Notas Observaciones
+                </label>
+                <textarea
+                  value={editNotas}
+                  onChange={(e) => setEditNotas(e.target.value)}
                   rows={4}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all resize-none" 
+                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all resize-none"
                 />
               </div>
             </div>
 
             <div className="flex gap-4 justify-end mt-10">
-              <button 
+              <button
                 onClick={() => setEditingError(null)}
                 className="px-6 py-3 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all active:scale-95"
               >
                 Cancelar
               </button>
-              <button 
-                onClick={saveEdit} 
+              <button
+                onClick={saveEdit}
                 disabled={editLoading}
                 className="flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-accent-gold to-accent-gold-dark hover:from-accent-gold-dark hover:to-accent-gold text-black text-[10px] font-black uppercase tracking-widest transition-all shadow-2xl shadow-accent-gold/20 active:scale-95 disabled:opacity-50"
               >
-                {editLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                {editLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4" />
+                )}
                 Guardar cambios
               </button>
             </div>

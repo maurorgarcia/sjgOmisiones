@@ -3,7 +3,9 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Save, AlertCircle, CheckCircle2, Loader2, Search, X, Maximize2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 import { ErrorCarga, MOTIVOS, CONTRATOS } from "@/types";
 
 type Empleado = {
@@ -48,6 +50,8 @@ function HourInputRow({ label, val, setVal, mods, setMods }: { label: string, va
 }
 
 export default function MiniCargaPage() {
+  const { data: session, status } = useSession();
+  const isAdmin = session?.user?.role === "admin";
   const [loading, setLoading] = useState(false);
   
   // Autocomplete
@@ -78,6 +82,14 @@ export default function MiniCargaPage() {
   const [horas100, setHoras100] = useState("");
   const [hs100Mods, setHs100Mods] = useState<HourMods>({ insa: false, polu: false, noct: false });
 
+  // Split OT feature
+  const [splitOT, setSplitOT] = useState(false);
+  const [motivo2, setMotivo2] = useState("");
+  const [ot2, setOt2] = useState("");
+  const [horasNormales2, setHorasNormales2] = useState("");
+  const [horas502, setHoras502] = useState("");
+  const [horas1002, setHoras1002] = useState("");
+
   // Validation errors
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -104,22 +116,32 @@ export default function MiniCargaPage() {
     if (errors.empleado) setErrors((e) => ({ ...e, empleado: "" }));
 
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    if (value.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
-
-    searchTimer.current = setTimeout(async () => {
-      setSearchLoading(true);
-      const isNumeric = /^\d+$/.test(value);
-      let query = supabase.from("empleados").select("*").limit(8);
-      if (isNumeric) {
-        query = query.ilike("legajo", `${value}%`);
-      } else {
-        query = query.ilike("nombre_apellido", `%${value}%`);
-      }
-      const { data } = await query;
-      setSuggestions(data || []);
-      setShowSuggestions(true);
+    if (!value.trim() || value.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
       setSearchLoading(false);
-    }, 300);
+      return;
+    }
+
+    setSearchLoading(true);
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("empleados")
+          .select("*")
+          .or(`nombre_apellido.ilike.%${value}%,legajo.ilike.%${value}%`)
+          .limit(10);
+        
+        if (error) throw error;
+        setSuggestions(data || []);
+        setShowSuggestions(true);
+      } catch (err) {
+        console.error("Search error:", err);
+        setSuggestions([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 400);
   };
 
   const selectEmpleado = (emp: Empleado) => {
@@ -127,8 +149,8 @@ export default function MiniCargaPage() {
       toast.error("Ya está en la lista.");
       return;
     }
-    setSelectedEmpleados([...selectedEmpleados, emp]);
-    if (!contrato) setContrato(emp.contrato);
+    setSelectedEmpleados(prev => [...prev, emp]);
+    if (!contrato && emp.contrato) setContrato(emp.contrato);
     setSearchQuery("");
     setSuggestions([]);
     setShowSuggestions(false);
@@ -220,36 +242,69 @@ export default function MiniCargaPage() {
       }
     }
 
-    const errorsToSave = employeesToSave.map(emp => ({
-      fecha: fechaISO,
-      legajo: emp.legajo,
-      nombre_apellido: emp.nombre_apellido,
-      motivo_error: motivo,
-      ot: ot.trim() || null,
-      sector: sector.trim(),
-      horario: horarioStr,
-      notas: notas.trim() || null,
-      contrato: contrato,
-      dia_semana: dias[selectedDate.getDay()],
-      horas_normales: horasNormales ? parseFloat(horasNormales) : null,
-      hs_normales_insa: hsNormalesMods.insa,
-      hs_normales_polu: hsNormalesMods.polu,
-      hs_normales_noct: hsNormalesMods.noct,
-      horas_50: horas50 ? parseFloat(horas50) : null,
-      hs_50_insa: hs50Mods.insa,
-      hs_50_polu: hs50Mods.polu,
-      hs_50_noct: hs50Mods.noct,
-      horas_100: horas100 ? parseFloat(horas100) : null,
-      hs_100_insa: hs100Mods.insa,
-      hs_100_polu: hs100Mods.polu,
-      hs_100_noct: hs100Mods.noct,
-    }));
+    const recordsToInsert: any[] = [];
 
-    const { error } = await supabase.from("error_carga").insert(errorsToSave);
+    employeesToSave.forEach((emp) => {
+      // Record 1
+      recordsToInsert.push({
+        fecha: fechaISO,
+        legajo: emp.legajo,
+        nombre_apellido: emp.nombre_apellido,
+        motivo_error: motivo,
+        ot: ot.trim() || null,
+        sector: sector.trim(),
+        horario: horarioStr,
+        notas: splitOT ? `[1/2] ${notas.trim()}` : (notas.trim() || null),
+        contrato: contrato,
+        dia_semana: dias[selectedDate.getDay()],
+        horas_normales: horasNormales ? parseFloat(horasNormales) : null,
+        hs_normales_insa: hsNormalesMods.insa,
+        hs_normales_polu: hsNormalesMods.polu,
+        hs_normales_noct: hsNormalesMods.noct,
+        horas_50: horas50 ? parseFloat(horas50) : null,
+        hs_50_insa: hs50Mods.insa,
+        hs_50_polu: hs50Mods.polu,
+        hs_50_noct: hs50Mods.noct,
+        horas_100: horas100 ? parseFloat(horas100) : null,
+        hs_100_insa: hs100Mods.insa,
+        hs_100_polu: hs100Mods.polu,
+        hs_100_noct: hs100Mods.noct,
+      });
+
+      // Flexible Record 2
+      if (splitOT) {
+        recordsToInsert.push({
+          fecha: fechaISO,
+          legajo: emp.legajo,
+          nombre_apellido: emp.nombre_apellido,
+          motivo_error: motivo2,
+          ot: ot2.trim() || null,
+          sector: sector.trim(),
+          horario: horarioStr,
+          notas: `[2/2] ${notas.trim()}`,
+          contrato: contrato,
+          dia_semana: dias[selectedDate.getDay()],
+          horas_normales: horasNormales2 ? parseFloat(horasNormales2) : null,
+          hs_normales_insa: hsNormalesMods.insa,
+          hs_normales_polu: hsNormalesMods.polu,
+          hs_normales_noct: hsNormalesMods.noct,
+          horas_50: horas502 ? parseFloat(horas502) : null,
+          hs_50_insa: hs50Mods.insa,
+          hs_50_polu: hs50Mods.polu,
+          hs_50_noct: hs50Mods.noct,
+          horas_100: horas1002 ? parseFloat(horas1002) : null,
+          hs_100_insa: hs100Mods.insa,
+          hs_100_polu: hs100Mods.polu,
+          hs_100_noct: hs100Mods.noct,
+        });
+      }
+    });
+
+    const { error } = await supabase.from("error_carga").insert(recordsToInsert);
 
     if (error) {
       if (error.message.includes("contrato")) {
-        const withoutContrato = errorsToSave.map(({ contrato: _c, ...rest }) => rest);
+        const withoutContrato = recordsToInsert.map(({ contrato: _c, ...rest }) => rest);
         const { error: err2 } = await supabase.from("error_carga").insert(withoutContrato);
         if (err2) {
           toast.error("Error al guardar.");
@@ -263,7 +318,7 @@ export default function MiniCargaPage() {
       }
     }
 
-    toast.success(`✅ ${errorsToSave.length} ${errorsToSave.length > 1 ? 'registros guardados' : 'registro guardado'}.`);
+    toast.success(`✅ ${recordsToInsert.length} ${recordsToInsert.length > 1 ? 'registros guardados' : 'registro guardado'}.`);
     setLoading(false);
     
     // Reset fields but keep state relevant for multiple loads
@@ -277,6 +332,10 @@ export default function MiniCargaPage() {
     setHorarioHasta("");
     setNotas("");
     setLegajoManual("");
+    setSplitOT(false);
+    setOt2("");
+    setMotivo2("");
+    setHorasNormales2("");
     setHorasNormales("");
     setHsNormalesMods({ insa: false, polu: false, noct: false });
     setHoras50("");
@@ -287,6 +346,21 @@ export default function MiniCargaPage() {
   };
 
   return (
+    <>
+    {(status === "loading") && (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-accent-gold" />
+      </div>
+    )}
+    {status !== "loading" && !isAdmin && (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 p-6">
+        <AlertCircle className="w-8 h-8 text-red-400" />
+        <p className="text-xs font-black text-slate-500 uppercase tracking-widest text-center">
+          Acceso no autorizado
+        </p>
+      </div>
+    )}
+    {status !== "loading" && isAdmin && (
     <div className="min-h-screen bg-background p-4 pb-12 font-sans selection:bg-accent-gold/30">
       <div className="flex items-center justify-between mb-4 bg-sidebar/80 backdrop-blur-xl p-4 rounded-[2rem] border border-border shadow-2xl sticky top-0 z-[60]">
         <div className="flex items-center gap-3">
@@ -323,9 +397,15 @@ export default function MiniCargaPage() {
                 placeholder="Nombre o legajo..."
                 autoComplete="off"
               />
-              <Search className="w-4 h-4 text-slate-400 dark:text-slate-700 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none group-focus-within/input:text-accent-gold transition-colors" />
-              {searchQuery && (
-                <button type="button" onClick={() => { setSearchQuery(""); setSelectedEmpleados([]); }} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-foreground transition-colors">
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                {searchLoading ? (
+                  <Loader2 className="w-4 h-4 text-accent-gold animate-spin" />
+                ) : (
+                  <Search className="w-4 h-4 text-slate-400 dark:text-slate-700 group-focus-within/input:text-accent-gold transition-colors" />
+                )}
+              </div>
+              {searchQuery && !searchLoading && (
+                <button type="button" onClick={() => { setSearchQuery(""); setSelectedEmpleados([]); setSuggestions([]); setShowSuggestions(false); }} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-foreground transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               )}
@@ -398,32 +478,87 @@ export default function MiniCargaPage() {
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Motivo*</label>
-            <select value={motivo} onChange={(e) => setMotivo(e.target.value)}
-              className={`w-full bg-background border rounded-2xl px-3 py-3 text-xs font-black uppercase tracking-widest text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all appearance-none cursor-pointer ${errors.motivo ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
-            >
-              <option value="" className="bg-card text-slate-500">Seleccione motivo...</option>
-              {MOTIVOS.map(m => <option key={m} value={m} className="bg-card text-foreground">{m}</option>)}
-            </select>
+          <div className="space-y-4 pt-2 pb-4 px-4 bg-accent-gold/5 rounded-3xl border border-accent-gold/10">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={splitOT}
+                onChange={(e) => setSplitOT(e.target.checked)}
+                className="w-5 h-5 rounded-lg border-border bg-background text-accent-gold focus:ring-accent-gold/20"
+              />
+              <span className="text-[10px] font-black uppercase tracking-widest text-foreground group-hover:text-accent-gold transition-colors">
+                Dividir registro en 2 OTs
+              </span>
+            </label>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                Motivo {splitOT ? "(OT 1)" : ""}*
+              </label>
+              <select value={motivo} onChange={(e) => setMotivo(e.target.value)}
+                className={`w-full bg-background border rounded-2xl px-3 py-3 text-xs font-black uppercase tracking-widest text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all appearance-none cursor-pointer ${errors.motivo ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
+              >
+                <option value="" className="bg-card text-slate-500">Seleccione motivo...</option>
+                {MOTIVOS.map(m => <option key={m} value={m} className="bg-card text-foreground">{m}</option>)}
+              </select>
+            </div>
+
+            {splitOT && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-1.5 pt-2 border-t border-accent-gold/10">
+                <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">Motivo (OT 2)*</label>
+                <select value={motivo2} onChange={(e) => setMotivo2(e.target.value)}
+                  className="w-full bg-emerald-500/5 border border-emerald-500/10 rounded-2xl px-3 py-3 text-xs font-black uppercase tracking-widest text-foreground outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all appearance-none"
+                >
+                  <option value="" className="bg-card text-slate-500">Seleccione motivo...</option>
+                  {MOTIVOS.map(m => <option key={m} value={m} className="bg-card text-foreground">{m}</option>)}
+                </select>
+              </motion.div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Sector*</label>
               <input type="text" value={sector} onChange={(e) => setSector(e.target.value)}
-                className={`w-full bg-background border rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest  text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner ${errors.sector ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
-                placeholder="Ej: Planta A" list="mini-sectores" />
-              <datalist id="mini-sectores"><option value="Planta A" /><option value="Planta B" /><option value="Mantenimiento" /></datalist>
+                className={`w-full bg-background border rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner ${errors.sector ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
+                placeholder="Ej: Planta A" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">OT</label>
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+                {splitOT ? "OT 1*" : "OT"}
+              </label>
               <input type="text" value={ot} onChange={(e) => setOt(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                disabled={motivo === "OT Inexistente"}
+                disabled={motivo === "OT Inexistente" && !splitOT}
                 className={`w-full bg-background border rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner disabled:opacity-20 ${errors.ot ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
                 placeholder="10 dígitos" maxLength={10} />
             </div>
           </div>
+
+          {splitOT && (
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-3 p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
+              <div>
+                <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">OT 2*</label>
+                <input 
+                  type="text" 
+                  value={ot2} 
+                  onChange={(e) => setOt2(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  className="w-full bg-background border border-emerald-500/20 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                  placeholder="OT con saldo u otro motivo" 
+                  maxLength={10} 
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">Horas Normales (OT 2)</label>
+                <input 
+                  type="number" step="0.5"
+                  value={horasNormales2} 
+                  onChange={(e) => setHorasNormales2(e.target.value)}
+                  className="w-full bg-background border border-emerald-500/20 rounded-xl px-4 py-2 text-xs font-black text-foreground outline-none"
+                  placeholder="Ej: 1" 
+                />
+              </div>
+            </motion.div>
+          )}
 
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Horario*</label>
@@ -467,5 +602,7 @@ export default function MiniCargaPage() {
         SJG Management Hub · v2.0
       </p>
     </div>
+    )}
+    </>
   );
 }

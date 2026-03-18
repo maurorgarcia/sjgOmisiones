@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { Loader2, Calendar, Building2, FileText, Hash, Search, X, CheckCircle2, ChevronRight, UserPlus } from "lucide-react";
+import { Loader2, Calendar, Building2, FileText, Hash, Search, X, CheckCircle2, ChevronRight, UserPlus, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, Toaster } from "sonner";
+import { useSession } from "next-auth/react";
 import { CONTRATOS, SECTORES_FALTANTES, MOTIVOS_FALTANTES } from "@/types";
 
 type Empleado = {
@@ -14,6 +15,8 @@ type Empleado = {
 };
 
 export default function MiniCargaFaltante() {
+  const { data: session, status } = useSession();
+  const isAdmin = session?.user?.role === "admin";
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Empleado[]>([]);
@@ -48,20 +51,29 @@ export default function MiniCargaFaltante() {
     if (!val.trim() || val.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
+      setSearchLoading(false);
       return;
     }
 
     setSearchLoading(true);
     searchTimer.current = setTimeout(async () => {
-      const { data } = await supabase
-        .from("empleados")
-        .select("nombre_apellido, legajo, contrato")
-        .or(`nombre_apellido.ilike.%${val}%,legajo.ilike.%${val}%`)
-        .limit(6);
-      setSuggestions(data || []);
-      setShowSuggestions(true);
-      setSearchLoading(false);
-    }, 300);
+      try {
+        const { data, error } = await supabase
+          .from("empleados")
+          .select("nombre_apellido, legajo, contrato")
+          .or(`nombre_apellido.ilike.%${val}%,legajo.ilike.%${val}%`)
+          .limit(8);
+        
+        if (error) throw error;
+        setSuggestions(data || []);
+        setShowSuggestions(true);
+      } catch (err) {
+        console.error("Search error:", err);
+        setSuggestions([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 400);
   };
 
   const selectEmpleado = (emp: Empleado) => {
@@ -188,10 +200,27 @@ export default function MiniCargaFaltante() {
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Buscar por nombre..."
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-xs font-medium text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 focus:ring-2 focus:ring-accent-gold/20 focus:border-accent-gold/50 outline-none transition-all pr-12 shadow-inner"
+              placeholder="Nombre o legajo..."
+              autoComplete="off"
+              className="w-full bg-background border border-border rounded-xl px-10 py-3 text-xs font-medium text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 focus:ring-2 focus:ring-accent-gold/20 focus:border-accent-gold/50 outline-none transition-all shadow-inner"
             />
-            {searchLoading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-accent-gold" />}
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+              {searchLoading ? (
+                <Loader2 className="w-4 h-4 text-accent-gold animate-spin" />
+              ) : (
+                <Search className="w-4 h-4 text-slate-400 dark:text-slate-700 group-focus-within/input:text-accent-gold transition-colors" />
+              )}
+            </div>
+            {searchQuery && !searchLoading && (
+              <button 
+                type="button" 
+                onClick={() => { setSearchQuery(""); setSelectedEmpleados([]); setSuggestions([]); setShowSuggestions(false); }} 
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-foreground transition-colors"
+                title="Limpiar búsqueda"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {showSuggestions && suggestions.length > 0 && (

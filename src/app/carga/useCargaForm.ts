@@ -51,6 +51,14 @@ export function useCargaForm() {
   const [horarioHasta, setHorarioHasta] = useState("");
   const [notas, setNotas] = useState("");
 
+  // Split OT feature
+  const [splitOT, setSplitOT] = useState(false);
+  const [motivo2, setMotivo2] = useState("");
+  const [ot2, setOt2] = useState("");
+  const [horasNormales2, setHorasNormales2] = useState("");
+  const [horas502, setHoras502] = useState("");
+  const [horas1002, setHoras1002] = useState("");
+
   // Hour details
   const [horasNormales, setHorasNormales] = useState("");
   const [hsNormalesMods, setHsNormalesMods] = useState<HourMods>(DEFAULT_MODS);
@@ -178,9 +186,14 @@ export function useCargaForm() {
     if (!horarioDesde) newErrors.horarioDesde = "La hora de entrada es requerida.";
     if (!horarioHasta) newErrors.horarioHasta = "La hora de salida es requerida.";
 
+    if (splitOT) {
+      if (!motivo2) newErrors.motivo2 = "Seleccione motivo para la 2da OT.";
+      if (!ot2.trim() && motivo2 !== "OT Inexistente") newErrors.ot2 = "La 2da OT es requerida.";
+    }
+
     setErrors(newErrors);
     return Object.values(newErrors).every((v) => !v);
-  }, [selectedEmpleados, searchQuery, legajoManual, contrato, motivo, sector, ot, horarioDesde, horarioHasta]);
+  }, [selectedEmpleados, searchQuery, legajoManual, contrato, motivo, sector, ot, horarioDesde, horarioHasta, splitOT, motivo2, ot2]);
 
   // ─── Reset form ───────────────────────────────────────────────────────────
   const resetForm = useCallback(() => {
@@ -200,6 +213,12 @@ export function useCargaForm() {
     setHs50Mods(DEFAULT_MODS);
     setHoras100("");
     setHs100Mods(DEFAULT_MODS);
+    setSplitOT(false);
+    setMotivo2("");
+    setOt2("");
+    setHorasNormales2("");
+    setHoras502("");
+    setHoras1002("");
     setErrors({});
   }, []);
 
@@ -229,30 +248,63 @@ export function useCargaForm() {
       return;
     }
 
-    const records = employeesToSave.map((emp) => ({
-      fecha: fechaISO,
-      legajo: emp.legajo,
-      nombre_apellido: emp.nombre_apellido,
-      motivo_error: motivo,
-      ot: ot.trim() || null,
-      sector: sector.trim(),
-      horario: horarioStr,
-      notas: notas.trim() || null,
-      contrato,
-      dia_semana: DIAS[selectedDate.getDay()],
-      horas_normales: horasNormales ? parseFloat(horasNormales) : null,
-      hs_normales_insa: hsNormalesMods.insa,
-      hs_normales_polu: hsNormalesMods.polu,
-      hs_normales_noct: hsNormalesMods.noct,
-      horas_50: horas50 ? parseFloat(horas50) : null,
-      hs_50_insa: hs50Mods.insa,
-      hs_50_polu: hs50Mods.polu,
-      hs_50_noct: hs50Mods.noct,
-      horas_100: horas100 ? parseFloat(horas100) : null,
-      hs_100_insa: hs100Mods.insa,
-      hs_100_polu: hs100Mods.polu,
-      hs_100_noct: hs100Mods.noct,
-    }));
+    const records: any[] = [];
+    
+    employeesToSave.forEach((emp) => {
+      // Record 1
+      records.push({
+        fecha: fechaISO,
+        legajo: emp.legajo,
+        nombre_apellido: emp.nombre_apellido,
+        motivo_error: motivo,
+        ot: ot.trim() || null,
+        sector: sector.trim(),
+        horario: horarioStr,
+        notas: splitOT ? `[OT 1/2] ${notas.trim()}` : (notas.trim() || null),
+        contrato,
+        dia_semana: DIAS[selectedDate.getDay()],
+        horas_normales: horasNormales ? parseFloat(horasNormales) : null,
+        hs_normales_insa: hsNormalesMods.insa,
+        hs_normales_polu: hsNormalesMods.polu,
+        hs_normales_noct: hsNormalesMods.noct,
+        horas_50: horas50 ? parseFloat(horas50) : null,
+        hs_50_insa: hs50Mods.insa,
+        hs_50_polu: hs50Mods.polu,
+        hs_50_noct: hs50Mods.noct,
+        horas_100: horas100 ? parseFloat(horas100) : null,
+        hs_100_insa: hs100Mods.insa,
+        hs_100_polu: hs100Mods.polu,
+        hs_100_noct: hs100Mods.noct,
+      });
+
+      // Optional Record 2
+      if (splitOT) {
+        records.push({
+          fecha: fechaISO,
+          legajo: emp.legajo,
+          nombre_apellido: emp.nombre_apellido,
+          motivo_error: motivo2,
+          ot: ot2.trim() || null,
+          sector: sector.trim(),
+          horario: horarioStr,
+          notas: `[OT 2/2] ${notas.trim()}`,
+          contrato,
+          dia_semana: DIAS[selectedDate.getDay()],
+          horas_normales: horasNormales2 ? parseFloat(horasNormales2) : null,
+          hs_normales_insa: hsNormalesMods.insa, // Re-use mods or set default?
+          hs_normales_polu: hsNormalesMods.polu,
+          hs_normales_noct: hsNormalesMods.noct,
+          horas_50: horas502 ? parseFloat(horas502) : null,
+          hs_50_insa: hs50Mods.insa,
+          hs_50_polu: hs50Mods.polu,
+          hs_50_noct: hs50Mods.noct,
+          horas_100: horas1002 ? parseFloat(horas1002) : null,
+          hs_100_insa: hs100Mods.insa,
+          hs_100_polu: hs100Mods.polu,
+          hs_100_noct: hs100Mods.noct,
+        });
+      }
+    });
 
     const { error } = await supabase.from("error_carga").insert(records);
 
@@ -331,6 +383,19 @@ export function useCargaForm() {
     setHoras100,
     hs100Mods,
     setHs100Mods,
+    // Split OT
+    splitOT,
+    setSplitOT,
+    motivo2,
+    setMotivo2,
+    ot2,
+    setOt2,
+    horasNormales2,
+    setHorasNormales2,
+    horas502,
+    setHoras502,
+    horas1002,
+    setHoras1002,
     // Actions
     handleSubmit,
     router,
