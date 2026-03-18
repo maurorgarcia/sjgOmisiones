@@ -30,12 +30,12 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { ErrorCarga, MOTIVO_COLORS } from "@/types";
+import { ErrorCarga, MOTIVO_COLORS, MOTIVOS, CONTRATOS } from "@/types";
 import { StatsCharts as StatsChartsBase } from "@/components/StatsCharts";
 const StatsCharts = memo(StatsChartsBase);
 import { Modal } from "@/components/Modal";
 import { Skeleton, TableSkeleton } from "@/components/Skeleton";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useErrores } from "./useErrores";
 
 function getMotivoBadge(motivo: string) {
@@ -81,11 +81,7 @@ export default function Dashboard() {
   const [sending, setSending] = useState(false);
   const [searchTyped, setSearchTyped] = useState("");
 
-  const [editingError, setEditingError] = useState<ErrorCarga | null>(null);
-  const [editNotas, setEditNotas] = useState("");
-  const [editSector, setEditSector] = useState("");
-  const [editOt, setEditOt] = useState("");
-  const [editHorario, setEditHorario] = useState("");
+  const [editForm, setEditForm] = useState<Partial<ErrorCarga> | null>(null);
   const [editLoading, setEditLoading] = useState(false);
 
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -189,30 +185,48 @@ export default function Dashboard() {
   );
 
   const openEdit = useCallback((err: ErrorCarga) => {
-    setEditingError(err);
-    setEditNotas(err.notas || "");
-    setEditSector(err.sector);
-    setEditOt(err.ot || "");
-    setEditHorario(err.horario || "");
+    setEditForm({ ...err });
   }, []);
 
   const saveEdit = useCallback(async () => {
-    if (!editingError) return;
+    if (!editForm || !editForm.id) return;
     setEditLoading(true);
-    await supabase
+    const { error } = await supabase
       .from("error_carga")
       .update({
-        notas: editNotas || null,
-        sector: editSector,
-        ot: editOt || null,
-        horario: editHorario || null,
+        fecha: editForm.fecha,
+        nombre_apellido: editForm.nombre_apellido?.toUpperCase(),
+        legajo: editForm.legajo,
+        motivo_error: editForm.motivo_error,
+        ot: editForm.ot || null,
+        sector: editForm.sector,
+        horario: editForm.horario || null,
+        notas: editForm.notas || null,
+        contrato: editForm.contrato,
+        horas_normales: editForm.horas_normales,
+        hs_normales_insa: editForm.hs_normales_insa,
+        hs_normales_polu: editForm.hs_normales_polu,
+        hs_normales_noct: editForm.hs_normales_noct,
+        horas_50: editForm.horas_50,
+        hs_50_insa: editForm.hs_50_insa,
+        hs_50_polu: editForm.hs_50_polu,
+        hs_50_noct: editForm.hs_50_noct,
+        horas_100: editForm.horas_100,
+        hs_100_insa: editForm.hs_100_insa,
+        hs_100_polu: editForm.hs_100_polu,
+        hs_100_noct: editForm.hs_100_noct,
       })
-      .eq("id", editingError.id);
+      .eq("id", editForm.id);
+    
     setEditLoading(false);
-    setEditingError(null);
-    toast.success("Registro actualizado correctamente.");
-    fetchErrores();
-  }, [editingError, editNotas, editSector, editOt, editHorario, fetchErrores]);
+    if (!error) {
+       setEditForm(null);
+       toast.success("Registro actualizado correctamente.");
+       fetchErrores();
+    } else {
+       toast.error("Error al actualizar: " + error.message);
+    }
+  }, [editForm, fetchErrores]);
 
   const confirmDelete = useCallback(
     async (id: number) => {
@@ -833,120 +847,218 @@ export default function Dashboard() {
       />
 
       {/* Edit modal */}
-      {editingError && (
-        <div className="fixed inset-0 bg-background/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-card rounded-[2.5rem] shadow-2xl p-8 max-w-lg w-full border border-border overflow-hidden relative"
-          >
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent-gold to-accent-gold-dark" />
+      <AnimatePresence>
+        {editForm && (
+          <div className="fixed inset-0 bg-background/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-card rounded-[2.5rem] shadow-2xl p-8 max-w-2xl w-full border border-border overflow-hidden relative flex flex-col max-h-[90vh]"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent-gold to-accent-gold-dark" />
 
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h3 className="text-xl font-black text-foreground uppercase tracking-tight">
-                  Editar Registro
-                </h3>
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1 opacity-70">
-                  {editingError.nombre_apellido} · Leg. {editingError.legajo}
-                </p>
+              <div className="flex items-center justify-between mb-6 flex-shrink-0">
+                <div>
+                  <h3 className="text-xl font-black text-foreground uppercase tracking-tight">
+                    Editar Registro Completo
+                  </h3>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1 opacity-70">
+                    ID: #{editForm.id} · Corrección de datos
+                  </p>
+                </div>
+                <button
+                  onClick={() => setEditForm(null)}
+                  className="p-2.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-2xl transition-all text-slate-500 hover:text-foreground"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                onClick={() => setEditingError(null)}
-                className="p-2.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-2xl transition-all text-slate-500 hover:text-foreground"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                    Sector
-                  </label>
-                  <div className="relative group/input">
-                    <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-accent-gold transition-colors" />
+              <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar pb-6">
+                {/* Row 1: Fecha & Legajo */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Fecha</label>
+                    <input
+                      type="date"
+                      value={editForm.fecha ? editForm.fecha.split('T')[0] : ''}
+                      onChange={(e) => setEditForm({ ...editForm, fecha: e.target.value })}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 [color-scheme:light] dark:[color-scheme:dark]"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Legajo SAP</label>
                     <input
                       type="text"
-                      value={editSector}
-                      onChange={(e) => setEditSector(e.target.value)}
-                      className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all"
+                      value={editForm.legajo || ''}
+                      onChange={(e) => setEditForm({ ...editForm, legajo: e.target.value })}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-mono font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10"
                     />
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                    OT (10 dígitos)
-                  </label>
-                  <div className="relative group/input">
-                    <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-accent-gold transition-colors" />
-                    <input
-                      type="text"
-                      value={editOt}
-                      onChange={(e) =>
-                        setEditOt(e.target.value.replace(/\D/g, "").slice(0, 10))
-                      }
-                      className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all"
-                      placeholder="Opcional"
-                      maxLength={10}
-                    />
-                  </div>
-                </div>
-              </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                  Horario
-                </label>
-                <div className="relative group/input">
-                  <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/input:text-accent-gold transition-colors" />
+                {/* Row 2: Nombre */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nombre y Apellido</label>
                   <input
                     type="text"
-                    value={editHorario}
-                    onChange={(e) => setEditHorario(e.target.value)}
-                    className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all"
+                    value={editForm.nombre_apellido || ''}
+                    onChange={(e) => setEditForm({ ...editForm, nombre_apellido: e.target.value })}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 uppercase"
+                  />
+                </div>
+
+                {/* Row 3: Contrato & Motivo */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Contrato</label>
+                    <select
+                      value={editForm.contrato || ''}
+                      onChange={(e) => setEditForm({ ...editForm, contrato: e.target.value })}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 appearance-none"
+                    >
+                      {CONTRATOS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Motivo</label>
+                    <select
+                      value={editForm.motivo_error || ''}
+                      onChange={(e) => setEditForm({ ...editForm, motivo_error: e.target.value })}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 appearance-none"
+                    >
+                      {MOTIVOS.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Row 4: Sector & OT */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Sector</label>
+                    <input
+                      type="text"
+                      value={editForm.sector || ''}
+                      onChange={(e) => setEditForm({ ...editForm, sector: e.target.value })}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">OT</label>
+                    <input
+                      type="text"
+                      value={editForm.ot || ''}
+                      onChange={(e) => setEditForm({ ...editForm, ot: e.target.value.replace(/\D/g, '').slice(0, 12) })}
+                      disabled={editForm.motivo_error === 'OT Inexistente'}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 disabled:opacity-30"
+                      maxLength={12}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 5: Horario */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Horario de Fichaje</label>
+                  <input
+                    type="text"
+                    value={editForm.horario || ''}
+                    onChange={(e) => setEditForm({ ...editForm, horario: e.target.value })}
                     placeholder="Ej: 06:00 a 14:00"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10"
+                  />
+                </div>
+
+                {/* Row 6: Horas Detail */}
+                <div className="space-y-4 pt-2 border-t border-border">
+                  <p className="text-[10px] font-black text-accent-gold uppercase tracking-[0.2em] mb-2">Desglose de Horas y Modificadores</p>
+                  <div className="grid grid-cols-1 gap-6 bg-black/5 dark:bg-white/5 p-4 rounded-3xl border border-border/50">
+                    {/* Normales */}
+                    <div className="space-y-3">
+                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Horas Normales</label>
+                       <div className="flex flex-wrap items-center gap-4">
+                          <input type="number" step="0.5" value={editForm.horas_normales || ''} onChange={(e) => setEditForm({...editForm, horas_normales: e.target.value ? parseFloat(e.target.value) : null})} className="w-24 bg-background border border-border rounded-lg px-3 py-2 text-xs font-bold text-foreground outline-none" />
+                          <div className="flex gap-3">
+                             <ModifierCheckbox label="INSA" checked={!!editForm.hs_normales_insa} onChange={(val) => setEditForm({...editForm, hs_normales_insa: val})} />
+                             <ModifierCheckbox label="POLU" checked={!!editForm.hs_normales_polu} onChange={(val) => setEditForm({...editForm, hs_normales_polu: val})} />
+                             <ModifierCheckbox label="NOCT" checked={!!editForm.hs_normales_noct} onChange={(val) => setEditForm({...editForm, hs_normales_noct: val})} />
+                          </div>
+                       </div>
+                    </div>
+                    {/* 50% */}
+                    <div className="space-y-3 pt-3 border-t border-border/10">
+                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Horas al 50%</label>
+                       <div className="flex flex-wrap items-center gap-4">
+                          <input type="number" step="0.5" value={editForm.horas_50 || ''} onChange={(e) => setEditForm({...editForm, horas_50: e.target.value ? parseFloat(e.target.value) : null})} className="w-24 bg-background border border-border rounded-lg px-3 py-2 text-xs font-bold text-foreground outline-none" />
+                          <div className="flex gap-3">
+                             <ModifierCheckbox label="INSA" checked={!!editForm.hs_50_insa} onChange={(val) => setEditForm({...editForm, hs_50_insa: val})} />
+                             <ModifierCheckbox label="POLU" checked={!!editForm.hs_50_polu} onChange={(val) => setEditForm({...editForm, hs_50_polu: val})} />
+                             <ModifierCheckbox label="NOCT" checked={!!editForm.hs_50_noct} onChange={(val) => setEditForm({...editForm, hs_50_noct: val})} />
+                          </div>
+                       </div>
+                    </div>
+                    {/* 100% */}
+                    <div className="space-y-3 pt-3 border-t border-border/10">
+                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Horas al 100%</label>
+                       <div className="flex flex-wrap items-center gap-4">
+                          <input type="number" step="0.5" value={editForm.horas_100 || ''} onChange={(e) => setEditForm({...editForm, horas_100: e.target.value ? parseFloat(e.target.value) : null})} className="w-24 bg-background border border-border rounded-lg px-3 py-2 text-xs font-bold text-foreground outline-none" />
+                          <div className="flex gap-3">
+                             <ModifierCheckbox label="INSA" checked={!!editForm.hs_100_insa} onChange={(val) => setEditForm({...editForm, hs_100_insa: val})} />
+                             <ModifierCheckbox label="POLU" checked={!!editForm.hs_100_polu} onChange={(val) => setEditForm({...editForm, hs_100_polu: val})} />
+                             <ModifierCheckbox label="NOCT" checked={!!editForm.hs_100_noct} onChange={(val) => setEditForm({...editForm, hs_100_noct: val})} />
+                          </div>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 7: Notas */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Notas Observaciones</label>
+                  <textarea
+                    value={editForm.notas || ''}
+                    onChange={(e) => setEditForm({ ...editForm, notas: e.target.value })}
+                    rows={3}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-xs font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 resize-none"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                  Notas Observaciones
-                </label>
-                <textarea
-                  value={editNotas}
-                  onChange={(e) => setEditNotas(e.target.value)}
-                  rows={4}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-xs font-bold text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all resize-none"
-                />
+              <div className="flex gap-4 justify-end mt-6 pt-6 border-t border-border flex-shrink-0">
+                <button
+                  onClick={() => setEditForm(null)}
+                  className="px-6 py-3 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={saveEdit}
+                  disabled={editLoading}
+                  className="flex items-center gap-2 px-10 py-3 rounded-xl bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black text-[10px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 disabled:opacity-50"
+                >
+                  {editLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  Guardar Correcciones
+                </button>
               </div>
-            </div>
-
-            <div className="flex gap-4 justify-end mt-10">
-              <button
-                onClick={() => setEditingError(null)}
-                className="px-6 py-3 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all active:scale-95"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={saveEdit}
-                disabled={editLoading}
-                className="flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-accent-gold to-accent-gold-dark hover:from-accent-gold-dark hover:to-accent-gold text-black text-[10px] font-black uppercase tracking-widest transition-all shadow-2xl shadow-accent-gold/20 active:scale-95 disabled:opacity-50"
-              >
-                {editLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4" />
-                )}
-                Guardar cambios
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
+  );
+}
+
+function ModifierCheckbox({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      onClick={() => onChange(!checked)}
+      className={`px-2 py-1 rounded-md text-[9px] font-black border transition-all ${
+        checked 
+          ? "bg-accent-gold border-accent-gold text-black shadow-[0_0_10px_rgba(245,158,11,0.3)]" 
+          : "bg-background border-border text-slate-500 opacity-50"
+      }`}
+    >
+      {label}
+    </button>
   );
 }

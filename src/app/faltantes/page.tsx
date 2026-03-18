@@ -16,6 +16,7 @@ import {
   AlertCircle,
   FilterX,
   ChevronDown,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -45,6 +46,32 @@ export default function FaltantesDashboard() {
   } = useFaltantes();
 
   const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const handleDownload = useCallback(async () => {
+    try {
+      const params = new URLSearchParams({
+        ...(fechaDesde && { fechaDesde }),
+        ...(fechaHasta && { fechaHasta }),
+        ...(searchQuery.trim() && { search: searchQuery.trim() }),
+      });
+      const res = await fetch(`/api/exportar-faltantes?${params}`);
+      if (!res.ok) {
+        toast.error("No hay datos o hubo un error al exportar.");
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `faltantes_${fechaDesde || "general"}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Ocurrió un error al descargar el archivo.");
+    }
+  }, [fechaDesde, fechaHasta, searchQuery]);
 
   const handleDelete = useCallback(
     async (id: number) => {
@@ -76,13 +103,23 @@ export default function FaltantesDashboard() {
             </p>
           </div>
         </div>
-        <Link
-          href="/faltantes/carga"
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-accent-gold to-accent-gold-dark px-5 py-2.5 rounded-2xl text-[10px] font-black text-black uppercase tracking-widest shadow-lg hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:scale-[1.02] transition-all active:scale-95"
-        >
-          <UserPlus className="w-4 h-4" />
-          Registrar Faltante
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDownload}
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-xl bg-card/20 px-4 py-2.5 border border-border text-xs font-bold text-slate-500 hover:bg-card/40 hover:text-accent-gold transition-all shadow-xl active:scale-95 disabled:opacity-50"
+            title="Descargar Excel con filtros actuales"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+          <Link
+            href="/faltantes/carga"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-accent-gold to-accent-gold-dark px-5 py-2.5 rounded-2xl text-[10px] font-black text-black uppercase tracking-widest shadow-lg hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:scale-[1.02] transition-all active:scale-95"
+          >
+            <UserPlus className="w-4 h-4" />
+            Registrar Faltante
+          </Link>
+        </div>
       </div>
 
       {/* Filter Bar */}

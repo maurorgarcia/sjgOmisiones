@@ -24,7 +24,8 @@ export function useFaltantes() {
     if (typeof window === "undefined") return "";
     return sessionStorage.getItem("sjg_fecha_hasta") || "";
   });
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQueryRaw, setSearchQueryRaw] = useState("");
+  const [search, setSearch] = useState("");
 
   const [checkedNames, setCheckedNames] = useState<Set<string>>(() => {
     if (typeof window === "undefined") return new Set();
@@ -41,6 +42,11 @@ export function useFaltantes() {
         ? `${fechaHasta}T23:59:59.999Z`
         : `${fechaDesde}T23:59:59.999Z`;
       query = query.gte("fecha", startIso).lte("fecha", endIso);
+    }
+
+    if (search.trim()) {
+      const q = search.trim();
+      query = query.or(`nombre_apellido.ilike.%${q}%,contrato.ilike.%${q}%,sector.ilike.%${q}%,motivo.ilike.%${q}%`);
     }
 
     if (sortConfig) {
@@ -84,7 +90,14 @@ export function useFaltantes() {
 
   useEffect(() => {
     fetchFaltantes();
-  }, [fetchFaltantes]);
+  }, [fetchFaltantes, search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchQueryRaw);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQueryRaw]);
 
   const handleSort = useCallback((key: string) => {
     setSortConfig((prev) => {
@@ -107,20 +120,10 @@ export function useFaltantes() {
   const resetFilters = useCallback(() => {
     setFechaDesde(new Date().toISOString().split("T")[0]);
     setFechaHasta("");
-    setSearchQuery("");
+    setSearchQueryRaw("");
   }, []);
 
-  const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return data;
-    const q = searchQuery.toLowerCase();
-    return data.filter(
-      (f) =>
-        f.nombre_apellido.toLowerCase().includes(q) ||
-        f.contrato.toLowerCase().includes(q) ||
-        (f.sector && f.sector.toLowerCase().includes(q)) ||
-        (f.motivo && f.motivo.toLowerCase().includes(q))
-    );
-  }, [data, searchQuery]);
+  const filtered = data;
 
   const updateFechaDesde = useCallback((val: string) => {
     setFechaDesde(val);
@@ -142,14 +145,14 @@ export function useFaltantes() {
     sortConfig,
     fechaDesde,
     fechaHasta,
-    searchQuery,
     checkedNames,
     handleSort,
     toggleNameHighlight,
     resetFilters,
     loadMore,
     refetch: fetchFaltantes,
-    setSearchQuery,
+    setSearchQuery: setSearchQueryRaw,
+    searchQuery: searchQueryRaw,
     updateFechaDesde,
     updateFechaHasta,
   };

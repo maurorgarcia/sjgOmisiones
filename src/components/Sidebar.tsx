@@ -16,6 +16,7 @@ import {
   X,
   Wifi,
   WifiOff,
+  UserSquare2,
 } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -56,6 +57,7 @@ const faltantesItems = [
 ];
 
 const adminItems = [
+  { href: "/empleados", label: "Base de Personal", icon: UserSquare2, adminOnly: true },
   { href: "/importar", label: "Importar Empleados", icon: Upload, adminOnly: true },
 ];
 
