@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Loader2, Maximize2, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, Loader2, Maximize2, Plus, Trash2, ArrowRight, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MOTIVOS, CONTRATOS } from "@/types";
 import { useCargaForm } from "./useCargaForm";
@@ -12,23 +12,21 @@ import { ErrorCarga } from "@/types";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-// Shared input/select class helpers — keeps JSX clean and styles consistent
+// Shared aesthetics
 const inputCls = (hasError?: boolean) =>
-  `w-full bg-background border rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground ${
-    hasError ? "border-red-500/50 bg-red-500/5" : "border-border"
+  `w-full bg-background border rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground shadow-inner ${
+    hasError ? "border-red-500/50 bg-red-500/5 shadow-red-500/5" : "border-border shadow-black/5"
   }`;
 
 const selectCls = (hasError?: boolean) =>
-  `w-full bg-background border rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black uppercase tracking-widest text-foreground appearance-none cursor-pointer ${
-    hasError ? "border-red-500/50 bg-red-500/5" : "border-border"
+  `w-full bg-background border rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black uppercase tracking-widest text-foreground appearance-none cursor-pointer shadow-inner ${
+    hasError ? "border-red-500/50 bg-red-500/5 shadow-red-500/5" : "border-border shadow-black/5"
   }`;
 
 const labelCls = "block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-600 dark:text-slate-500 ml-1";
 
 const FieldError = ({ msg }: { msg?: string }) =>
-  msg ? <p className="text-red-500 text-xs mt-1 font-bold">{msg}</p> : null;
-
-// ─── Page ──────────────────────────────────────────────────────────────────────
+  msg ? <p className="text-red-500 text-[10px] mt-1.5 font-black uppercase tracking-widest ml-1">{msg}</p> : null;
 
 export default function CargaPage() {
   const f = useCargaForm();
@@ -48,361 +46,324 @@ export default function CargaPage() {
 
   useEffect(() => {
     fetchRecent();
-  }, [fetchRecent, f.loading]); // Refetch when loading changes (after save)
+  }, [fetchRecent, f.loading]);
+
+  const activeOT = f.ots[f.activeOTIndex];
 
   return (
-    <div className="max-w-2xl mx-auto">
-
-      {/* Header */}
-      <div className="mb-6 flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-1.5 h-8 bg-accent-gold rounded-full shadow-[0_0_12px_rgba(245,158,11,0.5)]" />
+    <div className="max-w-3xl mx-auto px-4 sm:px-0">
+      
+      {/* ── Header ─────────────────────────────────────────────────── */}
+      <div className="mb-10 flex items-center justify-between">
+        <div className="flex items-center gap-5">
+          <div className="relative">
+            <div className="w-1.5 h-12 bg-accent-gold rounded-full shadow-[0_0_20px_rgba(245,158,11,0.6)]" />
+            <div className="absolute top-0 right-0 w-3 h-3 bg-accent-gold rounded-full animate-ping opacity-20" />
+          </div>
           <div>
-            <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">
-              Cargar Registro
+            <h1 className="text-3xl font-black text-foreground tracking-tighter uppercase leading-none">
+              Gestión de Omisiones
             </h1>
-            <p className="text-slate-600 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">
-              Gestión de Omisiones y Errores SJG
+            <p className="text-slate-500 dark:text-slate-500 text-[11px] font-black uppercase tracking-[0.3em] mt-2">
+              Panel Inteligente para Errores de Carga
             </p>
           </div>
         </div>
         <button
           onClick={() =>
-            window.open(
-              "/carga/mini",
-              "MiniCarga",
-              "width=450,height=800,menubar=no,toolbar=no,location=no,status=no"
-            )
+            window.open("/carga/mini", "MiniCarga", "width=450,height=800")
           }
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-accent-gold/20 bg-accent-gold/5 text-accent-gold text-[10px] font-black uppercase tracking-wider hover:bg-accent-gold/10 transition-all active:scale-95 shadow-lg"
-          title="Abrir como ventana flotante para multitarea"
+          className="group flex items-center gap-3 px-5 py-3 rounded-2xl border border-accent-gold/20 bg-accent-gold/5 text-accent-gold text-[10px] font-black uppercase tracking-[0.2em] hover:bg-accent-gold/10 transition-all active:scale-95 shadow-xl shadow-accent-gold/5"
         >
-          <Maximize2 className="w-3.5 h-3.5" />
-          <span>Modo Ventana</span>
+          <Maximize2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+          <span className="hidden sm:inline">Modo Ventana</span>
         </button>
       </div>
 
-      {/* Form card */}
-      <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl p-8 backdrop-blur-xl">
-        <form onSubmit={f.handleSubmit} className="space-y-5" noValidate>
-
-          {/* ── Employee search ─────────────────────────────────────────── */}
-          <EmpleadoSearch
-            searchRef={f.searchRef}
-            searchQuery={f.searchQuery}
-            suggestions={f.suggestions}
-            selectedEmpleados={f.selectedEmpleados}
-            searchLoading={f.searchLoading}
-            showSuggestions={f.showSuggestions}
-            legajoManual={f.legajoManual}
-            errors={f.errors}
-            onSearch={f.handleSearch}
-            onFocus={() => f.suggestions.length > 0 && f.setShowSuggestions(true)}
-            onSelect={f.selectEmpleado}
-            onAddManual={f.addManualEmpleado}
-            onRemove={f.removeEmpleado}
-            onClear={f.clearSearch}
-            onLegajoChange={f.setLegajoManual}
-          />
-
-          {/* ── Fecha ───────────────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label className={labelCls}>
-                Fecha del Error <span className="text-accent-gold ml-1 font-bold">*</span>
-              </label>
-              <input
-                type="date"
-                required
-                value={f.fecha}
-                onChange={(e) => f.setFecha(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm text-foreground [color-scheme:light] dark:[color-scheme:dark]"
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+        <form onSubmit={f.handleSubmit} className="space-y-6" noValidate>
+          
+          {/* Card 1: Empleado y Fecha */}
+          <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl p-8 backdrop-blur-3xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-accent-gold/5 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none group-hover:bg-accent-gold/10 transition-colors" />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <EmpleadoSearch
+                searchRef={f.searchRef}
+                searchQuery={f.searchQuery}
+                suggestions={f.suggestions}
+                selectedEmpleados={f.selectedEmpleados}
+                searchLoading={f.searchLoading}
+                showSuggestions={f.showSuggestions}
+                legajoManual={f.legajoManual}
+                errors={f.errors}
+                onSearch={f.handleSearch}
+                onFocus={() => f.suggestions.length > 0 && f.setShowSuggestions(true)}
+                onSelect={f.selectEmpleado}
+                onAddManual={f.addManualEmpleado}
+                onRemove={f.removeEmpleado}
+                onClear={f.clearSearch}
+                onLegajoChange={f.setLegajoManual}
               />
-            </div>
-          </div>
 
-          {/* ── Multi-OT Management ───────────────────────────────────────── */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-3">
-                <div className="bg-accent-gold/10 p-2 rounded-xl">
-                  <Maximize2 className="w-4 h-4 text-accent-gold" />
-                </div>
+              <div className="space-y-6">
                 <div>
-                  <h3 className="text-sm font-black text-foreground uppercase tracking-tight">Ordenes de Trabajo</h3>
-                  <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mt-0.5">Gestión de una o más OTs para el día</p>
+                  <label className={labelCls}>Fecha del Registro</label>
+                  <input
+                    type="date"
+                    required
+                    value={f.fecha}
+                    onChange={(e) => f.setFecha(e.target.value)}
+                    className={inputCls()}
+                  />
                 </div>
-              </div>
-              <button
-                type="button"
-                onClick={f.addOT}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-accent-gold/20 bg-accent-gold/5 text-accent-gold text-[10px] font-black uppercase tracking-wider hover:bg-accent-gold/10 transition-all active:scale-95"
-              >
-                <Plus className="w-3 h-3" />
-                <span>Agregar OT</span>
-              </button>
-            </div>
-
-            <AnimatePresence mode="popLayout">
-              {f.ots.map((otEntry, idx) => (
-                <motion.div
-                  key={otEntry.id}
-                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className={`p-6 rounded-[2rem] border transition-all ${
-                    idx % 2 === 0 
-                      ? "bg-slate-500/5 border-slate-500/10 shadow-sm" 
-                      : "bg-emerald-500/5 border-emerald-500/10 shadow-md"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-5 px-1">
-                    <div className="flex items-center gap-2">
-                       <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg uppercase tracking-widest ${
-                         idx % 2 === 0 ? "bg-slate-500/20 text-slate-500" : "bg-emerald-500/20 text-emerald-500 shadow-sm shadow-emerald-500/20"
-                       }`}>
-                         OT {idx + 1}
-                       </span>
-                    </div>
-                    {f.ots.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => f.removeOT(otEntry.id)}
-                        className="p-2 rounded-xl hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all active:scale-95"
-                        title="Quitar esta OT"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-                    {/* Motivo */}
-                    <div>
-                      <label className={labelCls}>
-                        Motivo <span className="text-accent-gold ml-1 font-bold">*</span>
-                      </label>
-                      <select
-                        required
-                        value={otEntry.motivo}
-                        onChange={(e) => f.updateOT(otEntry.id, { motivo: e.target.value })}
-                        className={selectCls(!!f.errors[`motivo_${idx}`])}
-                      >
-                        <option value="">Seleccione un motivo...</option>
-                        {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
-                      </select>
-                      <FieldError msg={f.errors[`motivo_${idx}`]} />
-                    </div>
-
-                    {/* Número de OT */}
-                    <div>
-                      <label className={labelCls}>
-                        Número de OT
-                        {otEntry.motivo && otEntry.motivo !== "OT Inexistente" && (
-                          <span className="text-slate-400 font-normal ml-1">(8-12 dígitos)</span>
-                        )}
-                      </label>
-                      <input
-                        type="text"
-                        value={otEntry.ot}
-                        onChange={(e) => f.updateOT(otEntry.id, { ot: e.target.value.replace(/\D/g, "").slice(0, 12) })}
-                        disabled={otEntry.motivo === "OT Inexistente"}
-                        className={`${inputCls(!!f.errors[`ot_${idx}`])} disabled:opacity-20`}
-                        placeholder={otEntry.motivo === "OT Inexistente" ? "No aplica" : "Ej: 0012300456"}
-                        maxLength={12}
-                      />
-                      <FieldError msg={f.errors[`ot_${idx}`]} />
-                    </div>
-                  </div>
-
-                  {/* Horas para esta OT */}
-                  <div className="bg-background/40 p-5 rounded-3xl border border-border/50">
-                    <HorasDetalle
-                      horasNormales={otEntry.horasNormales}
-                      setHorasNormales={(v) => f.updateOT(otEntry.id, { horasNormales: v })}
-                      hsNormalesMods={f.hsNormalesMods}
-                      setHsNormalesMods={f.setHsNormalesMods}
-                      horas50={otEntry.horas50}
-                      setHoras50={(v) => f.updateOT(otEntry.id, { horas50: v })}
-                      hs50Mods={f.hs50Mods}
-                      setHs50Mods={f.setHs50Mods}
-                      horas100={otEntry.horas100}
-                      setHoras100={(v) => f.updateOT(otEntry.id, { horas100: v })}
-                      hs100Mods={f.hs100Mods}
-                      setHs100Mods={f.setHs100Mods}
-                      isSecondary={idx > 0}
-                    />
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 border-t border-border pt-6">
-            {/* ── Contrato ───────────────────────────────────────── */}
-            <div>
-              <label className={labelCls}>
-                Contrato <span className="text-accent-gold ml-1 font-bold">*</span>
-              </label>
-              <select
-                required
-                value={f.contrato}
-                onChange={(e) => { f.setContrato(e.target.value); f.setErrors((err) => ({ ...err, contrato: "" })); }}
-                className={selectCls(!!f.errors.contrato)}
-              >
-                <option value="">Seleccionar contrato...</option>
-                {CONTRATOS.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <FieldError msg={f.errors.contrato} />
-            </div>
-
-            {/* ── Sector ─────────────────────────────────────────────── */}
-            <div>
-              <label className={labelCls}>
-                Sector / Área <span className="text-accent-gold ml-1 font-bold">*</span>
-              </label>
-              <input
-                type="text"
-                value={f.sector}
-                onChange={(e) => { f.setSector(e.target.value); f.setErrors((err) => ({ ...err, sector: "" })); }}
-                className={inputCls(!!f.errors.sector)}
-                placeholder="Ej: Planta A, Mantenimiento..."
-              />
-              <FieldError msg={f.errors.sector} />
-            </div>
-          </div>
-
-          {/* ── Horario ─────────────────────────────────────────────────── */}
-          <div>
-            <label className={labelCls}>
-              Horario de Fichaje <span className="text-accent-gold ml-1 font-bold">*</span>
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[10px] font-black text-slate-600 dark:text-slate-500 mb-1 uppercase tracking-widest ml-1">
-                  Entrada
-                </label>
-                <input
-                  type="time"
-                  value={f.horarioDesde}
-                  onChange={(e) => { f.setHorarioDesde(e.target.value); f.setErrors((err) => ({ ...err, horarioDesde: "" })); }}
-                  className={`w-full bg-background border rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm text-foreground [color-scheme:light] dark:[color-scheme:dark] ${f.errors.horarioDesde ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
-                />
-                <FieldError msg={f.errors.horarioDesde} />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black text-slate-600 dark:text-slate-500 mb-1 uppercase tracking-widest ml-1">
-                  Salida
-                </label>
-                <input
-                  type="time"
-                  value={f.horarioHasta}
-                  onChange={(e) => { f.setHorarioHasta(e.target.value); f.setErrors((err) => ({ ...err, horarioHasta: "" })); }}
-                  className={`w-full bg-background border rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm text-foreground [color-scheme:light] dark:[color-scheme:dark] ${f.errors.horarioHasta ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
-                />
-                <FieldError msg={f.errors.horarioHasta} />
-              </div>
-            </div>
-          </div>
-
-          {/* ── Notas ───────────────────────────────────────────────────── */}
-          <div className="pt-2 border-t border-border">
-            <label className="block text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] mb-2 ml-1">
-              Notas adicionales
-            </label>
-            <textarea
-              value={f.notas}
-              onChange={(e) => f.setNotas(e.target.value)}
-              rows={3}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition resize-none text-sm text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 font-medium"
-              placeholder="Algún comentario sobre el error..."
-            />
-          </div>
-
-          {/* ── Actions ─────────────────────────────────────────────────── */}
-          <div className="pt-6 flex justify-end gap-3 border-t border-border">
-            <button
-              type="button"
-              onClick={() => f.router.push("/")}
-              className="px-6 py-3.5 rounded-2xl border border-border text-[11px] font-black uppercase tracking-widest text-slate-500 hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-all active:scale-[0.98]"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={f.loading}
-              className="min-w-[200px] bg-gradient-to-r from-accent-gold to-accent-gold-dark hover:shadow-[0_8px_30px_rgba(217,119,6,0.2)] text-black font-black py-4 px-8 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98] text-[11px] uppercase tracking-widest"
-            >
-              {f.loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Guardando...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span>
-                    Guardar{" "}
-                    {f.selectedEmpleados.length > 1
-                      ? `(${f.selectedEmpleados.length})`
-                      : "Registro"}
-                  </span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* ── Recent entries section ────────────────────────────────────── */}
-      <div className="mt-12 mb-20">
-        <div className="flex items-center gap-3 mb-6 px-1">
-          <div className="bg-accent-gold/10 p-2 rounded-xl">
-            <CheckCircle2 className="w-5 h-5 text-accent-gold" />
-          </div>
-          <h2 className="text-lg font-black text-foreground uppercase tracking-tight">Cargados Recientemente</h2>
-        </div>
-
-        <div className="space-y-3">
-          {loadingRecent ? (
-            <div className="bg-card/20 rounded-3xl p-8 border border-border flex flex-col items-center gap-4">
-               <Loader2 className="w-6 h-6 animate-spin text-slate-500" />
-               <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Buscando historial...</p>
-            </div>
-          ) : recentEntries.length === 0 ? (
-            <div className="bg-card/20 rounded-3xl p-8 border border-border text-center">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">No hay registros recientes.</p>
-            </div>
-          ) : (
-            recentEntries.map((err) => (
-              <motion.div
-                key={err.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-card/30 hover:bg-card/50 border border-border hover:border-accent-gold/20 rounded-2xl p-4 flex items-center justify-between group transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center font-black text-slate-500 text-xs shadow-inner uppercase">
-                    {err.nombre_apellido.slice(0, 2)}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelCls}>Contrato</label>
+                    <select
+                      required
+                      value={f.contrato}
+                      onChange={(e) => { f.setContrato(e.target.value); f.setErrors((err) => ({ ...err, contrato: "" })); }}
+                      className={selectCls(!!f.errors.contrato)}
+                    >
+                      <option value="">Seleccionar...</option>
+                      {CONTRATOS.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <FieldError msg={f.errors.contrato} />
                   </div>
                   <div>
-                    <h4 className="text-xs font-black text-foreground uppercase tracking-tight">{err.nombre_apellido}</h4>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] font-black text-accent-gold uppercase tracking-widest">{err.motivo_error}</span>
-                      <span className="text-slate-400 text-[10px]">·</span>
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{format(new Date(err.fecha), 'dd MMM', { locale: es })}</span>
-                    </div>
+                    <label className={labelCls}>Sector</label>
+                    <input
+                      type="text"
+                      value={f.sector}
+                      onChange={(e) => { f.setSector(e.target.value); f.setErrors((err) => ({ ...err, sector: "" })); }}
+                      className={inputCls(!!f.errors.sector)}
+                      placeholder="Ej: Planta A"
+                    />
+                    <FieldError msg={f.errors.sector} />
                   </div>
                 </div>
-                <div className="text-right">
-                   <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">OT: {err.ot || '---'}</div>
-                   <div className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase">{err.sector}</div>
-                </div>
-              </motion.div>
-            ))
-          )}
-        </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Multi-OT Center (Compact & Tabbed) */}
+          <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl overflow-hidden backdrop-blur-3xl lg:min-h-[450px] flex flex-col">
+            
+            {/* OT Tabs Header */}
+            <div className="bg-background/50 border-b border-border p-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pr-4 max-w-[70%] sm:max-w-none">
+                {f.ots.map((ot, idx) => (
+                  <button
+                    key={ot.id}
+                    type="button"
+                    onClick={() => f.setActiveOTIndex(idx)}
+                    className={`flex-shrink-0 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      f.activeOTIndex === idx
+                        ? "bg-accent-gold text-black shadow-lg shadow-accent-gold/20"
+                        : "bg-background border border-border text-slate-500 hover:border-accent-gold/50"
+                    }`}
+                  >
+                    <span>OT {idx + 1}</span>
+                    {f.errors[`motivo_${idx}`] || f.errors[`ot_${idx}`] ? (
+                      <span className="ml-2 w-1.5 h-1.5 bg-red-500 rounded-full inline-block" />
+                    ) : null}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={f.addOT}
+                  className="flex-shrink-0 p-2.5 rounded-2xl bg-accent-gold/10 text-accent-gold hover:bg-accent-gold/20 active:scale-95 transition-all text-[10px] font-bold uppercase flex items-center gap-2 px-4 border border-dashed border-accent-gold/30"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Nueva OT</span>
+                </button>
+              </div>
+
+              {f.ots.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => f.removeOT(activeOT.id)}
+                  className="p-2.5 rounded-2xl hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all active:scale-95 border border-transparent hover:border-red-500/20"
+                  title="Quitar esta OT"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Active OT Content */}
+            <div className="p-8 flex-1">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeOT.id}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-8"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Config Left */}
+                    <div className="space-y-6">
+                      <div>
+                        <label className={labelCls}>Motivo Seleccionado</label>
+                        <select
+                          required
+                          value={activeOT.motivo}
+                          onChange={(e) => f.updateOT(activeOT.id, { motivo: e.target.value })}
+                          className={selectCls(!!f.errors[`motivo_${f.activeOTIndex}`])}
+                        >
+                          <option value="">Seleccionar motivo...</option>
+                          {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                        <FieldError msg={f.errors[`motivo_${f.activeOTIndex}`]} />
+                      </div>
+
+                      <div>
+                        <label className={labelCls}>Número de OT {activeOT.motivo === "OT Inexistente" ? "(No aplica)" : ""}</label>
+                        <input
+                          type="text"
+                          value={activeOT.ot}
+                          onChange={(e) => f.updateOT(activeOT.id, { ot: e.target.value.replace(/\D/g, "").slice(0, 12) })}
+                          disabled={activeOT.motivo === "OT Inexistente"}
+                          className={`${inputCls(!!f.errors[`ot_${f.activeOTIndex}`])} disabled:opacity-30 disabled:grayscale`}
+                          placeholder="Ej: 0012300456"
+                          maxLength={12}
+                        />
+                        <FieldError msg={f.errors[`ot_${f.activeOTIndex}`]} />
+                      </div>
+
+                      <div>
+                        <label className={labelCls}>Horario del Error</label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <input
+                            type="time"
+                            value={f.horarioDesde}
+                            onChange={(e) => { f.setHorarioDesde(e.target.value); f.setErrors((err) => ({ ...err, horarioDesde: "" })); }}
+                            className={inputCls(!!f.errors.horarioDesde)}
+                          />
+                          <input
+                            type="time"
+                            value={f.horarioHasta}
+                            onChange={(e) => { f.setHorarioHasta(e.target.value); f.setErrors((err) => ({ ...err, horarioHasta: "" })); }}
+                            className={inputCls(!!f.errors.horarioHasta)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hours Right */}
+                    <div className="bg-background/30 p-6 rounded-[2rem] border border-border/50 shadow-inner">
+                      <HorasDetalle
+                        horasNormales={activeOT.horasNormales}
+                        setHorasNormales={(v) => f.updateOT(activeOT.id, { horasNormales: v })}
+                        hsNormalesMods={activeOT.hsNormalesMods}
+                        setHsNormalesMods={(v) => f.updateOT(activeOT.id, { hsNormalesMods: v })}
+                        horas50={activeOT.horas50}
+                        setHoras50={(v) => f.updateOT(activeOT.id, { horas50: v })}
+                        hs50Mods={activeOT.hs50Mods}
+                        setHs50Mods={(v) => f.updateOT(activeOT.id, { hs50Mods: v })}
+                        horas100={activeOT.horas100}
+                        setHoras100={(v) => f.updateOT(activeOT.id, { horas100: v })}
+                        hs100Mods={activeOT.hs100Mods}
+                        setHs100Mods={(v) => f.updateOT(activeOT.id, { hs100Mods: v })}
+                        isSecondary
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Pagination / Helper */}
+            <div className="px-8 pb-6 flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
+              <div className="flex gap-2">
+                 {f.activeOTIndex > 0 && (
+                   <button type="button" onClick={() => f.setActiveOTIndex(f.activeOTIndex - 1)} className="hover:text-accent-gold transition-colors flex items-center gap-1">
+                     <ArrowLeft className="w-3 h-3" /> OT Anterior
+                   </button>
+                 )}
+                 {f.activeOTIndex < f.ots.length - 1 && (
+                   <button type="button" onClick={() => f.setActiveOTIndex(f.activeOTIndex + 1)} className="hover:text-accent-gold transition-colors flex items-center gap-1">
+                     OT Siguiente <ArrowRight className="w-3 h-3" />
+                   </button>
+                 )}
+              </div>
+              <p>Configurando OT {f.activeOTIndex + 1} de {f.ots.length}</p>
+            </div>
+          </div>
+
+          {/* Card 3: Notas y Guardado */}
+          <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl p-8 backdrop-blur-3xl space-y-8">
+            <div>
+              <label className={labelCls}>Notas Adicionales</label>
+              <textarea
+                value={f.notas}
+                onChange={(e) => f.setNotas(e.target.value)}
+                rows={2}
+                className={inputCls()}
+                placeholder="Obs. relevantes para el cierre..."
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-4 gap-4">
+              <button
+                type="button"
+                onClick={() => f.router.push("/")}
+                className="px-8 py-4 rounded-2xl border border-border text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 hover:bg-black/5 dark:hover:bg-white/5 transition-all active:scale-[0.98]"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={f.loading}
+                className="flex-1 max-w-[350px] bg-gradient-to-r from-accent-gold to-accent-gold-dark hover:shadow-[0_8px_40px_rgba(217,119,6,0.3)] text-black font-black py-4.5 px-8 rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-4 active:scale-[0.98] text-[12px] uppercase tracking-[0.2em] relative overflow-hidden group shadow-xl"
+              >
+                <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700 skew-x-12" />
+                {f.loading ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <span>Procesando...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-6 h-6 opacity-70" />
+                    <span>Guardar Todo</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {/* Historial Reciente (Compact bottom) */}
+        {!f.loading && !f.searchQuery && (
+          <div className="mt-4 animate-in fade-in duration-1000">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-2 h-2 bg-accent-gold rounded-full" />
+              <h2 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Cargados Hoy</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               {recentEntries.map((err) => (
+                 <div key={err.id} className="bg-card/20 border border-border/50 rounded-2xl p-3 flex items-center justify-between hover:border-accent-gold/20 transition-all hover:shadow-lg">
+                    <div className="flex items-center gap-3">
+                       <div className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center text-[9px] font-black text-slate-600 uppercase">
+                          {err.nombre_apellido.slice(0,2)}
+                       </div>
+                       <div>
+                          <p className="text-[10px] font-black text-foreground uppercase tracking-tight truncate max-w-[120px]">{err.nombre_apellido}</p>
+                          <p className="text-[8px] font-black text-accent-gold uppercase tracking-tighter">{err.motivo_error}</p>
+                       </div>
+                    </div>
+                    <div className="text-right">
+                       <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{err.ot || "---"}</p>
+                    </div>
+                 </div>
+               ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -26,6 +26,9 @@ export type OTEntry = {
   horasNormales: string;
   horas50: string;
   horas100: string;
+  hsNormalesMods: HourMods;
+  hs50Mods: HourMods;
+  hs100Mods: HourMods;
 };
 
 const DIAS = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"];
@@ -38,6 +41,9 @@ const createEmptyOT = (): OTEntry => ({
   horasNormales: "",
   horas50: "",
   horas100: "",
+  hsNormalesMods: { ...DEFAULT_MODS },
+  hs50Mods: { ...DEFAULT_MODS },
+  hs100Mods: { ...DEFAULT_MODS },
 });
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -69,11 +75,7 @@ export function useCargaForm() {
 
   // Multiple OTs feature
   const [ots, setOts] = useState<OTEntry[]>([createEmptyOT()]);
-
-  // Hour mods (shared across all OTs for the day)
-  const [hsNormalesMods, setHsNormalesMods] = useState<HourMods>(DEFAULT_MODS);
-  const [hs50Mods, setHs50Mods] = useState<HourMods>(DEFAULT_MODS);
-  const [hs100Mods, setHs100Mods] = useState<HourMods>(DEFAULT_MODS);
+  const [activeOTIndex, setActiveOTIndex] = useState(0);
 
   // ─── Init: restore working date from session ──────────────────────────────
   useEffect(() => {
@@ -113,7 +115,6 @@ export function useCargaForm() {
     searchTimer.current = setTimeout(async () => {
       setSearchLoading(true);
       try {
-        // Search via API route to avoid exposing Supabase key in client
         const res = await fetch(`/api/empleados?q=${encodeURIComponent(value)}`);
         const data: Empleado[] = res.ok ? await res.json() : [];
         setSuggestions(data);
@@ -133,7 +134,6 @@ export function useCargaForm() {
     }
     setSelectedEmpleados((prev) => [...prev, emp]);
     setSearchQuery("");
-    // Auto-fill contract from first selected employee
     if (!contrato) setContrato(emp.contrato);
     setSuggestions([]);
     setShowSuggestions(false);
@@ -170,13 +170,19 @@ export function useCargaForm() {
 
   // ─── OT Management ────────────────────────────────────────────────────────
   const addOT = useCallback(() => {
-    setOts((prev) => [...prev, createEmptyOT()]);
-  }, []);
+    const newOT = createEmptyOT();
+    setOts((prev) => [...prev, newOT]);
+    setActiveOTIndex(ots.length); // Switch to the new OT
+  }, [ots.length]);
 
   const removeOT = useCallback((id: string) => {
     if (ots.length <= 1) return;
+    const indexToRemove = ots.findIndex(o => o.id === id);
     setOts((prev) => prev.filter((o) => o.id !== id));
-  }, [ots.length]);
+    if (activeOTIndex >= indexToRemove && activeOTIndex > 0) {
+      setActiveOTIndex(prev => prev - 1);
+    }
+  }, [ots, activeOTIndex]);
 
   const updateOT = useCallback((id: string, updates: Partial<OTEntry>) => {
     setOts((prev) => prev.map((o) => (o.id === id ? { ...o, ...updates } : o)));
@@ -193,23 +199,17 @@ export function useCargaForm() {
     if (!hasLegajo) newErrors.legajo = "El legajo es requerido.";
     if (!contrato) newErrors.contrato = "Debe seleccionar un contrato.";
     if (!sector.trim()) newErrors.sector = "El sector es requerido.";
-
     if (!horarioDesde) newErrors.horarioDesde = "La hora de entrada es requerida.";
     if (!horarioHasta) newErrors.horarioHasta = "La hora de salida es requerida.";
 
     ots.forEach((otEntry, idx) => {
-      if (!otEntry.motivo) {
-        newErrors[`motivo_${idx}`] = "Debe seleccionar el motivo.";
-      }
-      
+      if (!otEntry.motivo) newErrors[`motivo_${idx}`] = "Requerido.";
       if (otEntry.motivo && otEntry.motivo !== "OT Inexistente") {
         if (!otEntry.ot.trim()) {
-          newErrors[`ot_${idx}`] = "El número de OT es requerido.";
+          newErrors[`ot_${idx}`] = "Requerido.";
         } else if (!/^\d{8,12}$/.test(otEntry.ot.trim())) {
-          newErrors[`ot_${idx}`] = "La OT debe tener entre 8 y 12 dígitos.";
+          newErrors[`ot_${idx}`] = "8-12 dígitos.";
         }
-      } else if (otEntry.ot.trim() && !/^\d{8,12}$/.test(otEntry.ot.trim())) {
-        newErrors[`ot_${idx}`] = "La OT debe tener entre 8 y 12 dígitos.";
       }
     });
 
@@ -227,27 +227,25 @@ export function useCargaForm() {
     setHorarioHasta("");
     setNotas("");
     setLegajoManual("");
-    setHsNormalesMods(DEFAULT_MODS);
-    setHs50Mods(DEFAULT_MODS);
-    setHs100Mods(DEFAULT_MODS);
     setOts([createEmptyOT()]);
+    setActiveOTIndex(0);
     setErrors({});
   }, []);
 
   // ─── Submit ───────────────────────────────────────────────────────────────
   const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      toast.error("Por favor, revise los errores en el formulario.");
+      return;
+    }
 
     setLoading(true);
-
-    // Build date at noon UTC to avoid timezone day-shift issues
     const fechaISO = `${fecha}T12:00:00.000Z`;
     const [year, month, day] = fecha.split("-").map(Number);
     const selectedDate = new Date(year, month - 1, day);
     const horarioStr = horarioDesde && horarioHasta ? `${horarioDesde} a ${horarioHasta}` : null;
 
-    // Build employee list — fall back to manual entry if none selected
     const employeesToSave: Empleado[] = selectedEmpleados.length > 0
       ? [...selectedEmpleados]
       : searchQuery.trim() && legajoManual.trim()
@@ -260,32 +258,7 @@ export function useCargaForm() {
       return;
     }
 
-    // ─── Duplicate Detection ────────────────────────────────────────────────
-    try {
-      const { data: existing } = await supabase
-        .from("error_carga")
-        .select("nombre_apellido")
-        .in("legajo", employeesToSave.map(e => e.legajo))
-        .eq("fecha", fechaISO);
-
-      if (existing && existing.length > 0) {
-        const names = Array.from(new Set(existing.map(e => e.nombre_apellido))).join(", ");
-        const msg = existing.length === 1 
-          ? `Atención: ${names} ya tiene un registro cargado para esta fecha. ¿Desea cargar otro de todos modos?`
-          : `Atención: Hay ${existing.length} registros existentes para estos empleados en la fecha seleccionada. ¿Desea continuar?`;
-        
-        if (!confirm(msg)) {
-          setLoading(false);
-          return;
-        }
-      }
-    } catch (err) {
-      console.error("Error checking duplicates:", err);
-    }
-
     const records: any[] = [];
-    const multiOT = ots.length > 1;
-    
     employeesToSave.forEach((emp) => {
       ots.forEach((otEntry, idx) => {
         records.push({
@@ -296,58 +269,40 @@ export function useCargaForm() {
           ot: otEntry.ot.trim() || null,
           sector: sector.trim(),
           horario: horarioStr,
-          notas: multiOT ? `[OT ${idx + 1}/${ots.length}] ${notas.trim()}` : (notas.trim() || null),
+          notas: ots.length > 1 ? `[OT ${idx + 1}/${ots.length}] ${notas.trim()}` : (notas.trim() || null),
           contrato,
           dia_semana: DIAS[selectedDate.getDay()],
           horas_normales: otEntry.horasNormales ? parseFloat(otEntry.horasNormales) : null,
-          hs_normales_insa: hsNormalesMods.insa,
-          hs_normales_polu: hsNormalesMods.polu,
-          hs_normales_noct: hsNormalesMods.noct,
+          hs_normales_insa: otEntry.hsNormalesMods.insa,
+          hs_normales_polu: otEntry.hsNormalesMods.polu,
+          hs_normales_noct: otEntry.hsNormalesMods.noct,
           horas_50: otEntry.horas50 ? parseFloat(otEntry.horas50) : null,
-          hs_50_insa: hs50Mods.insa,
-          hs_50_polu: hs50Mods.polu,
-          hs_50_noct: hs50Mods.noct,
+          hs_50_insa: otEntry.hs50Mods.insa,
+          hs_50_polu: otEntry.hs50Mods.polu,
+          hs_50_noct: otEntry.hs50Mods.noct,
           horas_100: otEntry.horas100 ? parseFloat(otEntry.horas100) : null,
-          hs_100_insa: hs100Mods.insa,
-          hs_100_polu: hs100Mods.polu,
-          hs_100_noct: hs100Mods.noct,
+          hs_100_insa: otEntry.hs100Mods.insa,
+          hs_100_polu: otEntry.hs100Mods.polu,
+          hs_100_noct: otEntry.hs100Mods.noct,
         });
       });
     });
 
     const { error } = await supabase.from("error_carga").insert(records);
-
     if (error) {
-      // Fallback: retry without `contrato` field if DB schema doesn't have it yet
-      if (error.message.includes("contrato")) {
-        const withoutContrato = records.map(({ contrato: _c, ...rest }) => rest);
-        const { error: err2 } = await supabase.from("error_carga").insert(withoutContrato);
-        if (err2) {
-          toast.error("Error al guardar los registros.");
-          setLoading(false);
-          return;
-        }
-      } else {
-        toast.error("Error al guardar los registros.");
-        setLoading(false);
-        return;
-      }
+      toast.error("Error al guardar los registros.");
+    } else {
+      toast.success(`✅ ${records.length} registros guardados correctamente.`);
+      resetForm();
     }
-
-    toast.success(`✅ ${records.length} ${records.length === 1 ? "registro guardado" : "registros guardados"} correctamente.`);
-    resetForm();
     setLoading(false);
-  }, [validate, fecha, horarioDesde, horarioHasta, selectedEmpleados, searchQuery, legajoManual,
-      contrato, sector, notas, ots, hsNormalesMods, hs50Mods, hs100Mods, resetForm]);
+  }, [validate, fecha, horarioDesde, horarioHasta, selectedEmpleados, searchQuery, legajoManual, contrato, sector, notas, ots, resetForm]);
 
   return {
-    // Refs
     searchRef,
-    // UI
     loading,
     errors,
     setErrors,
-    // Search
     searchQuery,
     suggestions,
     selectedEmpleados,
@@ -361,7 +316,6 @@ export function useCargaForm() {
     addManualEmpleado,
     removeEmpleado,
     clearSearch,
-    // Fields
     fecha,
     setFecha,
     contrato,
@@ -374,21 +328,13 @@ export function useCargaForm() {
     setHorarioHasta,
     notas,
     setNotas,
-    // OT Array Management
     ots,
+    activeOTIndex,
+    setActiveOTIndex,
     addOT,
     removeOT,
     updateOT,
-    // Hour Mods (shared)
-    hsNormalesMods,
-    setHsNormalesMods,
-    hs50Mods,
-    setHs50Mods,
-    hs100Mods,
-    setHs100Mods,
-    // Actions
     handleSubmit,
     router,
   };
 }
-
