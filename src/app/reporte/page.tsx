@@ -2,20 +2,8 @@
 
 import { useMemo, memo, useState, useCallback, useEffect } from "react";
 import {
-  ExternalLink,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  TrendingDown,
-  CheckCheck,
-  Loader2,
-  Search,
-  Building2,
-  ChevronDown,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
+  ExternalLink, Calendar, CheckCircle2, Clock, AlertTriangle, TrendingDown,
+  CheckCheck, Loader2, Search, Building2, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -27,12 +15,9 @@ import { Skeleton } from "@/components/Skeleton";
 import { useErrores } from "../useErrores";
 
 function getMotivoBadge(motivo: string) {
-  const classes =
-    MOTIVO_COLORS[motivo] ?? "bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20";
+  const classes = MOTIVO_COLORS[motivo] ?? "bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20";
   return (
-    <span
-      className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-widest ${classes} shadow-sm`}
-    >
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-medium border ${classes}`}>
       {motivo}
     </span>
   );
@@ -40,25 +25,9 @@ function getMotivoBadge(motivo: string) {
 
 export default function ReportePage() {
   const {
-    errores,
-    loading,
-    loadingMore,
-    hasMore,
-    filtro,
-    filtroMotivo,
-    filtroSector,
-    fechaFiltro,
-    fechaHasta,
-    sortConfig,
-    setFiltro,
-    setFiltroMotivo,
-    setFiltroSector,
-    setFechaFiltro,
-    setFechaHasta,
-    search,
-    setSearch,
-    handleSort,
-    loadMore,
+    errores, loading, loadingMore, hasMore, filtro, filtroMotivo, filtroSector,
+    fechaFiltro, fechaHasta, sortConfig, setFiltro, setFiltroMotivo, setFiltroSector,
+    setFechaFiltro, setFechaHasta, search, setSearch, handleSort, loadMore,
   } = useErrores({ defaultFiltro: "todos", persistFilters: true });
 
   const [searchTyped, setSearchTyped] = useState("");
@@ -71,17 +40,14 @@ export default function ReportePage() {
   const filteredErrores = errores;
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearch(searchTyped);
-    }, 400);
+    const timer = setTimeout(() => { setSearch(searchTyped); }, 400);
     return () => clearTimeout(timer);
   }, [searchTyped, setSearch]);
 
   const toggleNameHighlight = useCallback((name: string) => {
     setCheckedNames((prev) => {
       const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
+      if (next.has(name)) next.delete(name); else next.add(name);
       sessionStorage.setItem("sjg_checked_names", JSON.stringify(Array.from(next)));
       return next;
     });
@@ -105,33 +71,23 @@ export default function ReportePage() {
   const handleDownload = useCallback(async () => {
     try {
       const params = new URLSearchParams({
-        filter: filtro,
-        motivo: filtroMotivo,
+        filter: filtro, motivo: filtroMotivo,
         ...(fechaFiltro && { fecha: fechaFiltro }),
         ...(fechaHasta && { fechaHasta }),
         ...(filtroSector.trim() && { sector: filtroSector.trim() }),
       });
       const res = await fetch(`/api/exportar?${params}`);
-      if (!res.ok) {
-        toast.error("No hay datos o hubo un error al exportar.");
-        return;
-      }
+      if (!res.ok) { toast.error("No hay datos o hubo un error al exportar."); return; }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       const cd = res.headers.get("content-disposition");
-      a.download = cd?.includes("filename=")
-        ? cd.split("filename=")[1].replace(/"/g, "")
-        : `omisiones_${filtro}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      a.download = cd?.includes("filename=") ? cd.split("filename=")[1].replace(/"/g, "") : `omisiones_${filtro}.xlsx`;
+      document.body.appendChild(a); a.click(); a.remove();
       window.URL.revokeObjectURL(url);
       toast.success("Excel generado correctamente.");
-    } catch {
-      toast.error("Ocurrió un error al descargar el archivo.");
-    }
+    } catch { toast.error("Ocurrió un error al descargar el archivo."); }
   }, [filtro, filtroMotivo, fechaFiltro, fechaHasta, filtroSector]);
 
   const handleDownloadIncompletos = useCallback(async () => {
@@ -142,111 +98,105 @@ export default function ReportePage() {
         ...(fechaHasta && { fechaHasta }),
       });
       const res = await fetch(`/api/exportar?${params}`);
-      if (!res.ok) {
-        toast.error("No hay registros de Omisiones/Fichadas en este periodo.");
-        return;
-      }
+      if (!res.ok) { toast.error("No hay registros de Omisiones/Fichadas en este periodo."); return; }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Reporte_Omisiones_y_Fichadas_${fechaFiltro || 'Historico'}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      a.download = `Reporte_Omisiones_y_Fichadas_${fechaFiltro || "Historico"}.xlsx`;
+      document.body.appendChild(a); a.click(); a.remove();
       window.URL.revokeObjectURL(url);
       toast.success("Excel de Omisiones/Fichadas generado.");
-    } catch {
-      toast.error("Error al descargar omisiones.");
-    }
+    } catch { toast.error("Error al descargar omisiones."); }
   }, [fechaFiltro, fechaHasta]);
 
+  // Descarga todos los motivos excepto "Saldo hrs insuficiente" y "Otro"
+  // (salvo que "Otro" comparta legajo+día con un motivo de omisión/OT/fichada)
+  const handleDownloadReporte = useCallback(async () => {
+    try {
+      const params = new URLSearchParams({
+        filter: filtro,
+        subgroup: "sin_otros_saldo",
+        ...(fechaFiltro && { fecha: fechaFiltro }),
+        ...(fechaHasta && { fechaHasta }),
+        ...(filtroSector.trim() && { sector: filtroSector.trim() }),
+      });
+      const res = await fetch(`/api/exportar?${params}`);
+      if (!res.ok) { toast.error("No hay datos para exportar con estos filtros."); return; }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const cd = res.headers.get("content-disposition");
+      a.download = cd?.includes("filename=") ? cd.split("filename=")[1].replace(/"/g, "") : `Omisiones_Reporte.xlsx`;
+      document.body.appendChild(a); a.click(); a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Reporte generado (sin Saldo / Otro no relacionado).");
+    } catch { toast.error("Ocurrió un error al descargar el reporte."); }
+  }, [filtro, fechaFiltro, fechaHasta, filtroSector]);
+
   return (
-    <div className="space-y-6 max-w-7xl">
+    <div className="space-y-5 max-w-7xl">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-1.5 h-8 bg-accent-gold rounded-full shadow-[0_0_12px_rgba(245,158,11,0.5)]" />
-          <div>
-            <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">
-              Reporte de Errores
-            </h1>
-            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">
-              {dateLabel}
-            </p>
-          </div>
+        <div>
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">Reporte de Errores</h1>
+          <p className="text-sm text-muted mt-0.5">{dateLabel}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleDownloadIncompletos}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl bg-orange-500/10 border border-orange-500/20 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-orange-600 hover:bg-orange-500/20 transition-all shadow-xl active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-500/10 border border-orange-500/20 text-xs font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 transition-colors disabled:opacity-50"
+            title="Solo Omisión, Par de fichada incompleto y OT Inexistente"
           >
-            <AlertTriangle className="w-4 h-4" />
+            <AlertTriangle className="w-3.5 h-3.5" />
             Omisiones / Fichadas
           </button>
-          
+          <button
+            onClick={handleDownloadReporte}
+            disabled={loading}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent-gold hover:bg-accent-gold-dark text-white font-semibold text-sm transition-colors disabled:opacity-50 shadow-sm"
+            title="Excluye 'Saldo hrs insuficiente' y 'Otro' (salvo que el Otro esté vinculado a una omisión/OT)"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span className="text-xs">Reporte</span>
+          </button>
           <button
             onClick={handleDownload}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-accent-gold transition-all shadow-xl active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm text-muted hover:text-foreground hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-colors disabled:opacity-50"
+            title="Exporta todo sin filtro de motivo"
           >
-            <ExternalLink className="w-4 h-4" />
-            Todo (Excel)
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span className="text-xs">Todo</span>
           </button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-card/40 rounded-2xl p-4 border border-border shadow-2xl group hover:border-accent-gold/20 transition-all">
-          <div className="flex items-center gap-3">
-            <div className="bg-accent-gold/5 p-2 rounded-xl group-hover:bg-accent-gold/10 transition-colors">
-              <AlertTriangle className="w-5 h-5 text-accent-gold/70" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total</p>
-              <p className="text-2xl font-black text-foreground">{stats.total}</p>
-            </div>
-          </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-card border border-border rounded-xl p-4">
+          <p className="text-[11px] font-medium text-muted uppercase tracking-wide mb-1">Total</p>
+          <p className="text-2xl font-semibold text-foreground">{stats.total}</p>
         </div>
-        <div className="bg-card/40 rounded-2xl p-4 border border-accent-gold/10 shadow-2xl group hover:border-accent-gold/30 transition-all">
-          <div className="flex items-center gap-3">
-            <div className="bg-accent-gold/5 p-2 rounded-xl group-hover:bg-accent-gold/10 transition-colors">
-              <Clock className="w-5 h-5 text-accent-gold" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-accent-gold uppercase tracking-widest">Pendientes</p>
-              <p className="text-2xl font-black text-foreground">{stats.pendientes}</p>
-            </div>
-          </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <p className="text-[11px] font-medium text-accent-gold uppercase tracking-wide mb-1">Pendientes</p>
+          <p className="text-2xl font-semibold text-foreground">{stats.pendientes}</p>
         </div>
-        <div className="bg-card/40 rounded-2xl p-4 border border-emerald-500/10 shadow-2xl group hover:border-emerald-500/30 transition-all">
-          <div className="flex items-center gap-3">
-            <div className="bg-emerald-500/5 p-2 rounded-xl group-hover:bg-emerald-500/10 transition-colors">
-              <CheckCheck className="w-5 h-5 text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Resueltos</p>
-              <p className="text-2xl font-black text-foreground">{stats.resueltos}</p>
-            </div>
-          </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wide mb-1">Resueltos</p>
+          <p className="text-2xl font-semibold text-foreground">{stats.resueltos}</p>
         </div>
-        <div className="bg-card/40 rounded-2xl p-4 border border-border shadow-2xl group hover:border-accent-gold/20 transition-all">
-          <div className="flex items-center gap-3">
-            <div className="bg-background border border-border p-2 rounded-xl group-hover:bg-card transition-colors shadow-inner">
-              <TrendingDown className="w-5 h-5 text-slate-400" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Resolución</p>
-              <p className="text-2xl font-black text-foreground">{stats.pct}%</p>
-            </div>
-          </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <p className="text-[11px] font-medium text-muted uppercase tracking-wide mb-1">Resolución</p>
+          <p className="text-2xl font-semibold text-foreground">{stats.pct}%</p>
         </div>
       </div>
 
       {/* Charts */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Skeleton className="h-[280px]" />
           <Skeleton className="h-[280px]" />
           <Skeleton className="h-[280px]" />
@@ -256,62 +206,52 @@ export default function ReportePage() {
       )}
 
       {/* Filters */}
-      <div className="bg-card px-4 py-3 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        {/* Filtros de motives y fechas */}
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+      <div className="bg-card border border-border rounded-xl p-4">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
           <select
             value={filtroMotivo}
             onChange={(e) => setFiltroMotivo(e.target.value)}
-            className="px-4 py-2 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-500 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card cursor-pointer shadow-inner appearance-none"
+            className="px-3 py-2 rounded-lg border border-border text-xs font-medium text-muted focus:ring-2 focus:ring-accent-gold/30 focus:border-accent-gold outline-none transition bg-background cursor-pointer appearance-none"
           >
-            <option value="todos" className="bg-card font-black uppercase">
-              Todos los motivos
-            </option>
+            <option value="todos">Todos los motivos</option>
             {Object.keys(MOTIVO_COLORS).map((m) => (
-              <option key={m} value={m} className="bg-card font-black uppercase">
-                {m}
-              </option>
+              <option key={m} value={m}>{m}</option>
             ))}
           </select>
 
-          <div className="relative flex-grow sm:flex-grow-0 min-w-[140px]">
-            <Building2 className="w-3.5 h-3.5 text-slate-600 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="relative min-w-[140px]">
+            <Building2 className="w-3.5 h-3.5 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={filtroSector}
               onChange={(e) => setFiltroSector(e.target.value)}
               placeholder="Sector..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-border text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 dark:placeholder:opacity-50 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner"
+              className="w-full pl-9 pr-3 py-2 rounded-lg border border-border text-xs font-medium text-foreground placeholder:text-muted focus:ring-2 focus:ring-accent-gold/30 focus:border-accent-gold outline-none transition bg-background"
             />
           </div>
 
-          <div className="relative flex-grow sm:flex-grow-0">
-            <Calendar className="w-3.5 h-3.5 text-slate-600 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="relative">
+            <Calendar className="w-3.5 h-3.5 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="date"
               value={fechaFiltro}
               onChange={(e) => setFechaFiltro(e.target.value)}
-              className="w-full sm:w-auto pl-9 pr-4 py-2 rounded-xl border border-border text-xs font-medium text-foreground focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
+              className="w-full sm:w-auto pl-9 pr-3 py-2 rounded-lg border border-border text-xs font-medium text-foreground focus:ring-2 focus:ring-accent-gold/30 focus:border-accent-gold outline-none transition bg-background [color-scheme:light] dark:[color-scheme:dark]"
             />
           </div>
-          <div className="flex items-center gap-1.5 flex-grow sm:flex-grow-0">
-            <span className="text-xs text-slate-600 dark:text-slate-500 hidden sm:inline">a</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted hidden sm:inline">–</span>
             <input
               type="date"
               value={fechaHasta}
               onChange={(e) => setFechaHasta(e.target.value)}
-              className="w-full sm:w-auto pl-4 py-2 rounded-xl border border-border text-xs font-medium text-foreground focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
-              title="Hasta (opcional, para rango)"
+              className="w-full sm:w-auto px-3 py-2 rounded-lg border border-border text-xs font-medium text-foreground focus:ring-2 focus:ring-accent-gold/30 focus:border-accent-gold outline-none transition bg-background [color-scheme:light] dark:[color-scheme:dark]"
+              title="Hasta (opcional)"
             />
           </div>
           <button
-            onClick={() => {
-              setFechaFiltro("");
-              setFechaHasta("");
-              setFiltro("todos");
-            }}
-            className="text-[10px] text-accent-gold hover:text-accent-gold-dark font-black uppercase tracking-widest whitespace-nowrap px-4 py-2 rounded-xl border border-accent-gold/10 hover:bg-accent-gold/5 transition-all shadow-inner active:scale-95"
+            onClick={() => { setFechaFiltro(""); setFechaHasta(""); setFiltro("todos"); }}
+            className="text-xs font-medium text-accent-gold hover:text-accent-gold-dark transition-colors px-3 py-2 rounded-lg border border-border hover:bg-accent-gold/5"
           >
             Ver Histórico
           </button>
@@ -321,249 +261,170 @@ export default function ReportePage() {
       {/* Search */}
       {!loading && errores.length > 0 && (
         <div className="flex items-center gap-2">
-          <Search className="w-4 h-4 text-slate-600 dark:text-slate-500" />
-          <input
-            type="text"
-            value={searchTyped}
-            onChange={(e) => setSearchTyped(e.target.value)}
-            placeholder="Buscar por nombre, legajo o OT (Toda la base)..."
-            className="flex-1 max-w-xs border border-border rounded-xl pl-4 py-2 text-xs font-medium text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 dark:placeholder:opacity-50 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner"
-          />
+          <div className="relative max-w-xs w-full">
+            <Search className="w-3.5 h-3.5 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchTyped}
+              onChange={(e) => setSearchTyped(e.target.value)}
+              placeholder="Buscar por nombre, legajo o OT..."
+              className="w-full pl-9 pr-3 border border-border rounded-lg py-2 text-xs font-medium text-foreground placeholder:text-muted focus:ring-2 focus:ring-accent-gold/30 focus:border-accent-gold outline-none transition bg-background"
+            />
+          </div>
           {searchTyped.trim() && (
-            <span className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest">
-              {loading ? "Buscando..." : `Encontrados: ${errores.length}`}
+            <span className="text-xs text-muted">
+              {loading ? "Buscando..." : `${errores.length} resultado(s)`}
             </span>
           )}
         </div>
       )}
 
       {/* Table */}
-          {/* Table / Cards Container */}
-      <div className="bg-card/40 rounded-2xl border border-border bg-card/40 shadow-2xl overflow-hidden backdrop-blur-sm">
-        {/* Desktop Table View */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-[10px] text-slate-600 dark:text-slate-500 uppercase bg-background/60 border-b border-border tracking-[0.2em] font-black">
+            <thead className="text-[11px] font-medium text-muted uppercase tracking-wide bg-background border-b border-border">
               <tr>
                 <th className="px-5 py-3.5">
-                  <button
-                    onClick={() => handleSort("resuelto")}
-                    className="flex items-center gap-1 hover:text-accent-gold transition-colors"
-                  >
+                  <button onClick={() => handleSort("resuelto")} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
                     Estado
-                    {sortConfig?.key === "resuelto" ? (
-                      sortConfig.direction === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                    ) : (
-                      <ArrowUpDown className="w-3 h-3 opacity-30" />
-                    )}
+                    {sortConfig?.key === "resuelto" ? (sortConfig.direction === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
                 <th className="px-5 py-3.5">
-                  <button
-                    onClick={() => handleSort("fecha")}
-                    className="flex items-center gap-1 hover:text-accent-gold transition-colors"
-                  >
+                  <button onClick={() => handleSort("fecha")} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
                     Fecha
-                    {sortConfig?.key === "fecha" ? (
-                      sortConfig.direction === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                    ) : (
-                      <ArrowUpDown className="w-3 h-3 opacity-30" />
-                    )}
+                    {sortConfig?.key === "fecha" ? (sortConfig.direction === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
                 <th className="px-5 py-3.5">
-                  <button
-                    onClick={() => handleSort("nombre_apellido")}
-                    className="flex items-center gap-1 hover:text-accent-gold transition-colors"
-                  >
+                  <button onClick={() => handleSort("nombre_apellido")} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
                     Empleado
-                    {sortConfig?.key === "nombre_apellido" ? (
-                      sortConfig.direction === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                    ) : (
-                      <ArrowUpDown className="w-3 h-3 opacity-30" />
-                    )}
+                    {sortConfig?.key === "nombre_apellido" ? (sortConfig.direction === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
                 <th className="px-5 py-3.5">
-                  <button
-                    onClick={() => handleSort("motivo_error")}
-                    className="flex items-center gap-1 hover:text-accent-gold transition-colors"
-                  >
+                  <button onClick={() => handleSort("motivo_error")} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
                     Motivo
-                    {sortConfig?.key === "motivo_error" ? (
-                      sortConfig.direction === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                    ) : (
-                      <ArrowUpDown className="w-3 h-3 opacity-30" />
-                    )}
+                    {sortConfig?.key === "motivo_error" ? (sortConfig.direction === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-30" />}
                   </button>
                 </th>
-                <th className="px-5 py-3.5 font-black uppercase tracking-widest text-slate-600 dark:text-slate-500">
-                  OT / Sector
-                </th>
+                <th className="px-5 py-3.5">OT / Sector</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-24 text-center">
-                    <div className="flex flex-col items-center gap-4 text-slate-500">
-                      <Loader2 className="w-8 h-8 animate-spin text-accent-gold" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">
-                        Cargando datos maestros...
-                      </span>
-                    </div>
+                  <td colSpan={5} className="py-20 text-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-accent-gold mx-auto" />
                   </td>
                 </tr>
               ) : filteredErrores.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-16 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="bg-background border border-border p-4 rounded-full shadow-inner">
-                        <CheckCheck className="w-7 h-7 text-slate-400" />
+                    <CheckCheck className="w-6 h-6 text-muted mx-auto mb-2" />
+                    <p className="text-sm text-muted">
+                      {errores.length === 0 ? "No hay errores para mostrar" : "Ningún registro coincide"}
+                    </p>
+                  </td>
+                </tr>
+              ) : filteredErrores.map((err) => (
+                <tr key={err.id} className={`hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors ${err.resuelto ? "opacity-60" : ""}`}>
+                  <td className="px-5 py-3.5">
+                    {err.resuelto ? (
+                      <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        <CheckCircle2 className="w-3 h-3" /> Resuelto
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-medium bg-accent-gold/10 text-accent-gold border border-accent-gold/20">
+                        <Clock className="w-3 h-3" /> Pendiente
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3.5 whitespace-nowrap">
+                    <div className="font-medium text-foreground">{format(new Date(err.fecha), "dd MMM yyyy", { locale: es })}</div>
+                    <div className="text-xs text-muted mt-0.5">{err.dia_semana}</div>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div onClick={() => toggleNameHighlight(err.nombre_apellido)}
+                      className={`font-medium cursor-pointer transition-all ${checkedNames.has(err.nombre_apellido) ? "text-emerald-600 dark:text-emerald-400" : "text-foreground hover:text-accent-gold"}`}
+                      title="Click para marcar progreso">
+                      {err.nombre_apellido}
+                    </div>
+                    <div className="text-xs text-muted mt-0.5">Leg: {err.legajo}</div>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    {getMotivoBadge(err.motivo_error)}
+                    {err.notas && (
+                      <div className="text-xs text-muted mt-1.5 max-w-[200px] truncate italic" title={err.notas}>
+                        &quot;{err.notas}&quot;
                       </div>
-                      <p className="font-black uppercase text-[11px] tracking-widest text-slate-500 mt-1">
-                        {errores.length === 0 ? "No hay errores para mostrar" : "Ningún registro coincide"}
-                      </p>
-                      <p className="text-[10px] font-bold uppercase tracking-tight text-slate-400 opacity-60">
-                        {errores.length === 0
-                          ? filtro === "pendientes"
-                            ? "¡Todo al día! No hay nada pendiente."
-                            : "No se encontraron registros con este filtro."
-                          : `Hay ${errores.length} registro(s). Probá otro término.`}
-                      </p>
+                    )}
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div className="font-medium text-foreground text-xs">{err.sector}</div>
+                    <div className="text-xs text-muted mt-0.5">
+                      {err.ot ? `OT: ${err.ot}` : "Sin OT"}
+                      {err.horario ? ` · ${err.horario}` : ""}
                     </div>
                   </td>
                 </tr>
-              ) : (
-                filteredErrores.map((err) => (
-                  <tr
-                    key={err.id}
-                    className={`hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-b border-border last:border-0 ${err.resuelto ? "opacity-60 bg-black/5" : ""}`}
-                  >
-                    <td className="px-5 py-4">
-                      {err.resuelto ? (
-                        <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          Resuelto
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-accent-gold/10 text-accent-gold border border-accent-gold/20 shadow-[0_0_12px_rgba(245,158,11,0.1)]">
-                          <Clock className="w-3.5 h-3.5" />
-                          Pendiente
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-5 py-4 whitespace-nowrap">
-                      <div className="font-bold text-foreground text-sm">
-                        {format(new Date(err.fecha), "dd MMM yyyy", { locale: es })}
-                      </div>
-                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                        {err.dia_semana}
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div
-                        onClick={() => toggleNameHighlight(err.nombre_apellido)}
-                        className={`font-bold text-sm cursor-pointer transition-all ${
-                          checkedNames.has(err.nombre_apellido)
-                            ? "text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-xl border border-emerald-500/20 shadow-lg scale-[1.02]"
-                            : "text-foreground hover:text-accent-gold"
-                        }`}
-                        title="Click para marcar progreso"
-                      >
-                        {err.nombre_apellido}
-                      </div>
-                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">
-                        Leg: {err.legajo}
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      {getMotivoBadge(err.motivo_error)}
-                      {err.notas && (
-                        <div
-                          className="text-[10px] font-bold text-slate-500 mt-1.5 max-w-[200px] truncate italic uppercase tracking-tight"
-                          title={err.notas}
-                        >
-                          &quot;{err.notas}&quot;
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="font-bold text-foreground text-xs uppercase tracking-tight">
-                        {err.sector}
-                      </div>
-                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">
-                        {err.ot ? `OT: ${err.ot}` : "Sin OT"}
-                        {err.horario ? ` · ${err.horario}` : ""}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
         </div>
 
-        {/* Mobile Card View */}
+        {/* Mobile */}
         <div className="md:hidden divide-y divide-border">
-           {loading ? (
-             <div className="p-20 text-center uppercase text-[10px] font-black tracking-widest opacity-50">Cargando datos...</div>
-           ) : filteredErrores.length === 0 ? (
-             <div className="p-20 text-center uppercase text-[10px] font-black tracking-widest opacity-40">No hay registros</div>
-           ) : (
-             filteredErrores.map((err) => (
-                <div key={err.id} className={`p-5 space-y-4 ${err.resuelto ? "opacity-60 bg-black/5" : ""}`}>
-                   <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{format(new Date(err.fecha), "dd MMM yyyy", { locale: es })}</p>
-                        <h4 className={`font-black uppercase tracking-tight text-sm mt-0.5 ${checkedNames.has(err.nombre_apellido) ? "text-emerald-500" : "text-foreground"}`} onClick={() => toggleNameHighlight(err.nombre_apellido)}>
-                          {err.nombre_apellido}
-                        </h4>
-                        <p className="text-[9px] font-black text-slate-500/80 uppercase tracking-widest mt-0.5">Leg: {err.legajo}</p>
-                      </div>
-                      {err.resuelto ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                      ) : (
-                        <Clock className="w-5 h-5 text-accent-gold" />
-                      )}
-                   </div>
-                   <div className="flex flex-wrap gap-2">
-                      {getMotivoBadge(err.motivo_error)}
-                      {err.ot && <span className="text-[9px] font-black uppercase bg-black/5 dark:bg-white/5 border border-border px-2 py-1 rounded-lg text-slate-500 tracking-widest">OT: {err.ot}</span>}
-                   </div>
-                   <div className="flex justify-between items-center bg-black/5 dark:bg-white/5 rounded-xl p-3 border border-border/50">
-                      <div>
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest opacity-60">Sector</p>
-                        <p className="text-[10px] font-black uppercase tracking-tight text-foreground">{err.sector}</p>
-                      </div>
-                      {err.horario && (
-                        <div className="text-right">
-                          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest opacity-60">Horario</p>
-                          <p className="text-[10px] font-black uppercase tracking-tight text-foreground">{err.horario}</p>
-                        </div>
-                      )}
-                   </div>
-                   {err.notas && (
-                     <p className="text-[10px] font-bold italic text-slate-500 border-l-2 border-accent-gold/20 pl-3 py-1">"{err.notas}"</p>
-                   )}
+          {loading ? (
+            <div className="p-10 text-center"><Loader2 className="w-5 h-5 animate-spin text-accent-gold mx-auto" /></div>
+          ) : filteredErrores.length === 0 ? (
+            <div className="p-12 text-center text-sm text-muted">No hay registros</div>
+          ) : filteredErrores.map((err) => (
+            <div key={err.id} className={`p-4 space-y-3 ${err.resuelto ? "opacity-60" : ""}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs text-muted">{format(new Date(err.fecha), "dd MMM yyyy", { locale: es })}</p>
+                  <h4 className={`font-medium text-sm mt-0.5 cursor-pointer ${checkedNames.has(err.nombre_apellido) ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"}`}
+                    onClick={() => toggleNameHighlight(err.nombre_apellido)}>
+                    {err.nombre_apellido}
+                  </h4>
+                  <p className="text-xs text-muted mt-0.5">Leg: {err.legajo}</p>
                 </div>
-             ))
-           )}
+                {err.resuelto ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Clock className="w-4 h-4 text-accent-gold" />}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {getMotivoBadge(err.motivo_error)}
+                {err.ot && <span className="text-[10px] font-medium bg-background border border-border px-2 py-1 rounded-md text-muted">OT: {err.ot}</span>}
+              </div>
+              <div className="flex justify-between items-center bg-background rounded-lg p-3 border border-border">
+                <div>
+                  <p className="text-[10px] text-muted mb-0.5">Sector</p>
+                  <p className="text-xs font-medium text-foreground">{err.sector}</p>
+                </div>
+                {err.horario && (
+                  <div className="text-right">
+                    <p className="text-[10px] text-muted mb-0.5">Horario</p>
+                    <p className="text-xs font-medium text-foreground">{err.horario}</p>
+                  </div>
+                )}
+              </div>
+              {err.notas && (
+                <p className="text-xs text-muted italic border-l-2 border-accent-gold/20 pl-3">&quot;{err.notas}&quot;</p>
+              )}
+            </div>
+          ))}
         </div>
 
         {!loading && hasMore && errores.length > 0 && !searchTyped.trim() && (
-          <div className="border-t border-border py-6 flex justify-center bg-black/5 dark:bg-white/5">
+          <div className="border-t border-border py-4 flex justify-center">
             <button
               type="button"
               onClick={loadMore}
               disabled={loadingMore}
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-2xl border border-border bg-background text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:bg-card hover:text-accent-gold transition-all disabled:opacity-50 active:scale-95 shadow-xl"
+              className="flex items-center gap-2 px-5 py-2 rounded-lg border border-border text-sm font-medium text-muted hover:text-foreground transition-all disabled:opacity-50"
             >
-              {loadingMore ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
+              {loadingMore ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ChevronDown className="w-3.5 h-3.5" />}
               {loadingMore ? "Cargando…" : "Cargar más registros"}
             </button>
           </div>

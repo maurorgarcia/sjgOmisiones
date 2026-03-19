@@ -5,6 +5,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 
+const EXCLUIR = ["Otro", "Saldo hrs insuficiente"];
+const RELEVANTES = ["Omisión", "OT Inexistente", "Par de fichada incompleto"];
+
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
 
@@ -59,7 +62,32 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No hay datos para exportar" }, { status: 404 });
     }
 
-    const buffer = await generateExcelBuffer(data);
+    // ── Filtrado especial: excluir "Otro" y "Saldo hrs insuficiente"
+    //    salvo que el "Otro" comparta legajo + día con un motivo relevante ──
+    let exportData = data;
+    if (subgroup === "sin_otros_saldo") {
+      // Construir set de claves legajo|YYYY-MM-DD que tienen motivo relevante
+      const clavesRelevantes = new Set<string>();
+      for (const row of data) {
+        if (RELEVANTES.includes(row.motivo_error)) {
+          clavesRelevantes.add(`${row.legajo}|${row.fecha.slice(0, 10)}`);
+        }
+      }
+
+      exportData = data.filter((row) => {
+        if (!EXCLUIR.includes(row.motivo_error)) return true;
+        if (row.motivo_error === "Otro") {
+          return clavesRelevantes.has(`${row.legajo}|${row.fecha.slice(0, 10)}`);
+        }
+        return false; // "Saldo hrs insuficiente" nunca se incluye
+      });
+
+      if (exportData.length === 0) {
+        return NextResponse.json({ error: "No hay datos para exportar" }, { status: 404 });
+      }
+    }
+
+    const buffer = await generateExcelBuffer(exportData);
 
     const dateStr = fecha || new Date().toISOString().split("T")[0];
     let filename = fechaHasta
@@ -68,6 +96,11 @@ export async function GET(request: Request) {
 
     if (subgroup === "omisiones_fichadas") {
       filename = `Omisiones_Incompletos_${dateStr}.xlsx`;
+    }
+    if (subgroup === "sin_otros_saldo") {
+      filename = fechaHasta
+        ? `Omisiones_Reporte_${dateStr}_a_${fechaHasta}.xlsx`
+        : `Omisiones_Reporte_${dateStr}.xlsx`;
     }
 
     return new NextResponse(new Uint8Array(buffer), {
