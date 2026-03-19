@@ -338,8 +338,10 @@ export default function ReportePage() {
       )}
 
       {/* Table */}
-      <div className="bg-card/40 rounded-2xl border border-border shadow-2xl overflow-hidden backdrop-blur-sm">
-        <div className="overflow-x-auto">
+          {/* Table / Cards Container */}
+      <div className="bg-card/40 rounded-2xl border border-border bg-card/40 shadow-2xl overflow-hidden backdrop-blur-sm">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="text-[10px] text-slate-600 dark:text-slate-500 uppercase bg-background/60 border-b border-border tracking-[0.2em] font-black">
               <tr>
@@ -436,7 +438,7 @@ export default function ReportePage() {
                 filteredErrores.map((err) => (
                   <tr
                     key={err.id}
-                    className={`hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-b border-border last:border-0 ${err.resuelto ? "opacity-40 grayscale-[0.5]" : ""}`}
+                    className={`hover:bg-black/5 dark:hover:bg-white/5 transition-colors border-b border-border last:border-0 ${err.resuelto ? "opacity-60 bg-black/5" : ""}`}
                   >
                     <td className="px-5 py-4">
                       {err.resuelto ? (
@@ -501,6 +503,54 @@ export default function ReportePage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-border">
+           {loading ? (
+             <div className="p-20 text-center uppercase text-[10px] font-black tracking-widest opacity-50">Cargando datos...</div>
+           ) : filteredErrores.length === 0 ? (
+             <div className="p-20 text-center uppercase text-[10px] font-black tracking-widest opacity-40">No hay registros</div>
+           ) : (
+             filteredErrores.map((err) => (
+                <div key={err.id} className={`p-5 space-y-4 ${err.resuelto ? "opacity-60 bg-black/5" : ""}`}>
+                   <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{format(new Date(err.fecha), "dd MMM yyyy", { locale: es })}</p>
+                        <h4 className={`font-black uppercase tracking-tight text-sm mt-0.5 ${checkedNames.has(err.nombre_apellido) ? "text-emerald-500" : "text-foreground"}`} onClick={() => toggleNameHighlight(err.nombre_apellido)}>
+                          {err.nombre_apellido}
+                        </h4>
+                        <p className="text-[9px] font-black text-slate-500/80 uppercase tracking-widest mt-0.5">Leg: {err.legajo}</p>
+                      </div>
+                      {err.resuelto ? (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                      ) : (
+                        <Clock className="w-5 h-5 text-accent-gold" />
+                      )}
+                   </div>
+                   <div className="flex flex-wrap gap-2">
+                      {getMotivoBadge(err.motivo_error)}
+                      {err.ot && <span className="text-[9px] font-black uppercase bg-black/5 dark:bg-white/5 border border-border px-2 py-1 rounded-lg text-slate-500 tracking-widest">OT: {err.ot}</span>}
+                   </div>
+                   <div className="flex justify-between items-center bg-black/5 dark:bg-white/5 rounded-xl p-3 border border-border/50">
+                      <div>
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest opacity-60">Sector</p>
+                        <p className="text-[10px] font-black uppercase tracking-tight text-foreground">{err.sector}</p>
+                      </div>
+                      {err.horario && (
+                        <div className="text-right">
+                          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest opacity-60">Horario</p>
+                          <p className="text-[10px] font-black uppercase tracking-tight text-foreground">{err.horario}</p>
+                        </div>
+                      )}
+                   </div>
+                   {err.notas && (
+                     <p className="text-[10px] font-bold italic text-slate-500 border-l-2 border-accent-gold/20 pl-3 py-1">"{err.notas}"</p>
+                   )}
+                </div>
+             ))
+           )}
+        </div>
+
         {!loading && hasMore && errores.length > 0 && !searchTyped.trim() && (
           <div className="border-t border-border py-6 flex justify-center bg-black/5 dark:bg-white/5">
             <button

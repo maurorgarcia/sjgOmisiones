@@ -135,53 +135,87 @@ export default function EmpleadosPage() {
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-border">
-           <table className="w-full text-left text-xs">
-              <thead className="bg-background/60 text-slate-600 dark:text-slate-500 uppercase font-black tracking-widest border-b border-border">
-                 <tr>
-                    <th className="px-6 py-4">Empleado</th>
-                    <th className="px-6 py-4">Legajo</th>
-                    <th className="px-6 py-4">Contrato</th>
-                    <th className="px-6 py-4 text-right">Acción</th>
-                 </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                 {loading ? (
+           {/* Desktop Table View */}
+           <div className="hidden md:block overflow-x-auto">
+             <table className="w-full text-left text-xs">
+                <thead className="bg-background/60 text-slate-600 dark:text-slate-500 uppercase font-black tracking-widest border-b border-border">
                    <tr>
-                     <td colSpan={4} className="py-20 text-center text-slate-500 animate-pulse font-black uppercase tracking-[0.2em]">Cargando base...</td>
+                      <th className="px-6 py-4">Empleado</th>
+                      <th className="px-6 py-4">Legajo</th>
+                      <th className="px-6 py-4">Contrato</th>
+                      <th className="px-6 py-4 text-right">Acción</th>
                    </tr>
-                 ) : filtered.length === 0 ? (
-                   <tr>
-                     <td colSpan={4} className="py-20 text-center text-slate-500 font-bold uppercase tracking-widest">No se encontraron empleados.</td>
-                   </tr>
-                 ) : (
-                   filtered.map((e) => (
-                     <tr key={e.id} className="hover:bg-black/5 dark:hover:bg-white/5 group transition-colors">
-                        <td className="px-6 py-4">
-                           <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-accent-gold/5 flex items-center justify-center text-[10px] font-black border border-accent-gold/10 text-accent-gold transition-colors group-hover:bg-accent-gold group-hover:text-black">
-                                {e.nombre_apellido.slice(0, 2).toUpperCase()}
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="font-bold text-foreground group-hover:text-accent-gold transition-colors">{e.nombre_apellido}</span>
-                                {e.categoria && <span className="text-[10px] text-slate-500 font-medium">{e.categoria}</span>}
-                              </div>
-                           </div>
-                        </td>
-                        <td className="px-6 py-4 font-mono font-bold text-slate-500">{e.legajo}</td>
-                        <td className="px-6 py-4">
-                           <span className="text-[10px] font-black px-2 py-1 bg-black/5 dark:bg-white/5 border border-border rounded-lg text-slate-500 leading-none">{e.contrato}</span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => openEdit(e)} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg text-slate-500 hover:text-accent-gold transition-all"><Pencil className="w-3.5 h-3.5" /></button>
-                              <button onClick={() => handleDelete(e.id)} className="p-2 hover:bg-red-500/10 rounded-lg text-slate-500 hover:text-red-500 transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
-                           </div>
-                        </td>
+                </thead>
+                <tbody className="divide-y divide-border">
+                   {loading ? (
+                     <tr>
+                       <td colSpan={4} className="py-20 text-center text-slate-500 animate-pulse font-black uppercase tracking-[0.2em]">Cargando base...</td>
                      </tr>
-                   ))
-                 )}
-              </tbody>
-           </table>
+                   ) : filtered.length === 0 ? (
+                     <tr>
+                       <td colSpan={4} className="py-20 text-center text-slate-500 font-bold uppercase tracking-widest">No se encontraron empleados.</td>
+                     </tr>
+                   ) : (
+                     filtered.map((e) => (
+                       <tr key={e.id} className="hover:bg-black/5 dark:hover:bg-white/5 group transition-colors">
+                          <td className="px-6 py-4">
+                             <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-accent-gold/5 flex items-center justify-center text-[10px] font-black border border-accent-gold/10 text-accent-gold transition-colors group-hover:bg-accent-gold group-hover:text-black">
+                                  {e.nombre_apellido.slice(0, 2).toUpperCase()}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="font-bold text-foreground group-hover:text-accent-gold transition-colors uppercase">{e.nombre_apellido}</span>
+                                  {e.categoria && <span className="text-[10px] text-slate-500 font-medium">{e.categoria}</span>}
+                                </div>
+                             </div>
+                          </td>
+                          <td className="px-6 py-4 font-mono font-bold text-slate-500">{e.legajo}</td>
+                          <td className="px-6 py-4">
+                             <span className="text-[10px] font-black px-2 py-1 bg-black/5 dark:bg-white/5 border border-border rounded-lg text-slate-500 leading-none">{e.contrato}</span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                             <div className="flex items-center justify-end gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => openEdit(e)} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg text-slate-500 hover:text-accent-gold transition-all"><Pencil className="w-3.5 h-3.5" /></button>
+                                <button onClick={() => handleDelete(e.id)} className="p-2 hover:bg-red-500/10 rounded-lg text-slate-500 hover:text-red-500 transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
+                             </div>
+                          </td>
+                       </tr>
+                     ))
+                   )}
+                </tbody>
+             </table>
+           </div>
+
+           {/* Mobile Card View */}
+           <div className="md:hidden divide-y divide-border">
+              {loading ? (
+                <div className="p-10 text-center uppercase text-[10px] font-black tracking-widest opacity-50">Cargando base...</div>
+              ) : filtered.length === 0 ? (
+                <div className="p-10 text-center uppercase text-[10px] font-black tracking-widest opacity-40">Sin resultados</div>
+              ) : (
+                filtered.map((e) => (
+                  <div key={e.id} className="p-5 flex items-center justify-between gap-4 bg-card/20 group">
+                     <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center font-black text-accent-gold text-xs shadow-inner">
+                          {e.nombre_apellido.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex flex-col">
+                           <h4 className="text-sm font-black uppercase tracking-tight text-foreground">{e.nombre_apellido}</h4>
+                           <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Leg: {e.legajo}</span>
+                              <span className="w-1 h-1 rounded-full bg-slate-700 opacity-30" />
+                              <span className="text-[9px] font-black text-accent-gold/60 uppercase tracking-widest">{e.contrato}</span>
+                           </div>
+                        </div>
+                     </div>
+                     <div className="flex items-center gap-1">
+                        <button onClick={() => openEdit(e)} className="p-2.5 bg-background border border-border rounded-xl text-slate-500 hover:text-accent-gold shadow-sm"><Pencil className="w-4 h-4" /></button>
+                        <button onClick={() => handleDelete(e.id)} className="p-2.5 bg-background border border-border rounded-xl text-slate-500 hover:text-red-500 shadow-sm"><Trash2 className="w-4 h-4" /></button>
+                     </div>
+                  </div>
+                ))
+              )}
+           </div>
         </div>
       </div>
 

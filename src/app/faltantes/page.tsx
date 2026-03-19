@@ -176,7 +176,8 @@ export default function FaltantesDashboard() {
       </div>
 
       <div className="bg-card/40 rounded-[2rem] border border-border shadow-2xl overflow-hidden backdrop-blur-sm">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="text-[10px] text-slate-600 dark:text-slate-500 uppercase bg-background/60 border-b border-border tracking-[0.2em] font-black">
               <tr>
@@ -317,6 +318,43 @@ export default function FaltantesDashboard() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden divide-y divide-border">
+           {loading ? (
+             <div className="p-20 text-center uppercase text-[10px] font-black tracking-widest opacity-50">Cargando registros...</div>
+           ) : filtered.length === 0 ? (
+             <div className="p-20 text-center uppercase text-[10px] font-black tracking-widest opacity-40">Sin registros</div>
+           ) : (
+             filtered.map((f) => (
+                <div key={f.id} className="p-5 space-y-4 bg-card/20">
+                   <div className="flex justify-between items-start">
+                      <div>
+                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{format(new Date(f.fecha), "dd MMM yyyy", { locale: es })}</p>
+                         <h4 className={`text-sm font-black uppercase tracking-tight mt-0.5 ${checkedNames.has(f.nombre_apellido) ? "text-emerald-500" : "text-foreground"}`} onClick={() => toggleNameHighlight(f.nombre_apellido)}>
+                           {f.nombre_apellido}
+                         </h4>
+                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1 inline-block border border-border px-2 py-0.5 rounded-lg bg-background shadow-inner">Cont: {f.contrato}</span>
+                      </div>
+                      <button onClick={() => handleDelete(f.id)} disabled={deletingId === f.id} className="p-2.5 bg-background border border-border rounded-xl text-slate-500 hover:text-red-500 shadow-sm transition-all active:scale-95">
+                         {deletingId === f.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                      </button>
+                   </div>
+                   <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/50">
+                         <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest opacity-60">Sector</p>
+                         <p className="text-[11px] font-black uppercase tracking-tight text-foreground">{f.sector || "—"}</p>
+                      </div>
+                      <div className="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-border/50">
+                         <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest opacity-60">Motivo</p>
+                         <p className="text-[11px] font-black uppercase tracking-tight text-foreground">{f.motivo || "—"}</p>
+                      </div>
+                   </div>
+                </div>
+             ))
+           )}
+        </div>
+
         {!loading && hasMore && filtered.length > 0 && !searchQuery.trim() && (
           <div className="border-t border-border py-6 flex justify-center bg-black/5 dark:bg-white/5">
             <button

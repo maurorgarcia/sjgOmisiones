@@ -23,7 +23,6 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -153,10 +152,6 @@ export default function Dashboard() {
       const newStatus = !currentStatus;
       const label = currentStatus ? "reabierto" : "resuelto";
 
-      // Optimistic update
-      const prevErrores = [...errores];
-      fetchErrores();
-
       const { error } = await supabase
         .from("error_carga")
         .update({ resuelto: newStatus })
@@ -164,24 +159,13 @@ export default function Dashboard() {
 
       if (error) {
         toast.error("Error al actualizar el estado.");
-        fetchErrores();
         return;
       }
 
-      toast.success(`Registro ${label}.`, {
-        action: {
-          label: "Deshacer",
-          onClick: async () => {
-            await supabase
-              .from("error_carga")
-              .update({ resuelto: currentStatus })
-              .eq("id", id);
-            fetchErrores();
-          },
-        },
-      });
+      toast.success(`Registro ${label}.`);
+      fetchErrores();
     },
-    [errores, fetchErrores]
+    [fetchErrores]
   );
 
   const openEdit = useCallback((err: ErrorCarga) => {
@@ -263,11 +247,7 @@ export default function Dashboard() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const cd = res.headers.get("content-disposition");
-      a.download =
-        cd?.includes("filename=")
-          ? cd.split("filename=")[1].replace(/"/g, "")
-          : `omisiones_${filtro}.xlsx`;
+      a.download = `omisiones_${filtro}.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -293,9 +273,9 @@ export default function Dashboard() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al enviar el correo");
-      toast.success("Correo enviado exitosamente a los responsables.");
-    } catch (err: unknown) {
-      toast.error(`Error: ${err instanceof Error ? err.message : "Desconocido"}`);
+      toast.success("Correo enviado exitosamente.");
+    } catch (err: any) {
+      toast.error(`Error: ${err.message}`);
     } finally {
       setSending(false);
     }
@@ -312,734 +292,215 @@ export default function Dashboard() {
   const dateLabel = useMemo(() => {
     if (!fechaFiltro) return "Todos los registros";
     return fechaHasta
-      ? `${format(new Date(fechaFiltro + "T12:00:00"), "d/M/yyyy", { locale: es })} – ${format(new Date(fechaHasta + "T12:00:00"), "d/M/yyyy", { locale: es })}`
-      : format(
-          new Date(fechaFiltro + "T12:00:00"),
-          "EEEE d 'de' MMMM",
-          { locale: es }
-        );
+      ? `${format(new Date(fechaFiltro + "T12:00:00"), "d/M/yyyy")} – ${format(new Date(fechaHasta + "T12:00:00"), "d/M/yyyy")}`
+      : format(new Date(fechaFiltro + "T12:00:00"), "EEEE d 'de' MMMM", { locale: es });
   }, [fechaFiltro, fechaHasta]);
 
   return (
-    <div className="space-y-6 max-w-7xl">
-      {/* Page header */}
+    <div className="space-y-6 max-w-7xl animate-in fade-in duration-700">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-            <div className="absolute inset-0 w-2.5 h-2.5 bg-green-500 rounded-full animate-ping opacity-30" />
-          </div>
+          <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
           <div>
-            <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">
-              Gestión de Omisiones
-            </h1>
-            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">
-              {dateLabel}
-            </p>
+            <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">Gestión de Omisiones</h1>
+            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-0.5">{dateLabel}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={handleDownload}
-            disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl bg-card/20 px-4 py-2.5 border border-border text-xs font-bold text-slate-500 hover:bg-card/40 hover:text-accent-gold transition-all shadow-xl active:scale-95 disabled:opacity-50"
-          >
-            <ExternalLink className="w-4 h-4" />
-          </button>
-
+          <button onClick={handleDownload} disabled={loading} className="p-2.5 rounded-xl border border-border hover:bg-card transition-all"><ExternalLink className="w-4 h-4" /></button>
           {isAdmin && (
             <>
-              {selectedIds.length > 0 && (
-                <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <button
-                    onClick={handleBulkResolve}
-                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 text-emerald-600 px-4 py-2.5 border border-emerald-200 text-sm font-semibold hover:bg-emerald-100 transition shadow-sm"
-                  >
-                    <CheckCheck className="w-4 h-4" />
-                    Resolver ({selectedIds.length})
-                  </button>
-                  <button
-                    onClick={() => setIsBulkDeleting(true)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-red-50 text-red-600 px-4 py-2.5 border border-red-200 text-sm font-semibold hover:bg-red-100 transition shadow-sm"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Eliminar ({selectedIds.length})
-                  </button>
-                </div>
-              )}
-              <Link
-                href="/carga"
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-xs font-black text-black uppercase tracking-tight hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:scale-[1.02] transition-all active:scale-95"
-              >
-                <PlusCircle className="w-4 h-4" />
-                Nuevo Registro
-              </Link>
-              <button
-                onClick={handleSendEmail}
-                disabled={sending || loading}
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-5 py-2.5 text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all disabled:opacity-50 active:scale-95 shadow-lg"
-              >
-                {sending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-                Enviar Reporte
+              <Link href="/carga" className="bg-accent-gold px-5 py-2.5 rounded-xl text-black text-xs font-black uppercase tracking-tight shadow-lg active:scale-95 transition-all">Nuevo Registro</Link>
+              <button onClick={handleSendEmail} disabled={sending || loading} className="px-5 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all">
+                {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                <span className="ml-2">Enviar Reporte</span>
               </button>
             </>
           )}
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-card/40 rounded-2xl p-4 border border-border shadow-2xl group hover:border-accent-gold/20 transition-all">
-          <div className="flex items-center gap-3">
-            <div className="bg-amber-500/5 p-2 rounded-xl group-hover:bg-amber-500/10 transition-colors">
-              <AlertTriangle className="w-5 h-5 text-amber-500/70" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                Total
-              </p>
-              <p className="text-2xl font-black text-foreground">{stats.total}</p>
-            </div>
-          </div>
+        <div className="bg-card/40 rounded-2xl p-4 border border-border shadow-sm">
+           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total</p>
+           <p className="text-2xl font-black text-foreground">{stats.total}</p>
         </div>
-        <div className="bg-card/40 rounded-2xl p-4 border border-accent-gold/10 shadow-2xl group hover:border-accent-gold/30 transition-all">
-          <div className="flex items-center gap-3">
-            <div className="bg-amber-500/5 p-2 rounded-xl group-hover:bg-amber-500/10 transition-colors">
-              <Clock className="w-5 h-5 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">
-                Pendientes
-              </p>
-              <p className="text-2xl font-black text-foreground">
-                {stats.pendientes}
-              </p>
-            </div>
-          </div>
+        <div className="bg-card/40 rounded-2xl p-4 border border-accent-gold/10 shadow-sm text-accent-gold font-bold">
+           <p className="text-[10px] uppercase tracking-widest opacity-70">Pendientes</p>
+           <p className="text-2xl font-black text-foreground">{stats.pendientes}</p>
         </div>
-        <div className="bg-card/40 rounded-2xl p-4 border border-emerald-500/10 shadow-2xl group hover:border-emerald-500/30 transition-all">
-          <div className="flex items-center gap-3">
-            <div className="bg-emerald-500/5 p-2 rounded-xl group-hover:bg-emerald-500/10 transition-colors">
-              <CheckCheck className="w-5 h-5 text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
-                Resueltos
-              </p>
-              <p className="text-2xl font-black text-foreground">
-                {stats.resueltos}
-              </p>
-            </div>
-          </div>
+        <div className="bg-card/40 rounded-2xl p-4 border border-emerald-500/10 shadow-sm text-emerald-500 font-bold">
+           <p className="text-[10px] uppercase tracking-widest opacity-70">Resueltos</p>
+           <p className="text-2xl font-black text-foreground">{stats.resueltos}</p>
         </div>
-        <div className="bg-card/40 rounded-2xl p-4 border border-border shadow-2xl group hover:border-accent-gold/20 transition-all">
-          <div className="flex items-center gap-3">
-            <div className="bg-background border border-border p-2 rounded-xl group-hover:bg-card transition-colors shadow-inner">
-              <TrendingDown className="w-5 h-5 text-slate-400" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                Resolución
-              </p>
-              <p className="text-2xl font-black text-foreground">{stats.pct}%</p>
-            </div>
-          </div>
+        <div className="bg-card/40 rounded-2xl p-4 border border-border shadow-sm">
+           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resolución</p>
+           <p className="text-2xl font-black text-foreground">{stats.pct}%</p>
         </div>
       </div>
 
-      {/* Charts Section */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Skeleton className="h-[280px]" />
-          <Skeleton className="h-[280px]" />
-          <Skeleton className="h-[280px]" />
+      {loading ? <Skeleton className="h-[300px]" /> : errores.length > 0 && <StatsCharts data={errores} />}
+
+      <div className="bg-sidebar/50 px-4 py-3 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row gap-3">
+        <select value={filtroMotivo} onChange={(e) => setFiltroMotivo(e.target.value)} className="px-4 py-2 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest bg-background outline-none">
+           <option value="todos">Todos los motivos</option>
+           {Object.keys(MOTIVO_COLORS).map(m => <option key={m} value={m}>{m}</option>)}
+        </select>
+        <div className="relative flex-1">
+           <Building2 className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+           <input type="text" value={filtroSector} onChange={(e) => setFiltroSector(e.target.value)} placeholder="Sector..." className="w-full pl-9 pr-4 py-2 border border-border rounded-xl text-xs font-black uppercase bg-background" />
         </div>
-      ) : (
-        errores.length > 0 && <StatsCharts data={errores} />
-      )}
-
-      {/* Filters */}
-      <div className="bg-sidebar/50 px-4 py-3 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        {/* Filtros de motivos y fechas */}
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-          <select
-            value={filtroMotivo}
-            onChange={(e) => setFiltroMotivo(e.target.value)}
-            className="px-4 py-2 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-500 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card cursor-pointer shadow-inner appearance-none"
-          >
-            <option value="todos" className="bg-card font-black uppercase">
-              Todos los motivos
-            </option>
-            {Object.keys(MOTIVO_COLORS).map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-
-          <div className="relative flex-grow sm:flex-grow-0 min-w-[140px]">
-            <Building2 className="w-3.5 h-3.5 text-slate-600 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              value={filtroSector}
-              onChange={(e) => setFiltroSector(e.target.value)}
-              placeholder="Sector..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-border text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 dark:placeholder:opacity-50 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner"
-            />
-          </div>
-
-          <div className="relative flex-grow sm:flex-grow-0">
-            <Calendar className="w-3.5 h-3.5 text-slate-600 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="date"
-              value={fechaFiltro}
-              onChange={(e) => {
-                const newDate = e.target.value;
-                setFechaFiltro(newDate);
-                const today = new Date().toISOString().split("T")[0];
-                if (newDate !== today) {
-                  setFiltro("todos");
-                }
-              }}
-              className="w-full sm:w-auto pl-9 pr-4 py-2 rounded-xl border border-border text-xs font-medium text-foreground focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
-            />
-          </div>
-          <div className="flex items-center gap-1.5 flex-grow sm:flex-grow-0">
-            <span className="text-xs text-slate-600 dark:text-slate-500 hidden sm:inline">
-              a
-            </span>
-            <input
-              type="date"
-              value={fechaHasta}
-              onChange={(e) => setFechaHasta(e.target.value)}
-              className="w-full sm:w-auto pl-4 py-2 rounded-xl border border-border text-xs font-medium text-foreground focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner [color-scheme:light] dark:[color-scheme:dark]"
-              title="Hasta (opcional, para rango)"
-            />
-          </div>
-          <button
-            onClick={() => {
-              setFechaFiltro("");
-              setFechaHasta("");
-              setFiltro("todos");
-            }}
-            className="text-[10px] text-accent-gold hover:text-accent-gold-dark font-black uppercase tracking-widest whitespace-nowrap px-4 py-2 rounded-xl border border-accent-gold/10 hover:bg-accent-gold/5 transition-all shadow-inner active:scale-95"
-          >
-            Ver Histórico
-          </button>
-        </div>
+        <input type="date" value={fechaFiltro} onChange={(e) => setFechaFiltro(e.target.value)} className="px-4 py-2 border border-border rounded-xl text-xs bg-background" />
+        <button onClick={() => { setFechaFiltro(""); setFechaHasta(""); setFiltro("todos"); }} className="text-[10px] font-black text-accent-gold uppercase tracking-widest px-4 border border-accent-gold/10 rounded-xl hover:bg-accent-gold/5 transition-all">Histórico</button>
       </div>
 
-      {/* Búsqueda en tabla */}
       {!loading && errores.length > 0 && (
-        <div className="flex items-center gap-2">
-          <Search className="w-4 h-4 text-slate-600" />
-          <input
-            type="text"
-            value={searchTyped}
-            onChange={(e) => setSearchTyped(e.target.value)}
-            placeholder="Buscar por nombre, legajo o OT (Toda la base)..."
-            className="flex-1 max-w-xs border border-border rounded-xl pl-4 py-2 text-xs font-medium text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 dark:placeholder:opacity-50 focus:ring-2 focus:ring-accent-gold/50 outline-none transition bg-background hover:bg-card shadow-inner"
-          />
-          {searchTyped.trim() && (
-            <span className="text-xs text-slate-600 dark:text-slate-500 uppercase font-black tracking-widest text-[10px]">
-              {loading ? "Buscando..." : `Encontrados: ${errores.length}`}
-            </span>
-          )}
-        </div>
+         <div className="flex items-center gap-2 max-w-xs">
+            <Search className="w-4 h-4 text-slate-500" />
+            <input type="text" value={searchTyped} onChange={(e) => setSearchTyped(e.target.value)} placeholder="Buscar..." className="w-full border border-border rounded-xl px-4 py-1.5 text-xs bg-background" />
+         </div>
       )}
 
-      {/* Table */}
-      <div className="bg-card/40 rounded-2xl border border-border shadow-2xl overflow-hidden backdrop-blur-sm">
-        <div className="overflow-x-auto">
+      <div className="bg-card/40 rounded-[2rem] md:rounded-2xl border border-border overflow-hidden shadow-2xl backdrop-blur-sm">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-[10px] text-slate-600 dark:text-slate-500 uppercase bg-sidebar/60 border-b border-border tracking-[0.2em] font-black">
+            <thead className="text-[10px] text-slate-500 uppercase bg-sidebar/60 border-b border-border tracking-[0.2em] font-black">
               <tr>
-                {isAdmin && (
-                  <th className="px-5 py-3.5 w-12 text-center">
-                    <input
-                      type="checkbox"
-                      onChange={handleSelectAll}
-                      checked={
-                        filteredErrores.length > 0 &&
-                        selectedIds.length === filteredErrores.length
-                      }
-                      className="rounded border-border bg-card text-accent-gold focus:ring-accent-gold cursor-pointer"
-                    />
-                  </th>
-                )}
-                <th className="px-5 py-3.5 font-semibold">
-                  <button
-                    onClick={() => handleSort("resuelto")}
-                    className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider"
-                  >
-                    Estado
-                    {sortConfig?.key === "resuelto" ? (
-                      sortConfig.direction === "asc" ? (
-                        <ArrowUp className="w-3 h-3" />
-                      ) : (
-                        <ArrowDown className="w-3 h-3" />
-                      )
-                    ) : (
-                      <ArrowUpDown className="w-3 h-3 opacity-30" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-5 py-3.5 font-semibold">
-                  <button
-                    onClick={() => handleSort("fecha")}
-                    className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider"
-                  >
-                    Fecha
-                    {sortConfig?.key === "fecha" ? (
-                      sortConfig.direction === "asc" ? (
-                        <ArrowUp className="w-3 h-3" />
-                      ) : (
-                        <ArrowDown className="w-3 h-3" />
-                      )
-                    ) : (
-                      <ArrowUpDown className="w-3 h-3 opacity-30" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-5 py-3.5 font-semibold">
-                  <button
-                    onClick={() => handleSort("nombre_apellido")}
-                    className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider"
-                  >
-                    Empleado
-                    {sortConfig?.key === "nombre_apellido" ? (
-                      sortConfig.direction === "asc" ? (
-                        <ArrowUp className="w-3 h-3" />
-                      ) : (
-                        <ArrowDown className="w-3 h-3" />
-                      )
-                    ) : (
-                      <ArrowUpDown className="w-3 h-3 opacity-30" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-5 py-3.5 font-semibold">
-                  <button
-                    onClick={() => handleSort("motivo_error")}
-                    className="flex items-center gap-1 hover:text-accent-gold transition-colors uppercase tracking-wider"
-                  >
-                    Motivo
-                    {sortConfig?.key === "motivo_error" ? (
-                      sortConfig.direction === "asc" ? (
-                        <ArrowUp className="w-3 h-3" />
-                      ) : (
-                        <ArrowDown className="w-3 h-3" />
-                      )
-                    ) : (
-                      <ArrowUpDown className="w-3 h-3 opacity-30" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-5 py-3.5 font-black uppercase tracking-widest text-slate-500">
-                  OT / Sector
-                </th>
-                <th className="px-5 py-3.5 font-black uppercase tracking-widest text-right text-slate-500">
-                  Acción
-                </th>
+                {isAdmin && <th className="px-5 py-3 w-12 text-center" />}
+                <th className="px-5 py-4">Estado</th>
+                <th className="px-5 py-4">Fecha</th>
+                <th className="px-5 py-4">Empleado</th>
+                <th className="px-5 py-4">Motivo</th>
+                <th className="px-5 py-4 text-right">Acción</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="py-12">
-                    <TableSkeleton rows={8} />
-                  </td>
-                </tr>
-              ) : filteredErrores.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-16 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="bg-slate-100 p-4 rounded-full">
-                        <CheckCheck className="w-7 h-7 text-slate-400" />
-                      </div>
-                      <p className="font-semibold text-slate-700 mt-1">
-                        {errores.length === 0
-                          ? "No hay errores para mostrar"
-                          : "Ningún registro coincide con la búsqueda"}
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        {errores.length === 0
-                          ? filtro === "pendientes"
-                            ? "¡Todo al día! No hay nada pendiente."
-                            : "No se encontraron registros con este filtro."
-                          : `Hay ${errores.length} registro(s) con los filtros activos. Probá otro término.`}
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredErrores.map((err) => (
-                  <tr
-                    key={err.id}
-                    className={`hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${err.resuelto ? "opacity-60" : ""} ${selectedIds.includes(err.id) ? "bg-accent-gold/5" : ""}`}
-                  >
-                    {isAdmin && (
-                      <td className="px-5 py-3.5 text-center">
-                        <input
-                          type="checkbox"
-                          onChange={() => handleSelectOne(err.id)}
-                          checked={selectedIds.includes(err.id)}
-                          className="rounded border-border bg-card text-accent-gold focus:ring-accent-gold cursor-pointer"
-                        />
-                      </td>
-                    )}
-                    <td className="px-5 py-3.5">
-                      {err.resuelto ? (
-                        <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          Resuelto
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-accent-gold/10 text-accent-gold border border-accent-gold/20 shadow-[0_0_12px_rgba(245,158,11,0.1)]">
-                          <Clock className="w-3.5 h-3.5" />
-                          Pendiente
-                        </span>
+              {loading ? <tr><td colSpan={6} className="py-12"><TableSkeleton rows={5} /></td></tr> : filteredErrores.length === 0 ? (
+                <tr><td colSpan={6} className="py-20 text-center uppercase text-[10px] font-black tracking-widest opacity-40">No se encontraron registros</td></tr>
+              ) : filteredErrores.map(err => (
+                 <tr key={err.id} className={`hover:bg-white/5 transition-colors ${err.resuelto ? "opacity-60" : ""}`}>
+                   {isAdmin && <td className="px-5 text-center"><input type="checkbox" checked={selectedIds.includes(err.id)} onChange={() => handleSelectOne(err.id)} className="rounded border-border text-accent-gold focus:ring-accent-gold" /></td>}
+                   <td className="px-5 py-4">
+                      <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full border ${err.resuelto ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-accent-gold/10 text-accent-gold border-accent-gold/20"}`}>
+                        {err.resuelto ? "RESUELTO" : "PENDIENTE"}
+                      </span>
+                   </td>
+                   <td className="px-5 py-4 font-bold text-xs">{format(new Date(err.fecha), "dd MMM yyyy")}</td>
+                   <td className="px-5 py-4 font-black text-sm uppercase">{err.nombre_apellido}</td>
+                   <td className="px-5 py-4">{getMotivoBadge(err.motivo_error)}</td>
+                   <td className="px-5 py-4 text-right space-x-1">
+                      <button onClick={() => toggleResuelto(err.id, err.resuelto)} className="p-1.5 hover:text-accent-gold transition-colors">{err.resuelto ? <Clock className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}</button>
+                      {isAdmin && (
+                        <>
+                          <button onClick={() => openEdit(err)} className="p-1.5 hover:text-accent-gold transition-colors"><Pencil className="w-4 h-4" /></button>
+                          <button onClick={() => setDeletingId(err.id)} className="p-1.5 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                        </>
                       )}
-                    </td>
-                    <td className="px-5 py-3.5 whitespace-nowrap">
-                      <div className="font-bold text-foreground text-sm">
-                        {format(new Date(err.fecha), "dd MMM yyyy", {
-                          locale: es,
-                        })}
-                      </div>
-                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                        {err.dia_semana}
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div
-                        onClick={() =>
-                          toggleNameHighlight(err.nombre_apellido)
-                        }
-                        className={`font-bold text-sm cursor-pointer transition-all ${
-                          checkedNames.has(err.nombre_apellido)
-                            ? "text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-xl border border-emerald-500/20 shadow-lg scale-[1.02]"
-                            : "text-foreground hover:text-accent-gold"
-                        }`}
-                        title="Click para marcar/desmarcar progreso"
-                      >
-                        {err.nombre_apellido}
-                      </div>
-                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 mt-1">
-                        Leg: {err.legajo}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigator.clipboard.writeText(err.legajo);
-                          }}
-                          className="hover:text-accent-gold transition-colors"
-                          title="Copiar legajo"
-                        >
-                          <Copy className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      {getMotivoBadge(err.motivo_error)}
-                      {err.notas && (
-                        <div
-                          className="text-[10px] font-bold text-slate-500 mt-1.5 max-w-[200px] truncate italic uppercase tracking-tight"
-                          title={err.notas}
-                        >
-                          &ldquo;{err.notas}&rdquo;
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div className="font-bold text-foreground text-xs uppercase tracking-tight">
-                        {err.sector}
-                      </div>
-                      <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">
-                        {err.ot ? `OT: ${err.ot}` : "Sin OT"}
-                        {err.horario ? ` · ${err.horario}` : ""}
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() =>
-                            toggleResuelto(err.id, err.resuelto)
-                          }
-                          className={`text-[10px] font-black uppercase tracking-widest transition-all ${
-                            err.resuelto
-                              ? "text-slate-500 hover:text-foreground"
-                              : "text-accent-gold hover:text-accent-gold-dark"
-                          }`}
-                        >
-                          {err.resuelto ? "Reabrir" : "Resolver"}
-                        </button>
-
-                        {isAdmin && (
-                          <>
-                            <button
-                              onClick={() => openEdit(err)}
-                              className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-slate-500 hover:text-foreground transition-all shadow-inner"
-                              title="Editar"
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => setDeletingId(err.id)}
-                              className="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-500 hover:text-red-500 transition-all shadow-inner"
-                              title="Eliminar"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+                   </td>
+                 </tr>
+              ))}
             </tbody>
           </table>
         </div>
-        {!loading && hasMore && errores.length > 0 && !searchTyped.trim() && (
-          <div className="border-t border-border py-6 flex justify-center bg-black/5 dark:bg-white/5">
-            <button
-              type="button"
-              onClick={loadMore}
-              disabled={loadingMore}
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-2xl border border-border bg-background text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:bg-card hover:text-accent-gold transition-all disabled:opacity-50 active:scale-95 shadow-xl"
-            >
-              {loadingMore ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-              {loadingMore ? "Cargando…" : "Cargar más registros"}
-            </button>
-          </div>
-        )}
+
+        <div className="md:hidden divide-y divide-border">
+           {loading ? <div className="p-10 text-center uppercase text-[10px] font-black tracking-widest opacity-50">Cargando...</div> : filteredErrores.length === 0 ? (
+             <div className="p-20 text-center uppercase text-[10px] font-black tracking-widest opacity-40">No hay registros</div>
+           ) : filteredErrores.map(err => (
+             <div key={err.id} className={`p-5 space-y-3 ${err.resuelto ? "opacity-60 bg-black/5" : ""}`}>
+                <div className="flex justify-between items-start">
+                   <div>
+                      <p className="text-[10px] opacity-50 font-black">{format(new Date(err.fecha), "dd MMM yyyy")}</p>
+                      <h4 className="font-black text-sm uppercase tracking-tight">{err.nombre_apellido}</h4>
+                   </div>
+                   <button onClick={() => toggleResuelto(err.id, err.resuelto)} className={`text-[9px] font-black border rounded-lg px-2 py-1 ${err.resuelto ? "text-emerald-500 border-emerald-500/20" : "text-accent-gold border-accent-gold/20"}`}>{err.resuelto ? "RESUELTO" : "RESOLVER"}</button>
+                </div>
+                <div className="flex justify-between items-center">
+                   {getMotivoBadge(err.motivo_error)}
+                   <div className="flex gap-2">
+                     <button onClick={() => openEdit(err)} className="p-2 border rounded-xl"><Pencil className="w-4 h-4" /></button>
+                     <button onClick={() => setDeletingId(err.id)} className="p-2 border rounded-xl"><Trash2 className="w-4 h-4" /></button>
+                   </div>
+                </div>
+             </div>
+           ))}
+        </div>
       </div>
 
-      {/* Delete Single Modal */}
-      <Modal
-        isOpen={deletingId !== null}
-        onClose={() => setDeletingId(null)}
-        title="¿Eliminar registro?"
-        description="Esta acción no se puede deshacer. El registro seleccionado será eliminado permanentemente de la base de datos."
-        type="danger"
-        confirmLabel="Eliminar Registro"
-        onConfirm={() => deletingId && confirmDelete(deletingId)}
-      />
+      {!loading && hasMore && errores.length > 0 && !searchTyped.trim() && (
+        <div className="flex justify-center py-6">
+          <button onClick={loadMore} className="bg-background border border-border px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:text-accent-gold transition-all">
+            {loadingMore ? "Cargando..." : "Cargar más"}
+          </button>
+        </div>
+      )}
 
-      {/* Bulk Delete Modal */}
-      <Modal
-        isOpen={isBulkDeleting}
-        onClose={() => setIsBulkDeleting(false)}
-        title={`¿Eliminar ${selectedIds.length} registros?`}
-        description="Has seleccionado múltiples registros para eliminar. Esta operación es permanente y afectará a todos los elementos seleccionados."
-        type="danger"
-        confirmLabel={`Eliminar ${selectedIds.length} elementos`}
-        onConfirm={confirmBulkDelete}
-      />
+      <Modal isOpen={deletingId !== null} onClose={() => setDeletingId(null)} title="¿Eliminar registro?" type="danger" onConfirm={() => deletingId && confirmDelete(deletingId)} />
+      <Modal isOpen={isBulkDeleting} onClose={() => setIsBulkDeleting(false)} title={`¿Eliminar ${selectedIds.length} elementos?`} type="danger" onConfirm={confirmBulkDelete} />
 
-      {/* Edit modal */}
       <AnimatePresence>
         {editForm && (
           <div className="fixed inset-0 bg-background/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-card rounded-[2.5rem] shadow-2xl p-8 max-w-2xl w-full border border-border overflow-hidden relative flex flex-col max-h-[90vh]"
-            >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent-gold to-accent-gold-dark" />
-
-              <div className="flex items-center justify-between mb-6 flex-shrink-0">
-                <div>
-                  <h3 className="text-xl font-black text-foreground uppercase tracking-tight">
-                    Editar Registro Completo
-                  </h3>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1 opacity-70">
-                    ID: #{editForm.id} · Corrección de datos
-                  </p>
-                </div>
-                <button
-                  onClick={() => setEditForm(null)}
-                  className="p-2.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-2xl transition-all text-slate-500 hover:text-foreground"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar pb-6">
-                {/* Row 1: Fecha & Legajo */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Fecha</label>
-                    <input
-                      type="date"
-                      value={editForm.fecha ? editForm.fecha.split('T')[0] : ''}
-                      onChange={(e) => setEditForm({ ...editForm, fecha: e.target.value })}
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 [color-scheme:light] dark:[color-scheme:dark]"
-                    />
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="bg-card rounded-[2rem] p-8 max-w-2xl w-full border border-border shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+               <button onClick={() => setEditForm(null)} className="absolute top-6 right-6 p-2 hover:bg-white/5 rounded-full"><X className="w-5 h-5" /></button>
+               <h3 className="text-xl font-black uppercase tracking-tight mb-8">Editar Registro</h3>
+               
+               <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                     <div>
+                        <label className="text-[10px] font-black opacity-50 uppercase mb-1 block">Fecha</label>
+                        <input type="date" value={editForm!.fecha ? editForm!.fecha.split("T")[0] : ""} onChange={(e) => setEditForm({ ...editForm!, fecha: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-bold [color-scheme:dark]" />
+                     </div>
+                     <div>
+                        <label className="text-[10px] font-black opacity-50 uppercase mb-1 block">Legajo</label>
+                        <input type="text" value={editForm!.legajo || ""} onChange={(e) => setEditForm({ ...editForm!, legajo: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-bold" />
+                     </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Legajo SAP</label>
-                    <input
-                      type="text"
-                      value={editForm.legajo || ''}
-                      onChange={(e) => setEditForm({ ...editForm, legajo: e.target.value })}
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-mono font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10"
-                    />
+                  <div>
+                     <label className="text-[10px] font-black opacity-50 uppercase mb-1 block">Nombre Completo</label>
+                     <input type="text" value={editForm!.nombre_apellido || ""} onChange={(e) => setEditForm({ ...editForm!, nombre_apellido: e.target.value.toUpperCase() })} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-bold uppercase" />
                   </div>
-                </div>
-
-                {/* Row 2: Nombre */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nombre y Apellido</label>
-                  <input
-                    type="text"
-                    value={editForm.nombre_apellido || ''}
-                    onChange={(e) => setEditForm({ ...editForm, nombre_apellido: e.target.value })}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 uppercase"
-                  />
-                </div>
-
-                {/* Row 3: Contrato & Motivo */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Contrato</label>
-                    <select
-                      value={editForm.contrato || ''}
-                      onChange={(e) => setEditForm({ ...editForm, contrato: e.target.value })}
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 appearance-none"
-                    >
-                      {CONTRATOS.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                     <div>
+                        <label className="text-[10px] font-black opacity-50 uppercase mb-1 block">Motivo</label>
+                        <select value={editForm!.motivo_error || ""} onChange={(e) => setEditForm({ ...editForm!, motivo_error: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-xs font-bold uppercase">
+                           {MOTIVOS.map(m => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                     </div>
+                     <div>
+                        <label className="text-[10px] font-black opacity-50 uppercase mb-1 block">Sector</label>
+                        <input type="text" value={editForm!.sector || ""} onChange={(e) => setEditForm({ ...editForm!, sector: e.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-bold" />
+                     </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Motivo</label>
-                    <select
-                      value={editForm.motivo_error || ''}
-                      onChange={(e) => setEditForm({ ...editForm, motivo_error: e.target.value })}
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 appearance-none"
-                    >
-                      {MOTIVOS.map(m => <option key={m} value={m}>{m}</option>)}
-                    </select>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-border/50 rounded-2xl bg-black/5 dark:bg-white/5">
+                     <div>
+                        <label className="text-[9px] font-black opacity-40 uppercase mb-1 block text-center">Horas Normales</label>
+                        <input type="number" step="0.5" value={editForm!.horas_normales || ""} onChange={(e) => setEditForm({...editForm!, horas_normales: parseFloat(e.target.value) || null})} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs font-black text-center" />
+                     </div>
+                     <div>
+                        <label className="text-[9px] font-black opacity-40 uppercase mb-1 block text-center">Horas 50%</label>
+                        <input type="number" step="0.5" value={editForm!.horas_50 || ""} onChange={(e) => setEditForm({...editForm!, horas_50: parseFloat(e.target.value) || null})} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs font-black text-center" />
+                     </div>
+                     <div>
+                        <label className="text-[9px] font-black opacity-40 uppercase mb-1 block text-center">Horas 100%</label>
+                        <input type="number" step="0.5" value={editForm!.horas_100 || ""} onChange={(e) => setEditForm({...editForm!, horas_100: parseFloat(e.target.value) || null})} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs font-black text-center" />
+                     </div>
                   </div>
-                </div>
 
-                {/* Row 4: Sector & OT */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Sector</label>
-                    <input
-                      type="text"
-                      value={editForm.sector || ''}
-                      onChange={(e) => setEditForm({ ...editForm, sector: e.target.value })}
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10"
-                    />
+                  <div>
+                     <label className="text-[10px] font-black opacity-50 uppercase mb-1 block">Notas</label>
+                     <textarea value={editForm!.notas || ""} onChange={(e) => setEditForm({ ...editForm!, notas: e.target.value })} rows={3} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-bold resize-none" />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">OT</label>
-                    <input
-                      type="text"
-                      value={editForm.ot || ''}
-                      onChange={(e) => setEditForm({ ...editForm, ot: e.target.value.replace(/\D/g, '').slice(0, 12) })}
-                      disabled={editForm.motivo_error === 'OT Inexistente'}
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 disabled:opacity-30"
-                      maxLength={12}
-                    />
+                  
+                  <div className="flex gap-4 pt-4">
+                     <button onClick={() => setEditForm(null)} className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest border border-border rounded-2xl">Cancelar</button>
+                     <button onClick={saveEdit} disabled={editLoading} className="flex-1 py-4 bg-accent-gold text-black text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-accent-gold/20 flex items-center justify-center gap-2">
+                        {editLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCheck className="w-4 h-4" />}
+                        Guardar Cambios
+                     </button>
                   </div>
-                </div>
-
-                {/* Row 5: Horario */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Horario de Fichaje</label>
-                  <input
-                    type="text"
-                    value={editForm.horario || ''}
-                    onChange={(e) => setEditForm({ ...editForm, horario: e.target.value })}
-                    placeholder="Ej: 06:00 a 14:00"
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10"
-                  />
-                </div>
-
-                {/* Row 6: Horas Detail */}
-                <div className="space-y-4 pt-2 border-t border-border">
-                  <p className="text-[10px] font-black text-accent-gold uppercase tracking-[0.2em] mb-2">Desglose de Horas y Modificadores</p>
-                  <div className="grid grid-cols-1 gap-6 bg-black/5 dark:bg-white/5 p-4 rounded-3xl border border-border/50">
-                    {/* Normales */}
-                    <div className="space-y-3">
-                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Horas Normales</label>
-                       <div className="flex flex-wrap items-center gap-4">
-                          <input type="number" step="0.5" value={editForm.horas_normales || ''} onChange={(e) => setEditForm({...editForm, horas_normales: e.target.value ? parseFloat(e.target.value) : null})} className="w-24 bg-background border border-border rounded-lg px-3 py-2 text-xs font-bold text-foreground outline-none" />
-                          <div className="flex gap-3">
-                             <ModifierCheckbox label="INSA" checked={!!editForm.hs_normales_insa} onChange={(val) => setEditForm({...editForm, hs_normales_insa: val})} />
-                             <ModifierCheckbox label="POLU" checked={!!editForm.hs_normales_polu} onChange={(val) => setEditForm({...editForm, hs_normales_polu: val})} />
-                             <ModifierCheckbox label="NOCT" checked={!!editForm.hs_normales_noct} onChange={(val) => setEditForm({...editForm, hs_normales_noct: val})} />
-                          </div>
-                       </div>
-                    </div>
-                    {/* 50% */}
-                    <div className="space-y-3 pt-3 border-t border-border/10">
-                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Horas al 50%</label>
-                       <div className="flex flex-wrap items-center gap-4">
-                          <input type="number" step="0.5" value={editForm.horas_50 || ''} onChange={(e) => setEditForm({...editForm, horas_50: e.target.value ? parseFloat(e.target.value) : null})} className="w-24 bg-background border border-border rounded-lg px-3 py-2 text-xs font-bold text-foreground outline-none" />
-                          <div className="flex gap-3">
-                             <ModifierCheckbox label="INSA" checked={!!editForm.hs_50_insa} onChange={(val) => setEditForm({...editForm, hs_50_insa: val})} />
-                             <ModifierCheckbox label="POLU" checked={!!editForm.hs_50_polu} onChange={(val) => setEditForm({...editForm, hs_50_polu: val})} />
-                             <ModifierCheckbox label="NOCT" checked={!!editForm.hs_50_noct} onChange={(val) => setEditForm({...editForm, hs_50_noct: val})} />
-                          </div>
-                       </div>
-                    </div>
-                    {/* 100% */}
-                    <div className="space-y-3 pt-3 border-t border-border/10">
-                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Horas al 100%</label>
-                       <div className="flex flex-wrap items-center gap-4">
-                          <input type="number" step="0.5" value={editForm.horas_100 || ''} onChange={(e) => setEditForm({...editForm, horas_100: e.target.value ? parseFloat(e.target.value) : null})} className="w-24 bg-background border border-border rounded-lg px-3 py-2 text-xs font-bold text-foreground outline-none" />
-                          <div className="flex gap-3">
-                             <ModifierCheckbox label="INSA" checked={!!editForm.hs_100_insa} onChange={(val) => setEditForm({...editForm, hs_100_insa: val})} />
-                             <ModifierCheckbox label="POLU" checked={!!editForm.hs_100_polu} onChange={(val) => setEditForm({...editForm, hs_100_polu: val})} />
-                             <ModifierCheckbox label="NOCT" checked={!!editForm.hs_100_noct} onChange={(val) => setEditForm({...editForm, hs_100_noct: val})} />
-                          </div>
-                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Row 7: Notas */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Notas Observaciones</label>
-                  <textarea
-                    value={editForm.notas || ''}
-                    onChange={(e) => setEditForm({ ...editForm, notas: e.target.value })}
-                    rows={3}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-xs font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 resize-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-4 justify-end mt-6 pt-6 border-t border-border flex-shrink-0">
-                <button
-                  onClick={() => setEditForm(null)}
-                  className="px-6 py-3 rounded-xl border border-border text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={saveEdit}
-                  disabled={editLoading}
-                  className="flex items-center gap-2 px-10 py-3 rounded-xl bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black text-[10px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 disabled:opacity-50"
-                >
-                  {editLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                  Guardar Correcciones
-                </button>
-              </div>
+               </div>
             </motion.div>
           </div>
         )}
@@ -1051,12 +512,9 @@ export default function Dashboard() {
 function ModifierCheckbox({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
+      type="button"
       onClick={() => onChange(!checked)}
-      className={`px-2 py-1 rounded-md text-[9px] font-black border transition-all ${
-        checked 
-          ? "bg-accent-gold border-accent-gold text-black shadow-[0_0_10px_rgba(245,158,11,0.3)]" 
-          : "bg-background border-border text-slate-500 opacity-50"
-      }`}
+      className={`px-3 py-1.5 rounded-xl text-[9px] font-black border transition-all ${checked ? "bg-accent-gold border-accent-gold text-black shadow-lg shadow-accent-gold/20" : "bg-transparent border-border text-slate-500 opacity-50"}`}
     >
       {label}
     </button>
