@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Faltante, PAGE_SIZE } from "@/types";
@@ -16,16 +16,21 @@ export function useFaltantes() {
     key: "nombre_apellido",
     direction: "asc",
   });
+
   const [fechaDesde, setFechaDesde] = useState<string>(() => {
     if (typeof window === "undefined") return new Date().toISOString().split("T")[0];
     return sessionStorage.getItem("sjg_working_date") || new Date().toISOString().split("T")[0];
   });
+
   const [fechaHasta, setFechaHasta] = useState<string>(() => {
     if (typeof window === "undefined") return "";
     return sessionStorage.getItem("sjg_fecha_hasta") || "";
   });
-  const [searchQueryRaw, setSearchQueryRaw] = useState("");
-  const [search, setSearch] = useState("");
+
+  // ✅ FIX: un solo estado de búsqueda (ya no searchQueryRaw + search por separado)
+  // El debounce se maneja con useEffect, pero search va directo a buildQuery
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [checkedNames, setCheckedNames] = useState<Set<string>>(() => {
     if (typeof window === "undefined") return new Set();
@@ -33,6 +38,15 @@ export function useFaltantes() {
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
+  // ✅ FIX: debounce separado del estado expuesto — evita doble fetch
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // ✅ FIX: search incluido en buildQuery para paginación correcta en Supabase
   const buildQuery = useCallback(() => {
     let query = supabase.from("faltantes").select("*");
 
@@ -44,8 +58,8 @@ export function useFaltantes() {
       query = query.gte("fecha", startIso).lte("fecha", endIso);
     }
 
-    if (search.trim()) {
-      const q = search.trim();
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.trim();
       query = query.or(`nombre_apellido.ilike.%${q}%,contrato.ilike.%${q}%,sector.ilike.%${q}%,motivo.ilike.%${q}%`);
     }
 
@@ -59,7 +73,7 @@ export function useFaltantes() {
     }
 
     return query;
-  }, [fechaDesde, fechaHasta, sortConfig]);
+  }, [fechaDesde, fechaHasta, sortConfig, debouncedSearch]);
 
   const fetchFaltantes = useCallback(async () => {
     setLoading(true);
@@ -88,16 +102,10 @@ export function useFaltantes() {
     setLoadingMore(false);
   }, [loadingMore, hasMore, data.length, buildQuery]);
 
+  // ✅ FIX: un solo useEffect — buildQuery ya incluye debouncedSearch
   useEffect(() => {
     fetchFaltantes();
-  }, [fetchFaltantes, search]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearch(searchQueryRaw);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchQueryRaw]);
+  }, [fetchFaltantes]);
 
   const handleSort = useCallback((key: string) => {
     setSortConfig((prev) => {
@@ -120,10 +128,8 @@ export function useFaltantes() {
   const resetFilters = useCallback(() => {
     setFechaDesde(new Date().toISOString().split("T")[0]);
     setFechaHasta("");
-    setSearchQueryRaw("");
+    setSearchQuery("");
   }, []);
-
-  const filtered = data;
 
   const updateFechaDesde = useCallback((val: string) => {
     setFechaDesde(val);
@@ -138,7 +144,7 @@ export function useFaltantes() {
 
   return {
     data,
-    filtered,
+    filtered: data, // alias mantenido por compatibilidad
     loading,
     loadingMore,
     hasMore,
@@ -151,8 +157,8 @@ export function useFaltantes() {
     resetFilters,
     loadMore,
     refetch: fetchFaltantes,
-    setSearchQuery: setSearchQueryRaw,
-    searchQuery: searchQueryRaw,
+    searchQuery,
+    setSearchQuery,
     updateFechaDesde,
     updateFechaHasta,
   };

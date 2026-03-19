@@ -1,4 +1,5 @@
 "use client";
+
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -14,14 +15,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isLoginPage = pathname === "/login";
   const isMiniMode = pathname.endsWith("/mini");
 
+  // ✅ FIX: localStorage se accede dentro del useEffect (solo en cliente)
+  // Antes podía crashear en SSR porque se ejecutaba durante el render
   useEffect(() => {
-    if (session?.user?.role === "viewer" && !localStorage.getItem("sjg_onboarding_seen")) {
+    if (
+      session?.user?.role === "viewer" &&
+      typeof window !== "undefined" &&
+      !localStorage.getItem("sjg_onboarding_seen")
+    ) {
       setShowOnboarding(true);
     }
   }, [session]);
 
   const handleCloseOnboarding = () => {
-    localStorage.setItem("sjg_onboarding_seen", "true");
+    // ✅ FIX: guard de SSR también en el close handler
+    if (typeof window !== "undefined") {
+      localStorage.setItem("sjg_onboarding_seen", "true");
+    }
     setShowOnboarding(false);
   };
 

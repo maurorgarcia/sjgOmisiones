@@ -44,6 +44,9 @@ body {
   background-attachment: fixed;
   transition: background-color 0.3s ease, color 0.3s ease;
   min-height: 100vh;
+  /* ✅ FIX: evita scroll horizontal en mobile causado por dropdowns absolutos
+     que salen del viewport cuando están cerca del borde derecho */
+  overflow-x: hidden;
 }
 
 .dark body {

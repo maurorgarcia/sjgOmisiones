@@ -1,9 +1,11 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
+// ✅ FIX: agregado /empleados — antes un viewer podía acceder escribiendo la URL directo
 const ADMIN_ONLY_PATHS = [
   "/carga",
   "/importar",
+  "/empleados",
   "/faltantes/carga",
 ];
 

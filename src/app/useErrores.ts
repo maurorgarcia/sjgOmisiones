@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { ErrorCarga, PAGE_SIZE } from "@/types";
 
@@ -23,7 +23,7 @@ export function useErrores({ defaultFiltro = "pendientes", persistFilters = fals
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [search, setSearchRaw] = useState("");
+  const [search, setSearch] = useState("");
 
   const [filtro, setFiltroRaw] = useState<FilterStatus>(() => {
     if (!persistFilters || typeof window === "undefined") return defaultFiltro;
@@ -53,6 +53,13 @@ export function useErrores({ defaultFiltro = "pendientes", persistFilters = fals
 
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "nombre_apellido", direction: "asc" });
 
+  // ✅ Ref para acceder a los filtros activos dentro del handler de realtime
+  // sin necesidad de re-suscribir el canal cada vez que cambia un filtro
+  const activeFiltersRef = useRef({ filtro, filtroMotivo, filtroSector, fechaFiltro, fechaHasta, search });
+  useEffect(() => {
+    activeFiltersRef.current = { filtro, filtroMotivo, filtroSector, fechaFiltro, fechaHasta, search };
+  }, [filtro, filtroMotivo, filtroSector, fechaFiltro, fechaHasta, search]);
+
   const setFiltro = useCallback((val: FilterStatus) => {
     setFiltroRaw(val);
     if (persistFilters) sessionStorage.setItem("sjg_filtro", val);
@@ -77,10 +84,6 @@ export function useErrores({ defaultFiltro = "pendientes", persistFilters = fals
     setFechaHastaRaw(val);
     if (val) sessionStorage.setItem("sjg_fecha_hasta", val);
     else sessionStorage.removeItem("sjg_fecha_hasta");
-  }, []);
-
-  const setSearch = useCallback((val: string) => {
-    setSearchRaw(val);
   }, []);
 
   const handleSort = useCallback((key: string) => {
@@ -115,12 +118,11 @@ export function useErrores({ defaultFiltro = "pendientes", persistFilters = fals
 
     if (search.trim()) {
       const q = search.trim();
-      // Search in name or legajo or OT using or filters
       query = query.or(`nombre_apellido.ilike.%${q}%,legajo.ilike.%${q}%,ot.ilike.%${q}%`);
     }
 
     return query;
-  }, [sortConfig, fechaFiltro, fechaHasta, filtro, filtroMotivo, filtroSector]);
+  }, [sortConfig, fechaFiltro, fechaHasta, filtro, filtroMotivo, filtroSector, search]);
 
   const fetchErrores = useCallback(async () => {
     setLoading(true);
@@ -148,19 +150,49 @@ export function useErrores({ defaultFiltro = "pendientes", persistFilters = fals
 
   useEffect(() => {
     fetchErrores();
-  }, [fetchErrores, search]);
+  }, [fetchErrores]);
 
+  // ✅ FIX: realtime INSERT ahora valida TODOS los filtros activos antes de agregar el registro
+  // Antes solo chequeaba `resuelto`, ignorando fecha, sector, motivo y búsqueda
   useEffect(() => {
     const channel = supabase
       .channel(`errores-rt-${Math.random()}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "error_carga" }, (payload) => {
         const row = payload.new as ErrorCarga;
-        const isPendiente = !row.resuelto;
+        const f = activeFiltersRef.current;
+
+        // Validar estado resuelto
         const matchesStatus =
-          filtro === "todos" ||
-          (filtro === "pendientes" && isPendiente) ||
-          (filtro === "resueltos" && !isPendiente);
-        if (matchesStatus) setErrores((prev) => [row, ...prev]);
+          f.filtro === "todos" ||
+          (f.filtro === "pendientes" && !row.resuelto) ||
+          (f.filtro === "resueltos" && row.resuelto);
+        if (!matchesStatus) return;
+
+        // Validar motivo
+        if (f.filtroMotivo !== "todos" && row.motivo_error !== f.filtroMotivo) return;
+
+        // Validar sector
+        if (f.filtroSector.trim() && !row.sector?.toLowerCase().includes(f.filtroSector.trim().toLowerCase())) return;
+
+        // Validar fecha
+        if (f.fechaFiltro) {
+          const rowDate = row.fecha.split("T")[0];
+          if (rowDate < f.fechaFiltro) return;
+          if (f.fechaHasta && rowDate > f.fechaHasta) return;
+          if (!f.fechaHasta && rowDate !== f.fechaFiltro) return;
+        }
+
+        // Validar búsqueda
+        if (f.search.trim()) {
+          const q = f.search.trim().toLowerCase();
+          const matchesSearch =
+            row.nombre_apellido?.toLowerCase().includes(q) ||
+            row.legajo?.toLowerCase().includes(q) ||
+            row.ot?.toLowerCase().includes(q);
+          if (!matchesSearch) return;
+        }
+
+        setErrores((prev) => [row, ...prev]);
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "error_carga" }, (payload) => {
         const updated = payload.new as ErrorCarga;
@@ -171,8 +203,9 @@ export function useErrores({ defaultFiltro = "pendientes", persistFilters = fals
         setErrores((prev) => prev.filter((e) => e.id !== deleted.id));
       })
       .subscribe();
+
     return () => { supabase.removeChannel(channel); };
-  }, [filtro]);
+  }, []); // canal se monta una sola vez, lee filtros por ref
 
   return {
     errores,

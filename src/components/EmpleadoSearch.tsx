@@ -42,7 +42,7 @@ export function EmpleadoSearch({
   const hasError = !!errors.empleado || !!errors.legajo;
 
   return (
-    // ✅ FIX: `relative` removido de acá, ya no engloba el label
+    // ✅ FIX: `relative` removido de acá — ya no engloba el label ni los errores
     <div className="space-y-2" ref={searchRef}>
       <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-600 dark:text-slate-500 ml-1 flex items-center gap-2 group">
         <Search className="w-3.5 h-3.5 group-hover:text-accent-gold transition-colors" />
@@ -78,7 +78,7 @@ export function EmpleadoSearch({
           )}
         </div>
 
-        {/* ✅ Suggestions dropdown — ahora se posiciona relativo al input */}
+        {/* ✅ Suggestions dropdown — se posiciona relativo al input, no al label */}
         {showSuggestions && suggestions.length > 0 && (
           <div className="absolute z-50 left-0 right-0 top-[calc(100%+8px)] bg-card rounded-[2rem] border border-border shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="max-h-[250px] overflow-y-auto">

@@ -35,8 +35,32 @@ export default function FaltantesReporte() {
     updateFechaHasta,
   } = useFaltantes();
 
-  const handleExport = () => {
-    toast.info("Función de exportar para Faltantes estará disponible próximamente.");
+  // ✅ FIX: descarga real conectada a /api/exportar-faltantes
+  // Antes: solo mostraba un toast de "próximamente"
+  const handleExport = async () => {
+    try {
+      const params = new URLSearchParams({
+        ...(fechaDesde && { fechaDesde }),
+        ...(fechaHasta && { fechaHasta }),
+        ...(searchQuery.trim() && { search: searchQuery.trim() }),
+      });
+      const res = await fetch(`/api/exportar-faltantes?${params}`);
+      if (!res.ok) {
+        toast.error("No hay datos o hubo un error al exportar.");
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `faltantes_${fechaDesde || "general"}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Ocurrió un error al descargar el archivo.");
+    }
   };
 
   return (
@@ -55,10 +79,11 @@ export default function FaltantesReporte() {
         </div>
         <button
           onClick={handleExport}
-          className="inline-flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-accent-gold transition-all shadow-xl active:scale-95"
+          disabled={loading}
+          className="inline-flex items-center gap-2 rounded-xl bg-card border border-border px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-accent-gold hover:border-accent-gold/30 transition-all shadow-xl active:scale-95 disabled:opacity-50"
         >
           <ExternalLink className="w-4 h-4" />
-          Descargar Datos
+          Descargar Excel
         </button>
       </div>
 
@@ -80,8 +105,7 @@ export default function FaltantesReporte() {
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
               <Calendar className="w-3 h-3 group-hover:text-accent-gold transition-colors" />
-              Fecha Hasta{" "}
-              <span className="text-[8px] opacity-40 font-black tracking-tight">(OPCIONAL)</span>
+              Fecha Hasta <span className="text-[8px] opacity-40 font-black tracking-tight">(OPCIONAL)</span>
             </label>
             <input
               type="date"
@@ -95,13 +119,13 @@ export default function FaltantesReporte() {
               <Search className="w-3 h-3 group-hover:text-accent-gold transition-colors" />
               Buscar
             </label>
-            <div className="relative group/input">
+            <div className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Nombre, contrato..."
-                className="w-full bg-background border border-border rounded-2xl px-4 py-3 text-xs font-medium text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 dark:placeholder:opacity-50 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all shadow-inner"
+                className="w-full bg-background border border-border rounded-2xl px-4 py-3 text-xs font-medium text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all shadow-inner"
               />
               <button
                 onClick={resetFilters}
@@ -115,6 +139,7 @@ export default function FaltantesReporte() {
         </div>
       </div>
 
+      {/* Table */}
       <div className="bg-card/40 rounded-[2rem] border border-border shadow-2xl overflow-hidden backdrop-blur-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
@@ -129,11 +154,9 @@ export default function FaltantesReporte() {
                   >
                     Empleado
                     {sortConfig?.key === "nombre_apellido" ? (
-                      sortConfig.direction === "asc" ? (
-                        <ArrowUp className="w-3 h-3" />
-                      ) : (
-                        <ArrowDown className="w-3 h-3" />
-                      )
+                      sortConfig.direction === "asc"
+                        ? <ArrowUp className="w-3 h-3" />
+                        : <ArrowDown className="w-3 h-3" />
                     ) : (
                       <ArrowUpDown className="w-3 h-3 opacity-30" />
                     )}
@@ -149,9 +172,7 @@ export default function FaltantesReporte() {
                   <td colSpan={5} className="py-24 text-center">
                     <div className="flex flex-col items-center gap-4 text-slate-500">
                       <Loader2 className="w-8 h-8 animate-spin text-accent-gold" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">
-                        Generando reporte...
-                      </span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">Generando reporte...</span>
                     </div>
                   </td>
                 </tr>
@@ -162,24 +183,17 @@ export default function FaltantesReporte() {
                       <div className="bg-background border border-border p-5 rounded-full shadow-inner">
                         <AlertCircle className="w-10 h-10 text-slate-400 dark:text-slate-600" />
                       </div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
-                        No hay datos en este rango
-                      </p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                        Ajuste la búsqueda para ver resultados.
-                      </p>
+                      <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">No hay datos en este rango</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ajuste la búsqueda para ver resultados.</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 filtered.map((f) => (
-                  <tr
-                    key={f.id}
-                    className="hover:bg-black/5 dark:hover:bg-white/5 transition-all group border-b border-border last:border-0"
-                  >
+                  <tr key={f.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-all group border-b border-border last:border-0">
                     <td className="px-6 py-5 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-accent-gold/5 text-accent-gold/70 rounded-2xl group-hover:bg-accent-gold group-hover:text-black transition-all duration-300 shadow-inner group-hover:shadow-[0_0_15px_rgba(245,158,11,0.4)]">
+                        <div className="p-2.5 bg-accent-gold/5 text-accent-gold/70 rounded-2xl group-hover:bg-accent-gold group-hover:text-black transition-all duration-300 shadow-inner">
                           <Calendar className="w-4 h-4" />
                         </div>
                         <div className="font-bold text-foreground text-sm">
@@ -188,7 +202,7 @@ export default function FaltantesReporte() {
                       </div>
                     </td>
                     <td className="px-6 py-5 whitespace-nowrap">
-                      <span className="font-black text-[10px] tracking-widest px-2.5 py-1.5 bg-background border border-border text-slate-500 rounded-xl uppercase shadow-inner group-hover:border-accent-gold/20 transition-colors">
+                      <span className="font-black text-[10px] tracking-widest px-2.5 py-1.5 bg-background border border-border text-slate-500 rounded-xl uppercase shadow-inner">
                         {f.contrato}
                       </span>
                     </td>
@@ -197,7 +211,7 @@ export default function FaltantesReporte() {
                         onClick={() => toggleNameHighlight(f.nombre_apellido)}
                         className={`font-bold text-sm cursor-pointer transition-all ${
                           checkedNames.has(f.nombre_apellido)
-                            ? "text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-xl border border-emerald-500/20 shadow-lg scale-[1.02]"
+                            ? "text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-xl border border-emerald-500/20 shadow-lg scale-[1.02] inline-block"
                             : "text-foreground hover:text-accent-gold"
                         }`}
                         title="Click para marcar progreso"
@@ -208,17 +222,13 @@ export default function FaltantesReporte() {
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-2.5 text-slate-500">
                         <Building2 className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600" />
-                        <span className="font-black text-[11px] uppercase tracking-tight">
-                          {f.sector || "—"}
-                        </span>
+                        <span className="font-black text-[11px] uppercase tracking-tight">{f.sector || "—"}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-2.5 text-slate-500">
                         <FileText className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600" />
-                        <span className="font-black text-[11px] uppercase tracking-tight">
-                          {f.motivo || "—"}
-                        </span>
+                        <span className="font-black text-[11px] uppercase tracking-tight">{f.motivo || "—"}</span>
                       </div>
                     </td>
                   </tr>

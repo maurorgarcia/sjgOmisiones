@@ -23,9 +23,18 @@ export const authOptions: NextAuthOptions = {
 
         if (error || !user) return null;
 
-        const isValidPassword = user.password_hash.startsWith("$2")
-          ? await bcrypt.compare(credentials.password, user.password_hash)
-          : user.password_hash === credentials.password;
+        // ✅ FIX: eliminado el fallback de texto plano — siempre se usa bcrypt.
+        // Antes: si el hash no empezaba con "$2", comparaba directo con texto plano (inseguro).
+        // Ahora: si el hash no es bcrypt válido, la autenticación falla directamente.
+        if (!user.password_hash?.startsWith("$2")) {
+          console.error(`[AUTH] Usuario "${credentials.username}" tiene hash inválido. Regenerar contraseña.`);
+          return null;
+        }
+
+        const isValidPassword = await bcrypt.compare(
+          credentials.password,
+          user.password_hash
+        );
 
         if (!isValidPassword) return null;
 

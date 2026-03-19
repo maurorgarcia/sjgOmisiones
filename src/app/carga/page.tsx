@@ -63,13 +63,24 @@ export default function CargaPage() {
   const [recentEntries, setRecentEntries] = useState<ErrorCarga[]>([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
 
+  // ✅ FIX: fetchRecent filtra por fecha de hoy — antes traía los últimos 5 globales
+  // sin importar la fecha, podía mostrar registros de días anteriores
   const fetchRecent = useCallback(async () => {
     setLoadingRecent(true);
+    const today = new Date();
+    const offset = today.getTimezoneOffset();
+    const todayLocal = new Date(today.getTime() - offset * 60 * 1000).toISOString().split("T")[0];
+    const startIso = `${todayLocal}T00:00:00.000Z`;
+    const endIso = `${todayLocal}T23:59:59.999Z`;
+
     const { data } = await supabase
       .from("error_carga")
       .select("*")
+      .gte("fecha", startIso)
+      .lte("fecha", endIso)
       .order("created_at", { ascending: false })
       .limit(5);
+
     if (data) setRecentEntries(data);
     setLoadingRecent(false);
   }, []);
@@ -82,8 +93,7 @@ export default function CargaPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-0">
-      
-      {/* ── Header ─────────────────────────────────────────────────── */}
+      {/* Header */}
       <div className="mb-10 flex items-center justify-between">
         <div className="flex items-center gap-5">
           <div className="relative">
@@ -101,9 +111,7 @@ export default function CargaPage() {
         </div>
         <button
           type="button"
-          onClick={() =>
-            window.open("/carga/mini", "MiniCarga", "width=450,height=800")
-          }
+          onClick={() => window.open("/carga/mini", "MiniCarga", "width=450,height=800")}
           className="group flex items-center gap-3 px-5 py-3 rounded-2xl border border-accent-gold/20 bg-accent-gold/5 text-accent-gold text-[10px] font-black uppercase tracking-[0.2em] hover:bg-accent-gold/10 transition-all active:scale-95 shadow-xl shadow-accent-gold/5"
         >
           <Maximize2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
@@ -113,11 +121,10 @@ export default function CargaPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
         <form onSubmit={f.handleSubmit} className="space-y-6" noValidate>
-          
+
           {/* Card 1: Empleado y Fecha */}
           <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl p-8 backdrop-blur-3xl relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-64 h-64 bg-accent-gold/5 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none group-hover:bg-accent-gold/10 transition-colors" />
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <EmpleadoSearch
                 searchRef={f.searchRef}
@@ -136,51 +143,49 @@ export default function CargaPage() {
                 onClear={f.clearSearch}
                 onLegajoChange={f.setLegajoManual}
               />
-
-                  <div className="space-y-6">
-                    <div>
-                      <label className={labelCls}>Fecha del Registro</label>
-                      <Input
-                        type="date"
-                        required
-                        value={f.fecha}
-                        onChange={(e) => f.setFecha(e.target.value)}
-                      />
-                    </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className={labelCls}>Contrato</label>
-                      <Select
-                        required
-                        value={f.contrato}
-                        onChange={(e) => { f.setContrato(e.target.value); f.setErrors((err) => ({ ...err, contrato: "" })); }}
-                        hasError={!!f.errors.contrato}
-                      >
-                        <option value="">Seleccionar...</option>
-                        {CONTRATOS.map((c) => <option key={c} value={c}>{c}</option>)}
-                      </Select>
-                      <FieldError msg={f.errors.contrato} />
-                    </div>
-                    <div>
-                      <label className={labelCls}>Sector</label>
-                      <Input
-                        type="text"
-                        value={f.sector}
-                        onChange={(e) => { f.setSector(e.target.value); f.setErrors((err) => ({ ...err, sector: "" })); }}
-                        hasError={!!f.errors.sector}
-                        placeholder="Ej: Planta A"
-                      />
-                      <FieldError msg={f.errors.sector} />
-                    </div>
+              <div className="space-y-6">
+                <div>
+                  <label className={labelCls}>Fecha del Registro</label>
+                  <Input
+                    type="date"
+                    required
+                    value={f.fecha}
+                    onChange={(e) => f.setFecha(e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelCls}>Contrato</label>
+                    <Select
+                      required
+                      value={f.contrato}
+                      onChange={(e) => { f.setContrato(e.target.value); f.setErrors((err) => ({ ...err, contrato: "" })); }}
+                      hasError={!!f.errors.contrato}
+                    >
+                      <option value="">Seleccionar...</option>
+                      {CONTRATOS.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </Select>
+                    <FieldError msg={f.errors.contrato} />
                   </div>
+                  <div>
+                    <label className={labelCls}>Sector</label>
+                    <Input
+                      type="text"
+                      value={f.sector}
+                      onChange={(e) => { f.setSector(e.target.value); f.setErrors((err) => ({ ...err, sector: "" })); }}
+                      hasError={!!f.errors.sector}
+                      placeholder="Ej: Planta A"
+                    />
+                    <FieldError msg={f.errors.sector} />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Card 2: Multi-OT Center */}
+          {/* Card 2: Multi-OT */}
           <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl overflow-hidden backdrop-blur-3xl lg:min-h-[450px] flex flex-col">
-            
-            {/* OT Tabs Header */}
+            {/* OT Tabs */}
             <div className="bg-background/50 border-b border-border p-4 flex items-center justify-between">
               <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pr-4 max-w-[70%] sm:max-w-none">
                 {f.ots.map((ot, idx) => (
@@ -209,7 +214,6 @@ export default function CargaPage() {
                   <span className="hidden sm:inline">Nueva OT</span>
                 </button>
               </div>
-
               {f.ots.length > 1 && (
                 <button
                   type="button"
@@ -234,7 +238,6 @@ export default function CargaPage() {
                   className="space-y-8"
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Config Left */}
                     <div className="space-y-6">
                       <div>
                         <label className={labelCls}>Motivo Seleccionado</label>
@@ -249,7 +252,6 @@ export default function CargaPage() {
                         </Select>
                         <FieldError msg={f.errors[`motivo_${f.activeOTIndex}`]} />
                       </div>
-
                       <div>
                         <label className={labelCls}>Número de OT {activeOT.motivo === "OT Inexistente" ? "(No aplica)" : ""}</label>
                         <Input
@@ -264,7 +266,6 @@ export default function CargaPage() {
                         />
                         <FieldError msg={f.errors[`ot_${f.activeOTIndex}`]} />
                       </div>
-
                       <div>
                         <label className={labelCls}>Horario del Error (OT {f.activeOTIndex + 1})</label>
                         <div className="grid grid-cols-2 gap-3">
@@ -289,8 +290,6 @@ export default function CargaPage() {
                         </div>
                       </div>
                     </div>
-
-                    {/* Hours Right */}
                     <div className="bg-background/30 p-6 rounded-[2rem] border border-border/50 shadow-inner">
                       <HorasDetalle
                         horasNormales={activeOT.horasNormales}
@@ -313,19 +312,19 @@ export default function CargaPage() {
               </AnimatePresence>
             </div>
 
-            {/* Pagination / Helper */}
+            {/* OT Navigation */}
             <div className="px-8 pb-6 flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
               <div className="flex gap-4">
-                 {f.activeOTIndex > 0 && (
-                   <button type="button" onClick={() => f.setActiveOTIndex(f.activeOTIndex - 1)} className="hover:text-accent-gold transition-colors flex items-center gap-1">
-                     <ArrowLeft className="w-3 h-3" /> OT Anterior
-                   </button>
-                 )}
-                 {f.activeOTIndex < f.ots.length - 1 && (
-                   <button type="button" onClick={() => f.setActiveOTIndex(f.activeOTIndex + 1)} className="hover:text-accent-gold transition-colors flex items-center gap-1">
-                     OT Siguiente <ArrowRight className="w-3 h-3" />
-                   </button>
-                 )}
+                {f.activeOTIndex > 0 && (
+                  <button type="button" onClick={() => f.setActiveOTIndex(f.activeOTIndex - 1)} className="hover:text-accent-gold transition-colors flex items-center gap-1">
+                    <ArrowLeft className="w-3 h-3" /> OT Anterior
+                  </button>
+                )}
+                {f.activeOTIndex < f.ots.length - 1 && (
+                  <button type="button" onClick={() => f.setActiveOTIndex(f.activeOTIndex + 1)} className="hover:text-accent-gold transition-colors flex items-center gap-1">
+                    OT Siguiente <ArrowRight className="w-3 h-3" />
+                  </button>
+                )}
               </div>
               <p>OT {f.activeOTIndex + 1} de {f.ots.length}</p>
             </div>
@@ -342,7 +341,6 @@ export default function CargaPage() {
                 placeholder="Obs. relevantes para el cierre..."
               />
             </div>
-
             <div className="flex items-center justify-between pt-4 gap-4">
               <button
                 type="button"
@@ -358,46 +356,49 @@ export default function CargaPage() {
               >
                 <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700 skew-x-12" />
                 {f.loading ? (
-                  <>
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                    <span>Procesando...</span>
-                  </>
+                  <><Loader2 className="w-6 h-6 animate-spin" /><span>Procesando...</span></>
                 ) : (
-                  <>
-                    <CheckCircle2 className="w-6 h-6 opacity-70" />
-                    <span>Guardar Todo</span>
-                  </>
+                  <><CheckCircle2 className="w-6 h-6 opacity-70" /><span>Guardar Todo</span></>
                 )}
               </button>
             </div>
           </div>
         </form>
 
-        {/* Historial Reciente */}
+        {/* ✅ FIX: historial "Cargados Hoy" — ahora solo muestra registros de hoy
+            Antes: sin filtro de fecha, podía mostrar registros de días anteriores */}
         {!f.loading && !f.searchQuery && (
           <div className="mt-4 animate-in fade-in duration-1000">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-2 h-2 bg-accent-gold rounded-full" />
               <h2 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Cargados Hoy</h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-10">
-               {recentEntries.map((err) => (
-                 <div key={err.id} className="bg-card/20 border border-border/50 rounded-2xl p-3 flex items-center justify-between hover:border-accent-gold/20 transition-all hover:shadow-lg">
+            {loadingRecent ? (
+              <div className="h-16 bg-card/20 rounded-2xl border border-border/50 animate-pulse" />
+            ) : recentEntries.length === 0 ? (
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest opacity-50 text-center py-4">
+                Ningún registro cargado hoy todavía
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-10">
+                {recentEntries.map((err) => (
+                  <div key={err.id} className="bg-card/20 border border-border/50 rounded-2xl p-3 flex items-center justify-between hover:border-accent-gold/20 transition-all hover:shadow-lg">
                     <div className="flex items-center gap-3">
-                       <div className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center text-[9px] font-black text-slate-600 uppercase">
-                          {err.nombre_apellido.slice(0,2)}
-                       </div>
-                       <div>
-                          <p className="text-[10px] font-black text-foreground uppercase tracking-tight truncate max-w-[120px]">{err.nombre_apellido}</p>
-                          <p className="text-[8px] font-black text-accent-gold uppercase tracking-tighter">{err.motivo_error}</p>
-                       </div>
+                      <div className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center text-[9px] font-black text-slate-600 uppercase">
+                        {err.nombre_apellido.slice(0, 2)}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-foreground uppercase tracking-tight truncate max-w-[120px]">{err.nombre_apellido}</p>
+                        <p className="text-[8px] font-black text-accent-gold uppercase tracking-tighter">{err.motivo_error}</p>
+                      </div>
                     </div>
                     <div className="text-right">
-                       <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{err.ot || "---"}</p>
+                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{err.ot || "---"}</p>
                     </div>
-                 </div>
-               ))}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

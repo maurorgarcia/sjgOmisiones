@@ -157,6 +157,7 @@ export function useCargaForm() {
     setSearchQuery("");
     setLegajoManual("");
     setShowSuggestions(false);
+    setErrors((prev) => ({ ...prev, empleado: "", legajo: "" }));
   }, [searchQuery, legajoManual, contrato]);
 
   const removeEmpleado = useCallback((legajo: string) => {
@@ -171,20 +172,29 @@ export function useCargaForm() {
   }, []);
 
   // ─── OT Management ────────────────────────────────────────────────────────
+
+  // ✅ FIX: addOT usaba ots.length en el closure (stale). Ahora usa el setter
+  // funcional para leer el estado más reciente y calcular el índice correcto.
   const addOT = useCallback(() => {
     const newOT = createEmptyOT();
-    setOts((prev) => [...prev, newOT]);
-    setActiveOTIndex(ots.length); 
-  }, [ots.length]);
+    setOts((prev) => {
+      setActiveOTIndex(prev.length); // siempre el índice correcto
+      return [...prev, newOT];
+    });
+  }, []);
 
   const removeOT = useCallback((id: string) => {
-    if (ots.length <= 1) return;
-    const indexToRemove = ots.findIndex(o => o.id === id);
-    setOts((prev) => prev.filter((o) => o.id !== id));
-    if (activeOTIndex >= indexToRemove && activeOTIndex > 0) {
-      setActiveOTIndex(prev => prev - 1);
-    }
-  }, [ots, activeOTIndex]);
+    setOts((prev) => {
+      if (prev.length <= 1) return prev;
+      const indexToRemove = prev.findIndex((o) => o.id === id);
+      const next = prev.filter((o) => o.id !== id);
+      setActiveOTIndex((currentIdx) => {
+        if (currentIdx >= indexToRemove && currentIdx > 0) return currentIdx - 1;
+        return currentIdx;
+      });
+      return next;
+    });
+  }, []);
 
   const updateOT = useCallback((id: string, updates: Partial<OTEntry>) => {
     setOts((prev) => prev.map((o) => (o.id === id ? { ...o, ...updates } : o)));
@@ -194,11 +204,18 @@ export function useCargaForm() {
   const validate = useCallback((): boolean => {
     const newErrors: FormErrors = {};
 
-    const hasEmpleado = selectedEmpleados.length > 0 || searchQuery.trim();
-    const hasLegajo = selectedEmpleados.length > 0 || legajoManual.trim();
+    // ✅ FIX: validación más estricta — empleado requiere ambos nombre y legajo
+    // para la vía manual, o al menos un empleado seleccionado de la lista.
+    const hasSelectedEmpleado = selectedEmpleados.length > 0;
+    const hasManualEmpleado = searchQuery.trim() && legajoManual.trim();
 
-    if (!hasEmpleado) newErrors.empleado = "Seleccionar empleado.";
-    if (!hasLegajo) newErrors.legajo = "Req.";
+    if (!hasSelectedEmpleado && !hasManualEmpleado) {
+      newErrors.empleado = "Seleccionar o agregar un empleado.";
+      if (searchQuery.trim() && !legajoManual.trim()) {
+        newErrors.legajo = "Legajo requerido para ingreso manual.";
+      }
+    }
+
     if (!contrato) newErrors.contrato = "Seleccionar contrato.";
     if (!sector.trim()) newErrors.sector = "Req.";
 

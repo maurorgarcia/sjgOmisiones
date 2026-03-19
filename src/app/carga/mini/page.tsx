@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Save, AlertCircle, Loader2, Search, X, Maximize2, Plus, Trash2 } from "lucide-react";
+import { Save, Loader2, Search, X, Plus, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -80,28 +80,28 @@ const Select = ({ hasError, className, children, ...props }: SelectProps) => (
   </div>
 );
 
-function HourInputRow({ label, val, setVal, mods, setMods }: { label: string, val: string, setVal: (v: string) => void, mods: HourMods, setMods: (m: HourMods) => void }) {
+function HourInputRow({ label, val, setVal, mods, setMods }: { label: string; val: string; setVal: (v: string) => void; mods: HourMods; setMods: (m: HourMods) => void }) {
   return (
     <div className="bg-background/20 p-3 rounded-2xl border border-border/50 space-y-2 shadow-inner group transition-all hover:border-accent-gold/20 backdrop-blur-3xl">
       <div className="flex items-center justify-between">
         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">{label}</label>
-        <input 
-          type="number" step="0.5" min="0" 
-          value={val} onChange={(e) => setVal(e.target.value)} 
-          className="w-16 h-10 bg-background border border-border rounded-xl px-2 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none text-[10px] font-black text-foreground text-right appearance-none" 
-          placeholder="0" 
+        <input
+          type="number" step="0.5" min="0"
+          value={val} onChange={(e) => setVal(e.target.value)}
+          className="w-16 h-10 bg-background border border-border rounded-xl px-2 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none text-[10px] font-black text-foreground text-right appearance-none"
+          placeholder="0"
         />
       </div>
       <div className="flex items-center justify-around pt-2 border-t border-border/30">
-        {(["insa", "polu", "noct"] as const).map(m => (
-          <label key={m} className={`flex items-center gap-1.5 text-[8px] font-black cursor-pointer uppercase transition-all tracking-tight ${mods[m] ? 'text-accent-gold' : 'text-slate-600 dark:text-slate-500 hover:text-slate-400'}`}>
-            <input 
-              type="checkbox" 
-              checked={mods[m]} 
-              onChange={(e) => setMods({...mods, [m]: e.target.checked})} 
+        {(["insa", "polu", "noct"] as const).map((m) => (
+          <label key={m} className={`flex items-center gap-1.5 text-[8px] font-black cursor-pointer uppercase transition-all tracking-tight ${mods[m] ? "text-accent-gold" : "text-slate-600 dark:text-slate-500 hover:text-slate-400"}`}>
+            <input
+              type="checkbox"
+              checked={mods[m]}
+              onChange={(e) => setMods({ ...mods, [m]: e.target.checked })}
               className="w-3 h-3 rounded border-border bg-background text-accent-gold focus:ring-accent-gold/20 cursor-pointer transition-all"
             />
-            {m === 'insa' ? 'INS' : m === 'polu' ? 'POL' : 'NOC'}
+            {m === "insa" ? "INS" : m === "polu" ? "POL" : "NOC"}
           </label>
         ))}
       </div>
@@ -110,10 +110,9 @@ function HourInputRow({ label, val, setVal, mods, setMods }: { label: string, va
 }
 
 export default function MiniCargaPage() {
-  const { data: session, status } = useSession();
-  const isAdmin = session?.user?.role === "admin";
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
-  
+
   // Autocomplete
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Empleado[]>([]);
@@ -141,7 +140,7 @@ export default function MiniCargaPage() {
     const saved = sessionStorage.getItem("sjg_working_date");
     const today = new Date();
     const offset = today.getTimezoneOffset();
-    const localToday = new Date(today.getTime() - (offset * 60 * 1000)).toISOString().split("T")[0];
+    const localToday = new Date(today.getTime() - offset * 60 * 1000).toISOString().split("T")[0];
     setFecha(saved || localToday);
   }, []);
 
@@ -176,7 +175,7 @@ export default function MiniCargaPage() {
           .limit(10);
         if (error) throw error;
         setSuggestions(data || []);
-      } catch (err) {
+      } catch {
         setSuggestions([]);
       } finally {
         setShowSuggestions(true);
@@ -186,11 +185,11 @@ export default function MiniCargaPage() {
   };
 
   const selectEmpleado = (emp: Empleado) => {
-    if (selectedEmpleados.some(e => e.legajo === emp.legajo)) {
+    if (selectedEmpleados.some((e) => e.legajo === emp.legajo)) {
       toast.error("Ya está en la lista.");
       return;
     }
-    setSelectedEmpleados(prev => [...prev, emp]);
+    setSelectedEmpleados((prev) => [...prev, emp]);
     if (!contrato && emp.contrato) setContrato(emp.contrato);
     setSearchQuery("");
     setSuggestions([]);
@@ -207,32 +206,40 @@ export default function MiniCargaPage() {
       nombre_apellido: searchQuery.trim().toUpperCase(),
       legajo: legajoManual.trim(),
       contrato: contrato || "S/C",
-      categoria: "MANUAL"
+      categoria: "MANUAL",
     };
-    setSelectedEmpleados([...selectedEmpleados, virtualEmp]);
+    setSelectedEmpleados((prev) => [...prev, virtualEmp]);
     setSearchQuery("");
     setLegajoManual("");
     setShowSuggestions(false);
   };
 
   const removeEmpleado = (legajo: string) => {
-    setSelectedEmpleados(prev => prev.filter(e => e.legajo !== legajo));
+    setSelectedEmpleados((prev) => prev.filter((e) => e.legajo !== legajo));
   };
 
+  // ✅ FIX: addOT usaba ots.length (stale closure). Ahora usa setter funcional
   const addOT = () => {
-    setOts([...ots, createEmptyOT()]);
-    setActiveOTIndex(ots.length);
+    const newOT = createEmptyOT();
+    setOts((prev) => {
+      setActiveOTIndex(prev.length);
+      return [...prev, newOT];
+    });
   };
 
+  // ✅ FIX: removeOT también usa setter funcional para evitar stale state
   const removeOT = (id: string) => {
-    if (ots.length > 1) {
-       const index = ots.findIndex(o => o.id === id);
-       setOts(ots.filter(o => o.id !== id));
-       if (activeOTIndex >= index && activeOTIndex > 0) setActiveOTIndex(activeOTIndex - 1);
-    }
+    setOts((prev) => {
+      if (prev.length <= 1) return prev;
+      const index = prev.findIndex((o) => o.id === id);
+      const next = prev.filter((o) => o.id !== id);
+      setActiveOTIndex((cur) => (cur >= index && cur > 0 ? cur - 1 : cur));
+      return next;
+    });
   };
 
-  const updateOT = (id: string, updates: Partial<OTEntry>) => setOts(otsMap => otsMap.map(o => o.id === id ? { ...o, ...updates } : o));
+  const updateOT = (id: string, updates: Partial<OTEntry>) =>
+    setOts((prev) => prev.map((o) => (o.id === id ? { ...o, ...updates } : o)));
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -254,8 +261,8 @@ export default function MiniCargaPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validate()) {
-       toast.error("Revise los campos requeridos en cada OT.");
-       return;
+      toast.error("Revise los campos requeridos en cada OT.");
+      return;
     }
     setLoading(true);
     const fechaISO = `${fecha}T12:00:00.000Z`;
@@ -263,7 +270,9 @@ export default function MiniCargaPage() {
     const selectedDate = new Date(year, month - 1, day);
     const dias = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"];
 
-    const employees = selectedEmpleados.length > 0 ? selectedEmpleados : [{ nombre_apellido: searchQuery.trim().toUpperCase(), legajo: legajoManual.trim(), contrato: contrato || "S/C", categoria: null }];
+    const employees = selectedEmpleados.length > 0
+      ? selectedEmpleados
+      : [{ nombre_apellido: searchQuery.trim().toUpperCase(), legajo: legajoManual.trim(), contrato: contrato || "S/C", categoria: null }];
 
     const records: any[] = [];
     employees.forEach((emp) => {
@@ -277,7 +286,7 @@ export default function MiniCargaPage() {
           sector: sector.trim(),
           horario: `${ot.horarioDesde} a ${ot.horarioHasta}`,
           notas: ots.length > 1 ? `[OT ${idx + 1}/${ots.length}] ${notas.trim()}` : (notas.trim() || null),
-          contrato: contrato,
+          contrato,
           dia_semana: dias[selectedDate.getDay()],
           horas_normales: ot.horasNormales ? parseFloat(ot.horasNormales) : null,
           hs_normales_insa: ot.hsNormalesMods.insa,
@@ -316,7 +325,6 @@ export default function MiniCargaPage() {
 
   return (
     <div className="min-h-screen bg-background p-4 pb-12 font-sans selection:bg-accent-gold/30">
-      
       {/* Mini-Header */}
       <div className="flex items-center justify-between mb-4 bg-sidebar/50 backdrop-blur-3xl p-4 rounded-3xl border border-border shadow-2xl sticky top-0 z-[60]">
         <div className="flex items-center gap-3">
@@ -330,11 +338,10 @@ export default function MiniCargaPage() {
 
       <div className="bg-card/40 rounded-[2rem] border border-border shadow-2xl backdrop-blur-3xl overflow-hidden">
         <form onSubmit={handleSubmit} className="flex flex-col h-full" noValidate>
-          
           <div className="p-6 space-y-6">
-            {/* Empleado Section */}
-            <div ref={searchRef} className="space-y-2 relative">
-              <div className="relative group/input">
+            {/* ✅ FIX: Empleado search — `relative` en el wrapper del input, no en el div con el label */}
+            <div ref={searchRef} className="space-y-2">
+              <div className="relative">
                 <Input
                   type="text"
                   value={searchQuery}
@@ -348,26 +355,45 @@ export default function MiniCargaPage() {
                 <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
                   {searchLoading ? <Loader2 className="w-4 h-4 text-accent-gold animate-spin" /> : <Search className="w-4 h-4 text-slate-500" />}
                 </div>
+
+                {/* ✅ FIX: dropdown ahora relativo al input — top-[calc(100%+8px)] en lugar de top-[110%] */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute z-[100] left-0 right-0 top-[calc(100%+8px)] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden overflow-y-auto max-h-48 backdrop-blur-3xl animate-in fade-in slide-in-from-top-2">
+                    {suggestions.map((emp) => (
+                      <button key={emp.legajo} type="button" onClick={() => selectEmpleado(emp)} className="w-full text-left px-4 py-3 hover:bg-accent-gold/5 transition-colors border-b border-border last:border-0 group/item">
+                        <p className="text-[10px] font-bold text-foreground uppercase tracking-tight group-hover/item:text-accent-gold transition-colors">{emp.nombre_apellido}</p>
+                        <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest mt-0.5">{emp.legajo} · {emp.contrato}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && !searchLoading && (
+                  <div className="absolute z-[100] left-0 right-0 top-[calc(100%+8px)] bg-card border border-border rounded-2xl shadow-2xl p-4 animate-in fade-in slide-in-from-top-2">
+                    <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-2">Ingresá el legajo manual:</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={legajoManual}
+                        onChange={(e) => setLegajoManual(e.target.value)}
+                        className="flex-1 bg-background border border-border rounded-xl px-3 py-2 text-[10px] font-black outline-none focus:ring-2 focus:ring-accent-gold/20"
+                        placeholder="Legajo SAP..."
+                      />
+                      <button type="button" onClick={addManualEmpleado} className="px-4 rounded-xl bg-accent-gold text-black font-black text-[9px] uppercase tracking-widest active:scale-95">
+                        Agregar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {selectedEmpleados.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {selectedEmpleados.map((emp) => (
                     <div key={emp.legajo} className="flex items-center gap-2 bg-accent-gold/10 border border-accent-gold/20 text-accent-gold px-2 py-1 rounded-xl text-[8px] font-black uppercase tracking-tight">
-                      {emp.nombre_apellido.split(' ')[0]}
+                      {emp.nombre_apellido.split(" ")[0]}
                       <button type="button" onClick={() => removeEmpleado(emp.legajo)}><X className="w-3 h-3 hover:text-foreground" /></button>
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute z-[100] left-0 right-0 top-[110%] bg-card border border-border rounded-2xl shadow-3xl overflow-hidden overflow-y-auto max-h-48 backdrop-blur-3xl animate-in fade-in slide-in-from-top-2">
-                  {suggestions.map((emp) => (
-                    <button key={emp.legajo} type="button" onClick={() => selectEmpleado(emp)} className="w-full text-left px-4 py-3 hover:bg-accent-gold/5 transition-colors border-b border-border last:border-0 group/item">
-                       <p className="text-[10px] font-bold text-foreground uppercase tracking-tight group-hover/item:text-accent-gold transition-colors">{emp.nombre_apellido}</p>
-                       <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest mt-0.5">{emp.legajo} · {emp.contrato}</p>
-                    </button>
                   ))}
                 </div>
               )}
@@ -375,94 +401,92 @@ export default function MiniCargaPage() {
 
             {/* Global Config Grid */}
             <div className="grid grid-cols-2 gap-4">
-               <div>
-                  <label className="text-[9px] font-black uppercase text-slate-500 block mb-1.5 ml-1 tracking-widest">Fecha</label>
-                  <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="[color-scheme:light] dark:[color-scheme:dark]" />
-               </div>
-               <div>
-                  <label className="text-[9px] font-black uppercase text-slate-500 block mb-1.5 ml-1 tracking-widest">Contrato</label>
-                  <Select value={contrato} onChange={(e) => setContrato(e.target.value)}>
-                    <option value="">Contrato...</option>
-                    {CONTRATOS.map(c => <option key={c} value={c}>{c}</option>)}
-                  </Select>
-               </div>
+              <div>
+                <label className="text-[9px] font-black uppercase text-slate-500 block mb-1.5 ml-1 tracking-widest">Fecha</label>
+                <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="[color-scheme:light] dark:[color-scheme:dark]" />
+              </div>
+              <div>
+                <label className="text-[9px] font-black uppercase text-slate-500 block mb-1.5 ml-1 tracking-widest">Contrato</label>
+                <Select value={contrato} onChange={(e) => setContrato(e.target.value)} hasError={!!errors.contrato}>
+                  <option value="">Contrato...</option>
+                  {CONTRATOS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </Select>
+              </div>
             </div>
 
             {/* TABBED OT SECTION */}
             <div className="space-y-4">
-               <div className="flex items-center justify-between border-b border-border pb-2">
-                  <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pr-2">
-                    {ots.map((o, idx) => (
-                      <button key={o.id} type="button" onClick={() => setActiveOTIndex(idx)} 
-                        className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-[0.2em] transition-all flex-shrink-0 ${activeOTIndex === idx ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'bg-background border border-border text-slate-500 hover:border-accent-gold/50'}`}>
-                        OT {idx + 1}
-                        {errors[`motivo_${idx}`] || errors[`ot_${idx}`] || errors[`horarioDesde_${idx}`] || errors[`horarioHasta_${idx}`] ? <span className="ml-1 w-1 h-1 bg-red-500 rounded-full inline-block" /> : null}
-                      </button>
-                    ))}
-                    <button type="button" onClick={addOT} className="p-1.5 rounded-xl bg-accent-gold/10 text-accent-gold hover:bg-accent-gold/20 flex-shrink-0 border border-dashed border-accent-gold/30">
-                      <Plus className="w-3 h-3" />
+              <div className="flex items-center justify-between border-b border-border pb-2">
+                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pr-2">
+                  {ots.map((o, idx) => (
+                    <button key={o.id} type="button" onClick={() => setActiveOTIndex(idx)}
+                      className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-[0.2em] transition-all flex-shrink-0 ${activeOTIndex === idx ? "bg-accent-gold text-black shadow-lg shadow-accent-gold/20" : "bg-background border border-border text-slate-500 hover:border-accent-gold/50"}`}>
+                      OT {idx + 1}
+                      {errors[`motivo_${idx}`] || errors[`ot_${idx}`] || errors[`horarioDesde_${idx}`] || errors[`horarioHasta_${idx}`] ? <span className="ml-1 w-1 h-1 bg-red-500 rounded-full inline-block" /> : null}
                     </button>
+                  ))}
+                  <button type="button" onClick={addOT} className="p-1.5 rounded-xl bg-accent-gold/10 text-accent-gold hover:bg-accent-gold/20 flex-shrink-0 border border-dashed border-accent-gold/30">
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+                {ots.length > 1 && <button type="button" onClick={() => removeOT(activeOT.id)} className="p-2 text-slate-400 hover:text-red-500 active:scale-95"><Trash2 className="w-3.5 h-3.5" /></button>}
+              </div>
+
+              <AnimatePresence mode="wait">
+                <motion.div key={activeOT.id} initial={{ opacity: 0, x: 5 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -5 }} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[9px] font-black uppercase text-accent-gold block mb-1.5 ml-1 tracking-widest">Motivo</label>
+                      <Select value={activeOT.motivo} onChange={(e) => updateOT(activeOT.id, { motivo: e.target.value })} hasError={!!errors[`motivo_${activeOTIndex}`]}>
+                        <option value="">Motivo...</option>
+                        {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-black uppercase text-accent-gold block mb-1.5 ml-1 tracking-widest">OT #</label>
+                      <Input type="text" value={activeOT.ot} onChange={(e) => updateOT(activeOT.id, { ot: e.target.value.replace(/\D/g, "").slice(0, 12) })} disabled={activeOT.motivo === "OT Inexistente"} hasError={!!errors[`ot_${activeOTIndex}`]} className="disabled:opacity-30 shadow-inner" placeholder="00123..." maxLength={12} />
+                    </div>
                   </div>
-                  {ots.length > 1 && <button type="button" onClick={() => removeOT(activeOT.id)} className="p-2 text-slate-400 hover:text-red-500 active:scale-95"><Trash2 className="w-3.5 h-3.5" /></button>}
-               </div>
 
-               <AnimatePresence mode="wait">
-                 <motion.div key={activeOT.id} initial={{ opacity: 0, x: 5 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -5 }} className="space-y-4">
+                  <div className="bg-background/40 p-3 rounded-2xl border border-border/30">
+                    <label className="text-[9px] font-black uppercase text-accent-gold block mb-2 ml-1 tracking-widest">Horario OT {activeOTIndex + 1}</label>
+                    <div className="flex items-center gap-2">
+                      <Input type="time" value={activeOT.horarioDesde} onChange={(e) => updateOT(activeOT.id, { horarioDesde: e.target.value })} hasError={!!errors[`horarioDesde_${activeOTIndex}`]} />
+                      <span className="text-slate-500">-</span>
+                      <Input type="time" value={activeOT.horarioHasta} onChange={(e) => updateOT(activeOT.id, { horarioHasta: e.target.value })} hasError={!!errors[`horarioHasta_${activeOTIndex}`]} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    <HourInputRow label="Normales" val={activeOT.horasNormales} setVal={(v) => updateOT(activeOT.id, { horasNormales: v })} mods={activeOT.hsNormalesMods} setMods={(v) => updateOT(activeOT.id, { hsNormalesMods: v })} />
                     <div className="grid grid-cols-2 gap-3">
-                       <div className="col-span-1">
-                          <label className="text-[9px] font-black uppercase text-accent-gold block mb-1.5 ml-1 tracking-widest">Motivo</label>
-                          <Select value={activeOT.motivo} onChange={(e) => updateOT(activeOT.id, { motivo: e.target.value })} hasError={!!errors[`motivo_${activeOTIndex}`]}>
-                            <option value="">Motivo...</option>
-                            {MOTIVOS.map(m => <option key={m} value={m}>{m}</option>)}
-                          </Select>
-                       </div>
-                       <div className="col-span-1">
-                          <label className="text-[9px] font-black uppercase text-accent-gold block mb-1.5 ml-1 tracking-widest">OT #</label>
-                          <Input type="text" value={activeOT.ot} onChange={(e) => updateOT(activeOT.id, { ot: e.target.value.replace(/\D/g, "").slice(0, 12) })} disabled={activeOT.motivo === "OT Inexistente"} hasError={!!errors[`ot_${activeOTIndex}`]} className="disabled:opacity-30 shadow-inner" placeholder="00123..." maxLength={12} />
-                       </div>
+                      <HourInputRow label="H 50%" val={activeOT.horas50} setVal={(v) => updateOT(activeOT.id, { horas50: v })} mods={activeOT.hs50Mods} setMods={(v) => updateOT(activeOT.id, { hs50Mods: v })} />
+                      <HourInputRow label="H 100%" val={activeOT.horas100} setVal={(v) => updateOT(activeOT.id, { horas100: v })} mods={activeOT.hs100Mods} setMods={(v) => updateOT(activeOT.id, { hs100Mods: v })} />
                     </div>
-
-                    {/* Independent Schedule inside OT Card */}
-                    <div className="bg-background/40 p-3 rounded-2xl border border-border/30">
-                       <label className="text-[9px] font-black uppercase text-accent-gold block mb-2 ml-1 tracking-widest">Horario OT {activeOTIndex + 1}</label>
-                       <div className="flex items-center gap-2">
-                          <Input type="time" value={activeOT.horarioDesde} onChange={(e) => updateOT(activeOT.id, { horarioDesde: e.target.value })} hasError={!!errors[`horarioDesde_${activeOTIndex}`]} />
-                          <span className="text-slate-500">-</span>
-                          <Input type="time" value={activeOT.horarioHasta} onChange={(e) => updateOT(activeOT.id, { horarioHasta: e.target.value })} hasError={!!errors[`horarioHasta_${activeOTIndex}`]} />
-                       </div>
-                    </div>
-                    
-                    {/* Compact Hours Row */}
-                    <div className="grid grid-cols-1 gap-3">
-                       <HourInputRow label="Normales" val={activeOT.horasNormales} setVal={(v) => updateOT(activeOT.id, { horasNormales: v })} mods={activeOT.hsNormalesMods} setMods={(v) => updateOT(activeOT.id, { hsNormalesMods: v })} />
-                       <div className="grid grid-cols-2 gap-3">
-                          <HourInputRow label="H 50%" val={activeOT.horas50} setVal={(v) => updateOT(activeOT.id, { horas50: v })} mods={activeOT.hs50Mods} setMods={(v) => updateOT(activeOT.id, { hs50Mods: v })} />
-                          <HourInputRow label="H 100%" val={activeOT.horas100} setVal={(v) => updateOT(activeOT.id, { horas100: v })} mods={activeOT.hs100Mods} setMods={(v) => updateOT(activeOT.id, { hs100Mods: v })} />
-                       </div>
-                    </div>
-                 </motion.div>
-               </AnimatePresence>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             </div>
 
             {/* Global Bottom Config */}
             <div className="grid grid-cols-1 gap-4 pt-4 border-t border-border">
-               <div>
-                  <label className="text-[9px] font-black uppercase text-slate-500 block mb-1.5 ml-1 tracking-widest">Sector</label>
-                  <Input type="text" value={sector} onChange={(e) => setSector(e.target.value.toUpperCase())} placeholder="Ej: Puesto Fijo..." />
-               </div>
-               <div>
-                  <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} className="w-full bg-background border border-border rounded-2xl px-4 py-3 text-[10px] font-medium text-foreground outline-none shadow-inner resize-none placeholder:text-slate-600" placeholder="Observaciones globales..." />
-               </div>
+              <div>
+                <label className="text-[9px] font-black uppercase text-slate-500 block mb-1.5 ml-1 tracking-widest">Sector</label>
+                <Input type="text" value={sector} onChange={(e) => setSector(e.target.value.toUpperCase())} hasError={!!errors.sector} placeholder="Ej: Puesto Fijo..." />
+              </div>
+              <div>
+                <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} className="w-full bg-background border border-border rounded-2xl px-4 py-3 text-[10px] font-medium text-foreground outline-none shadow-inner resize-none placeholder:text-slate-600" placeholder="Observaciones globales..." />
+              </div>
             </div>
           </div>
 
           <div className="p-6 pt-0">
-             <button type="submit" disabled={loading} className="w-full h-14 rounded-2xl bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black font-black text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl transition-all hover:shadow-[0_8px_30px_rgba(217,119,6,0.3)] active:scale-95 disabled:opacity-50 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700 skew-x-12" />
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 opacity-70" />}
-                <span>{loading ? "Guardando..." : "Guardar Registro"}</span>
-             </button>
-             <p className="text-center text-[8px] text-slate-600 dark:text-slate-500 mt-4 font-black uppercase tracking-[0.4em] opacity-60">SJG v2.1 (Multi-OT) · Independent Schedules</p>
+            <button type="submit" disabled={loading} className="w-full h-14 rounded-2xl bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black font-black text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl transition-all hover:shadow-[0_8px_30px_rgba(217,119,6,0.3)] active:scale-95 disabled:opacity-50 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700 skew-x-12" />
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 opacity-70" />}
+              <span>{loading ? "Guardando..." : "Guardar Registro"}</span>
+            </button>
+            <p className="text-center text-[8px] text-slate-600 dark:text-slate-500 mt-4 font-black uppercase tracking-[0.4em] opacity-60">SJG v2.1 · Multi-OT</p>
           </div>
         </form>
       </div>
