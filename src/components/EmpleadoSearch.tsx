@@ -48,9 +48,8 @@ export function EmpleadoSearch({
         Empleado <span className="text-accent-gold ml-1 font-bold">*</span>
       </label>
 
-      <div className={`relative h-14 bg-background border rounded-2xl flex items-center shadow-inner transition-all focus-within:ring-4 focus-within:ring-accent-gold/10 focus-within:border-accent-gold/50 ${
-        hasError ? "border-red-500/50 bg-red-500/5" : "border-border"
-      }`}>
+      <div className={`relative h-14 bg-background border rounded-2xl flex items-center shadow-inner transition-all focus-within:ring-4 focus-within:ring-accent-gold/10 focus-within:border-accent-gold/50 ${hasError ? "border-red-500/50 bg-red-500/5" : "border-border"
+        }`}>
         <input
           type="text"
           value={searchQuery}
@@ -90,13 +89,13 @@ export function EmpleadoSearch({
                 key={emp.legajo}
                 type="button"
                 onClick={() => onSelect(emp)}
-                className="w-full text-left px-5 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-all flex items-center justify-between group border-b border-border last:border-0"
+                className="w-full text-left px-5 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-all flex items-start justify-between group border-b border-border last:border-0"
               >
-                <div>
+                <div className="flex flex-col gap-0.5">
                   <p className="text-sm font-bold text-foreground group-hover:text-accent-gold transition-colors uppercase tracking-tight">
                     {emp.nombre_apellido}
                   </p>
-                  <p className="text-[10px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-widest mt-0.5">
+                  <p className="text-[10px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-widest">
                     Legajo: {emp.legajo}
                   </p>
                 </div>
