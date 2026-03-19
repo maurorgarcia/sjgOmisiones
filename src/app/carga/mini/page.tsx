@@ -308,7 +308,7 @@ export default function MiniCargaPage() {
                   value={searchQuery}
                   onChange={(e) => handleSearch(e.target.value)}
                   onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                  className={`w-full bg-background border rounded-2xl pl-10 pr-10 py-3.5 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-500 outline-none transition-all shadow-inner ${errors.empleado ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
+                  className={`w-full h-14 bg-background border rounded-2xl pl-10 pr-5 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-500 outline-none transition-all shadow-inner ${errors.empleado ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
                   placeholder="Nombre o legajo..."
                   autoComplete="off"
                 />
@@ -344,11 +344,11 @@ export default function MiniCargaPage() {
             <div className="grid grid-cols-2 gap-4">
                <div>
                   <label className="text-[9px] font-black uppercase text-slate-500 block mb-1.5 ml-1 tracking-widest">Fecha</label>
-                  <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="w-full bg-background border border-border rounded-2xl px-3 py-3 text-[10px] font-black uppercase tracking-widest text-foreground [color-scheme:light] dark:[color-scheme:dark] shadow-inner" />
+                  <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="w-full h-14 bg-background border border-border rounded-2xl px-5 text-[10px] font-black uppercase tracking-widest text-foreground [color-scheme:light] dark:[color-scheme:dark] shadow-inner" />
                </div>
                <div>
                   <label className="text-[9px] font-black uppercase text-slate-500 block mb-1.5 ml-1 tracking-widest">Contrato</label>
-                  <select value={contrato} onChange={(e) => setContrato(e.target.value)} className="w-full bg-background border border-border rounded-2xl px-3 py-3 text-[10px] font-black uppercase tracking-widest text-foreground appearance-none shadow-inner">
+                  <select value={contrato} onChange={(e) => setContrato(e.target.value)} className="w-full h-14 bg-background border border-border rounded-2xl px-5 text-[10px] font-black uppercase tracking-widest text-foreground appearance-none shadow-inner">
                     <option value="">Contrato...</option>
                     {CONTRATOS.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>

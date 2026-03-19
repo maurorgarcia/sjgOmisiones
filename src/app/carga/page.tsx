@@ -12,12 +12,12 @@ import { ErrorCarga } from "@/types";
 
 // Shared aesthetics
 const inputCls = (hasError?: boolean) =>
-  `w-full bg-background border rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground shadow-inner ${
+  `w-full h-14 bg-background border rounded-2xl px-5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground shadow-inner ${
     hasError ? "border-red-500/50 bg-red-500/5 shadow-red-500/5" : "border-border shadow-black/5"
   }`;
 
 const selectCls = (hasError?: boolean) =>
-  `w-full bg-background border rounded-2xl px-4 py-3.5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black uppercase tracking-widest text-foreground appearance-none cursor-pointer shadow-inner ${
+  `w-full h-14 bg-background border rounded-2xl px-5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black uppercase tracking-widest text-foreground appearance-none cursor-pointer shadow-inner ${
     hasError ? "border-red-500/50 bg-red-500/5 shadow-red-500/5" : "border-border shadow-black/5"
   }`;
 

@@ -55,7 +55,7 @@ export function EmpleadoSearch({
           onChange={(e) => onSearch(e.target.value)}
           onFocus={onFocus}
           placeholder="Buscar por nombre o legajo..."
-          className={`w-full bg-background border rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground pr-10 ${
+          className={`w-full h-14 bg-background border rounded-2xl px-5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground pr-12 ${
             hasError ? "border-red-500/50 bg-red-500/5" : "border-border"
           }`}
         />

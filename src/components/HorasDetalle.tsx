@@ -22,7 +22,7 @@ const labelCls =
   "block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-600 dark:text-slate-500 ml-1";
 
 const inputCls =
-  "w-full bg-background border border-border rounded-xl px-4 py-3 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground";
+  "w-full h-14 bg-background border border-border rounded-xl px-5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground";
 
 const MOD_KEYS: (keyof HourMods)[] = ["insa", "polu", "noct"];
 
