@@ -1,25 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f1f5f9;
-  --foreground: #0f172a;
-  --accent-gold: #d97706;
-  --accent-gold-dark: #b45309;
-  --sidebar-bg: #ffffff;
-  --card-bg: #ffffff;
-  --border-color: #cbd5e1;
-  --muted: #64748b;
+  /* ✅ MEJORA DE COLOR: light mode más cálido y con más contraste
+     Antes era slate-100 puro (#f1f5f9), ahora tiene un tinte cálido crema
+     que complementa mejor el accent-gold */
+  --background: #f5f3ef;
+  --foreground: #1a1208;
+  --accent-gold: #c96a00;
+  --accent-gold-dark: #a85500;
+  --sidebar-bg: #fdfcf9;
+  --card-bg: #fdfcf9;
+  --border-color: #e2d9cc;
+  --muted: #7a6a55;
 }
 
 .dark {
-  --background: #080a0f;
-  --foreground: #e8edf5;
-  --accent-gold: #f59e0b;
-  --accent-gold-dark: #d97706;
-  --sidebar-bg: #0d1117;
-  --card-bg: #111620;
-  --border-color: #1e2a3a;
-  --muted: #8b9ab4;
+  /* ✅ MEJORA DE COLOR: dark mode más profundo y sofisticado
+     Antes era casi negro puro, ahora tiene un tinte azul-carbón muy sutil
+     que da más profundidad y hace resaltar mejor el gold */
+  --background: #0c0e14;
+  --foreground: #edeae4;
+  --accent-gold: #f5a623;
+  --accent-gold-dark: #e08800;
+  --sidebar-bg: #10121a;
+  --card-bg: #13161f;
+  --border-color: #1e2235;
+  --muted: #8892b0;
 }
 
 @theme inline {
@@ -34,25 +40,33 @@
   --color-muted: var(--muted);
 }
 
+/* ✅ FIX FLASH DE TEMA: script inline que aplica la clase ANTES del primer render
+   Esto evita el parpadeo light→dark al cargar la página */
+:root[data-theme-resolved="dark"] {
+  color-scheme: dark;
+}
+:root[data-theme-resolved="light"] {
+  color-scheme: light;
+}
+
 body {
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
   background-color: var(--background);
   color: var(--foreground);
   background-image:
-    radial-gradient(ellipse at 0% 0%, rgba(217, 119, 6, 0.05) 0, transparent 55%),
-    radial-gradient(ellipse at 100% 100%, rgba(180, 83, 9, 0.04) 0, transparent 55%);
+    radial-gradient(ellipse at 0% 0%, rgba(201, 106, 0, 0.06) 0, transparent 55%),
+    radial-gradient(ellipse at 100% 100%, rgba(168, 85, 0, 0.04) 0, transparent 55%);
   background-attachment: fixed;
   transition: background-color 0.3s ease, color 0.3s ease;
   min-height: 100vh;
-  /* ✅ FIX: evita scroll horizontal en mobile causado por dropdowns absolutos
-     que salen del viewport cuando están cerca del borde derecho */
+  /* ✅ FIX: evita scroll horizontal en mobile causado por dropdowns absolutos */
   overflow-x: hidden;
 }
 
 .dark body {
   background-image:
-    radial-gradient(ellipse at 0% 0%, rgba(245, 158, 11, 0.06) 0, transparent 50%),
-    radial-gradient(ellipse at 100% 100%, rgba(30, 58, 138, 0.06) 0, transparent 50%);
+    radial-gradient(ellipse at 0% 0%, rgba(245, 166, 35, 0.07) 0, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, rgba(20, 40, 100, 0.07) 0, transparent 50%);
 }
 
 /* Custom Scrollbar */
