@@ -23,6 +23,8 @@ export type OTEntry = {
   id: string;
   motivo: string;
   ot: string;
+  horarioDesde: string;
+  horarioHasta: string;
   horasNormales: string;
   horas50: string;
   horas100: string;
@@ -38,6 +40,8 @@ const createEmptyOT = (): OTEntry => ({
   id: Math.random().toString(36).substr(2, 9),
   motivo: "",
   ot: "",
+  horarioDesde: "",
+  horarioHasta: "",
   horasNormales: "",
   horas50: "",
   horas100: "",
@@ -69,8 +73,6 @@ export function useCargaForm() {
   const [fecha, setFechaRaw] = useState(new Date().toISOString().split("T")[0]);
   const [contrato, setContrato] = useState("");
   const [sector, setSector] = useState("");
-  const [horarioDesde, setHorarioDesde] = useState("");
-  const [horarioHasta, setHorarioHasta] = useState("");
   const [notas, setNotas] = useState("");
 
   // Multiple OTs feature
@@ -172,7 +174,7 @@ export function useCargaForm() {
   const addOT = useCallback(() => {
     const newOT = createEmptyOT();
     setOts((prev) => [...prev, newOT]);
-    setActiveOTIndex(ots.length); // Switch to the new OT
+    setActiveOTIndex(ots.length); 
   }, [ots.length]);
 
   const removeOT = useCallback((id: string) => {
@@ -195,27 +197,27 @@ export function useCargaForm() {
     const hasEmpleado = selectedEmpleados.length > 0 || searchQuery.trim();
     const hasLegajo = selectedEmpleados.length > 0 || legajoManual.trim();
 
-    if (!hasEmpleado) newErrors.empleado = "Debe ingresar o seleccionar al menos un empleado.";
-    if (!hasLegajo) newErrors.legajo = "El legajo es requerido.";
-    if (!contrato) newErrors.contrato = "Debe seleccionar un contrato.";
-    if (!sector.trim()) newErrors.sector = "El sector es requerido.";
-    if (!horarioDesde) newErrors.horarioDesde = "La hora de entrada es requerida.";
-    if (!horarioHasta) newErrors.horarioHasta = "La hora de salida es requerida.";
+    if (!hasEmpleado) newErrors.empleado = "Seleccionar empleado.";
+    if (!hasLegajo) newErrors.legajo = "Req.";
+    if (!contrato) newErrors.contrato = "Seleccionar contrato.";
+    if (!sector.trim()) newErrors.sector = "Req.";
 
     ots.forEach((otEntry, idx) => {
-      if (!otEntry.motivo) newErrors[`motivo_${idx}`] = "Requerido.";
+      if (!otEntry.motivo) newErrors[`motivo_${idx}`] = "Req.";
       if (otEntry.motivo && otEntry.motivo !== "OT Inexistente") {
         if (!otEntry.ot.trim()) {
-          newErrors[`ot_${idx}`] = "Requerido.";
+          newErrors[`ot_${idx}`] = "Número de OT req.";
         } else if (!/^\d{8,12}$/.test(otEntry.ot.trim())) {
           newErrors[`ot_${idx}`] = "8-12 dígitos.";
         }
       }
+      if (!otEntry.horarioDesde) newErrors[`horarioDesde_${idx}`] = "Hora inicio req.";
+      if (!otEntry.horarioHasta) newErrors[`horarioHasta_${idx}`] = "Hora fin req.";
     });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [selectedEmpleados, searchQuery, legajoManual, contrato, sector, horarioDesde, horarioHasta, ots]);
+  }, [selectedEmpleados, searchQuery, legajoManual, contrato, sector, ots]);
 
   // ─── Reset form ───────────────────────────────────────────────────────────
   const resetForm = useCallback(() => {
@@ -223,8 +225,6 @@ export function useCargaForm() {
     setSearchQuery("");
     setContrato("");
     setSector("");
-    setHorarioDesde("");
-    setHorarioHasta("");
     setNotas("");
     setLegajoManual("");
     setOts([createEmptyOT()]);
@@ -236,7 +236,7 @@ export function useCargaForm() {
   const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validate()) {
-      toast.error("Por favor, revise los errores en el formulario.");
+      toast.error("Revise los campos marcados.");
       return;
     }
 
@@ -244,7 +244,6 @@ export function useCargaForm() {
     const fechaISO = `${fecha}T12:00:00.000Z`;
     const [year, month, day] = fecha.split("-").map(Number);
     const selectedDate = new Date(year, month - 1, day);
-    const horarioStr = horarioDesde && horarioHasta ? `${horarioDesde} a ${horarioHasta}` : null;
 
     const employeesToSave: Empleado[] = selectedEmpleados.length > 0
       ? [...selectedEmpleados]
@@ -268,7 +267,7 @@ export function useCargaForm() {
           motivo_error: otEntry.motivo,
           ot: otEntry.ot.trim() || null,
           sector: sector.trim(),
-          horario: horarioStr,
+          horario: `${otEntry.horarioDesde} a ${otEntry.horarioHasta}`,
           notas: ots.length > 1 ? `[OT ${idx + 1}/${ots.length}] ${notas.trim()}` : (notas.trim() || null),
           contrato,
           dia_semana: DIAS[selectedDate.getDay()],
@@ -290,13 +289,14 @@ export function useCargaForm() {
 
     const { error } = await supabase.from("error_carga").insert(records);
     if (error) {
-      toast.error("Error al guardar los registros.");
+      toast.error("Error al guardar.");
+      console.error(error);
     } else {
-      toast.success(`✅ ${records.length} registros guardados correctamente.`);
+      toast.success(`✅ ${records.length} registros guardados.`);
       resetForm();
     }
     setLoading(false);
-  }, [validate, fecha, horarioDesde, horarioHasta, selectedEmpleados, searchQuery, legajoManual, contrato, sector, notas, ots, resetForm]);
+  }, [validate, fecha, selectedEmpleados, searchQuery, legajoManual, contrato, sector, notas, ots, resetForm]);
 
   return {
     searchRef,
@@ -322,10 +322,6 @@ export function useCargaForm() {
     setContrato,
     sector,
     setSector,
-    horarioDesde,
-    setHorarioDesde,
-    horarioHasta,
-    setHorarioHasta,
     notas,
     setNotas,
     ots,

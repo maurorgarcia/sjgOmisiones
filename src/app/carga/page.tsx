@@ -9,8 +9,6 @@ import { HorasDetalle } from "@/components/HorasDetalle";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { ErrorCarga } from "@/types";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 
 // Shared aesthetics
 const inputCls = (hasError?: boolean) =>
@@ -70,6 +68,7 @@ export default function CargaPage() {
           </div>
         </div>
         <button
+          type="button"
           onClick={() =>
             window.open("/carga/mini", "MiniCarga", "width=450,height=800")
           }
@@ -147,7 +146,7 @@ export default function CargaPage() {
             </div>
           </div>
 
-          {/* Card 2: Multi-OT Center (Compact & Tabbed) */}
+          {/* Card 2: Multi-OT Center */}
           <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl overflow-hidden backdrop-blur-3xl lg:min-h-[450px] flex flex-col">
             
             {/* OT Tabs Header */}
@@ -165,7 +164,7 @@ export default function CargaPage() {
                     }`}
                   >
                     <span>OT {idx + 1}</span>
-                    {f.errors[`motivo_${idx}`] || f.errors[`ot_${idx}`] ? (
+                    {f.errors[`horarioDesde_${idx}`] || f.errors[`horarioHasta_${idx}`] || f.errors[`motivo_${idx}`] || f.errors[`ot_${idx}`] ? (
                       <span className="ml-2 w-1.5 h-1.5 bg-red-500 rounded-full inline-block" />
                     ) : null}
                   </button>
@@ -235,20 +234,26 @@ export default function CargaPage() {
                       </div>
 
                       <div>
-                        <label className={labelCls}>Horario del Error</label>
+                        <label className={labelCls}>Horario del Error (OT {f.activeOTIndex + 1})</label>
                         <div className="grid grid-cols-2 gap-3">
-                          <input
-                            type="time"
-                            value={f.horarioDesde}
-                            onChange={(e) => { f.setHorarioDesde(e.target.value); f.setErrors((err) => ({ ...err, horarioDesde: "" })); }}
-                            className={inputCls(!!f.errors.horarioDesde)}
-                          />
-                          <input
-                            type="time"
-                            value={f.horarioHasta}
-                            onChange={(e) => { f.setHorarioHasta(e.target.value); f.setErrors((err) => ({ ...err, horarioHasta: "" })); }}
-                            className={inputCls(!!f.errors.horarioHasta)}
-                          />
+                          <div className="space-y-1">
+                            <input
+                              type="time"
+                              value={activeOT.horarioDesde}
+                              onChange={(e) => f.updateOT(activeOT.id, { horarioDesde: e.target.value })}
+                              className={inputCls(!!f.errors[`horarioDesde_${f.activeOTIndex}`])}
+                            />
+                            <FieldError msg={f.errors[`horarioDesde_${f.activeOTIndex}`]} />
+                          </div>
+                          <div className="space-y-1">
+                            <input
+                              type="time"
+                              value={activeOT.horarioHasta}
+                              onChange={(e) => f.updateOT(activeOT.id, { horarioHasta: e.target.value })}
+                              className={inputCls(!!f.errors[`horarioHasta_${f.activeOTIndex}`])}
+                            />
+                            <FieldError msg={f.errors[`horarioHasta_${f.activeOTIndex}`]} />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -278,7 +283,7 @@ export default function CargaPage() {
 
             {/* Pagination / Helper */}
             <div className="px-8 pb-6 flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
-              <div className="flex gap-2">
+              <div className="flex gap-4">
                  {f.activeOTIndex > 0 && (
                    <button type="button" onClick={() => f.setActiveOTIndex(f.activeOTIndex - 1)} className="hover:text-accent-gold transition-colors flex items-center gap-1">
                      <ArrowLeft className="w-3 h-3" /> OT Anterior
@@ -290,14 +295,14 @@ export default function CargaPage() {
                    </button>
                  )}
               </div>
-              <p>Configurando OT {f.activeOTIndex + 1} de {f.ots.length}</p>
+              <p>OT {f.activeOTIndex + 1} de {f.ots.length}</p>
             </div>
           </div>
 
           {/* Card 3: Notas y Guardado */}
           <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl p-8 backdrop-blur-3xl space-y-8">
             <div>
-              <label className={labelCls}>Notas Adicionales</label>
+              <label className={labelCls}>Notas Adicionales (Global)</label>
               <textarea
                 value={f.notas}
                 onChange={(e) => f.setNotas(e.target.value)}
@@ -337,14 +342,14 @@ export default function CargaPage() {
           </div>
         </form>
 
-        {/* Historial Reciente (Compact bottom) */}
+        {/* Historial Reciente */}
         {!f.loading && !f.searchQuery && (
           <div className="mt-4 animate-in fade-in duration-1000">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-2 h-2 bg-accent-gold rounded-full" />
               <h2 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Cargados Hoy</h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-10">
                {recentEntries.map((err) => (
                  <div key={err.id} className="bg-card/20 border border-border/50 rounded-2xl p-3 flex items-center justify-between hover:border-accent-gold/20 transition-all hover:shadow-lg">
                     <div className="flex items-center gap-3">
