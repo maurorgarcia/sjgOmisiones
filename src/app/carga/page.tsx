@@ -1,7 +1,7 @@
 "use client";
 
-import { CheckCircle2, Loader2, Maximize2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { CheckCircle2, Loader2, Maximize2, Plus, Trash2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { MOTIVOS, CONTRATOS } from "@/types";
 import { useCargaForm } from "./useCargaForm";
 import { EmpleadoSearch } from "@/components/EmpleadoSearch";
@@ -121,24 +121,126 @@ export default function CargaPage() {
             </div>
           </div>
 
-          {/* ── Split OT Toggle ─────────────────────────────────────────── */}
-          <div className="bg-accent-gold/5 p-4 rounded-3xl border border-accent-gold/10 flex items-center justify-between group">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="split-ot-toggle"
-                checked={f.splitOT}
-                onChange={(e) => f.setSplitOT(e.target.checked)}
-                className="w-5 h-5 rounded-lg border-border bg-background text-accent-gold focus:ring-accent-gold/20 cursor-pointer"
-              />
-              <label htmlFor="split-ot-toggle" className="text-[11px] font-black uppercase tracking-widest text-foreground cursor-pointer group-hover:text-accent-gold transition-colors">
-                Dividir registro en 2 OTs (Ej: Saldo Insuficiente + Refuerzo)
-              </label>
+          {/* ── Multi-OT Management ───────────────────────────────────────── */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-3">
+                <div className="bg-accent-gold/10 p-2 rounded-xl">
+                  <Maximize2 className="w-4 h-4 text-accent-gold" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-foreground uppercase tracking-tight">Ordenes de Trabajo</h3>
+                  <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mt-0.5">Gestión de una o más OTs para el día</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={f.addOT}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-accent-gold/20 bg-accent-gold/5 text-accent-gold text-[10px] font-black uppercase tracking-wider hover:bg-accent-gold/10 transition-all active:scale-95"
+              >
+                <Plus className="w-3 h-3" />
+                <span>Agregar OT</span>
+              </button>
             </div>
+
+            <AnimatePresence mode="popLayout">
+              {f.ots.map((otEntry, idx) => (
+                <motion.div
+                  key={otEntry.id}
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className={`p-6 rounded-[2rem] border transition-all ${
+                    idx % 2 === 0 
+                      ? "bg-slate-500/5 border-slate-500/10 shadow-sm" 
+                      : "bg-emerald-500/5 border-emerald-500/10 shadow-md"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-5 px-1">
+                    <div className="flex items-center gap-2">
+                       <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg uppercase tracking-widest ${
+                         idx % 2 === 0 ? "bg-slate-500/20 text-slate-500" : "bg-emerald-500/20 text-emerald-500 shadow-sm shadow-emerald-500/20"
+                       }`}>
+                         OT {idx + 1}
+                       </span>
+                    </div>
+                    {f.ots.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => f.removeOT(otEntry.id)}
+                        className="p-2 rounded-xl hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all active:scale-95"
+                        title="Quitar esta OT"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+                    {/* Motivo */}
+                    <div>
+                      <label className={labelCls}>
+                        Motivo <span className="text-accent-gold ml-1 font-bold">*</span>
+                      </label>
+                      <select
+                        required
+                        value={otEntry.motivo}
+                        onChange={(e) => f.updateOT(otEntry.id, { motivo: e.target.value })}
+                        className={selectCls(!!f.errors[`motivo_${idx}`])}
+                      >
+                        <option value="">Seleccione un motivo...</option>
+                        {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                      <FieldError msg={f.errors[`motivo_${idx}`]} />
+                    </div>
+
+                    {/* Número de OT */}
+                    <div>
+                      <label className={labelCls}>
+                        Número de OT
+                        {otEntry.motivo && otEntry.motivo !== "OT Inexistente" && (
+                          <span className="text-slate-400 font-normal ml-1">(8-12 dígitos)</span>
+                        )}
+                      </label>
+                      <input
+                        type="text"
+                        value={otEntry.ot}
+                        onChange={(e) => f.updateOT(otEntry.id, { ot: e.target.value.replace(/\D/g, "").slice(0, 12) })}
+                        disabled={otEntry.motivo === "OT Inexistente"}
+                        className={`${inputCls(!!f.errors[`ot_${idx}`])} disabled:opacity-20`}
+                        placeholder={otEntry.motivo === "OT Inexistente" ? "No aplica" : "Ej: 0012300456"}
+                        maxLength={12}
+                      />
+                      <FieldError msg={f.errors[`ot_${idx}`]} />
+                    </div>
+                  </div>
+
+                  {/* Horas para esta OT */}
+                  <div className="bg-background/40 p-5 rounded-3xl border border-border/50">
+                    <HorasDetalle
+                      horasNormales={otEntry.horasNormales}
+                      setHorasNormales={(v) => f.updateOT(otEntry.id, { horasNormales: v })}
+                      hsNormalesMods={f.hsNormalesMods}
+                      setHsNormalesMods={f.setHsNormalesMods}
+                      horas50={otEntry.horas50}
+                      setHoras50={(v) => f.updateOT(otEntry.id, { horas50: v })}
+                      hs50Mods={f.hs50Mods}
+                      setHs50Mods={f.setHs50Mods}
+                      horas100={otEntry.horas100}
+                      setHoras100={(v) => f.updateOT(otEntry.id, { horas100: v })}
+                      hs100Mods={f.hs100Mods}
+                      setHs100Mods={f.setHs100Mods}
+                      isSecondary={idx > 0}
+                    />
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
 
-          {/* ── Contrato + Motivo 1 ───────────────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 border-t border-border pt-6">
+            {/* ── Contrato ───────────────────────────────────────── */}
             <div>
               <label className={labelCls}>
                 Contrato <span className="text-accent-gold ml-1 font-bold">*</span>
@@ -155,50 +257,7 @@ export default function CargaPage() {
               <FieldError msg={f.errors.contrato} />
             </div>
 
-            <div>
-              <label className={labelCls}>
-                Motivo (OT 1) <span className="text-accent-gold ml-1 font-bold">*</span>
-              </label>
-              <select
-                required
-                value={f.motivo}
-                onChange={(e) => { f.setMotivo(e.target.value); f.setErrors((err) => ({ ...err, motivo: "", ot: "" })); }}
-                className={selectCls(!!f.errors.motivo)}
-              >
-                <option value="">Seleccione un motivo...</option>
-                {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <FieldError msg={f.errors.motivo} />
-            </div>
-          </div>
-
-          {/* ── Motivo 2 (Optional) ───────────────────────────────────────── */}
-          {f.splitOT && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-5 bg-emerald-500/5 border border-emerald-500/10 rounded-3xl">
-              <div className="sm:col-span-2">
-                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-3">Datos de la Segunda OT</p>
-              </div>
-              <div>
-                <label className={labelCls}>
-                  Motivo (OT 2) <span className="text-accent-gold ml-1 font-bold">*</span>
-                </label>
-                <select
-                  required
-                  value={f.motivo2}
-                  onChange={(e) => { f.setMotivo2(e.target.value); f.setErrors((err) => ({ ...err, motivo2: "", ot2: "" })); }}
-                  className={selectCls(!!f.errors.motivo2)}
-                >
-                  <option value="">Seleccione motivo...</option>
-                  {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-                <FieldError msg={f.errors.motivo2} />
-              </div>
-              <div />
-            </motion.div>
-          )}
-
-          {/* ── Sector + OT ─────────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {/* ── Sector ─────────────────────────────────────────────── */}
             <div>
               <label className={labelCls}>
                 Sector / Área <span className="text-accent-gold ml-1 font-bold">*</span>
@@ -211,45 +270,6 @@ export default function CargaPage() {
                 placeholder="Ej: Planta A, Mantenimiento..."
               />
               <FieldError msg={f.errors.sector} />
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className={labelCls}>
-                  OT {f.splitOT ? "1" : ""}
-                  {f.motivo && f.motivo !== "OT Inexistente" && (
-                    <span className="text-slate-400 font-normal ml-1">(8-12 dígitos)</span>
-                  )}
-                </label>
-                <input
-                  type="text"
-                  value={f.ot}
-                  onChange={(e) => { f.setOt(e.target.value.replace(/\D/g, "").slice(0, 12)); f.setErrors((err) => ({ ...err, ot: "" })); }}
-                  disabled={f.motivo === "OT Inexistente"}
-                  className={`${inputCls(!!f.errors.ot)} disabled:opacity-20`}
-                  placeholder={f.motivo === "OT Inexistente" ? "No aplica" : "Ej: 0012300456"}
-                  maxLength={12}
-                />
-                <FieldError msg={f.errors.ot} />
-              </div>
-
-              {f.splitOT && (
-                <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
-                  <label className={labelCls}>
-                    OT 2 <span className="text-accent-gold ml-1 font-bold">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={f.ot2}
-                    onChange={(e) => { f.setOt2(e.target.value.replace(/\D/g, "").slice(0, 10)); f.setErrors((err) => ({ ...err, ot2: "" })); }}
-                    disabled={f.motivo2 === "OT Inexistente"}
-                    className={`${inputCls(!!f.errors.ot2)} border-emerald-500/30 bg-emerald-500/5 disabled:opacity-20`}
-                    placeholder="8-12 dígitos (2da OT)"
-                    maxLength={12}
-                  />
-                  <FieldError msg={f.errors.ot2} />
-                </motion.div>
-              )}
             </div>
           </div>
 
@@ -285,35 +305,6 @@ export default function CargaPage() {
               </div>
             </div>
           </div>
-
-          {/* ── Horas detalle 1 ────────────────────────────────────────────── */}
-          <div className={f.splitOT ? "p-4 bg-slate-500/5 rounded-3xl border border-border" : ""}>
-            {f.splitOT && <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 ml-1">Horas para OT 1</p>}
-            <HorasDetalle
-              horasNormales={f.horasNormales}       setHorasNormales={f.setHorasNormales}
-              hsNormalesMods={f.hsNormalesMods}     setHsNormalesMods={f.setHsNormalesMods}
-              horas50={f.horas50}                   setHoras50={f.setHoras50}
-              hs50Mods={f.hs50Mods}                 setHs50Mods={f.setHs50Mods}
-              horas100={f.horas100}                 setHoras100={f.setHoras100}
-              hs100Mods={f.hs100Mods}               setHs100Mods={f.setHs100Mods}
-            />
-          </div>
-
-          {/* ── Horas detalle 2 ────────────────────────────────────────────── */}
-          {f.splitOT && (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-4 bg-emerald-500/5 rounded-3xl border border-emerald-500/10">
-              <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-4 ml-1">Horas para OT 2</p>
-              <HorasDetalle
-                horasNormales={f.horasNormales2}      setHorasNormales={f.setHorasNormales2}
-                hsNormalesMods={f.hsNormalesMods}     setHsNormalesMods={f.setHsNormalesMods}
-                horas50={f.horas502}                  setHoras50={f.setHoras502}
-                hs50Mods={f.hs50Mods}                 setHs50Mods={f.setHs50Mods}
-                horas100={f.horas1002}                setHoras100={f.setHoras1002}
-                hs100Mods={f.hs100Mods}               setHs100Mods={f.setHs100Mods}
-                isSecondary
-              />
-            </motion.div>
-          )}
 
           {/* ── Notas ───────────────────────────────────────────────────── */}
           <div className="pt-2 border-t border-border">

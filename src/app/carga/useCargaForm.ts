@@ -19,8 +19,26 @@ export type HourMods = { insa: boolean; polu: boolean; noct: boolean };
 
 export type FormErrors = Partial<Record<string, string>>;
 
+export type OTEntry = {
+  id: string;
+  motivo: string;
+  ot: string;
+  horasNormales: string;
+  horas50: string;
+  horas100: string;
+};
+
 const DIAS = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"];
 const DEFAULT_MODS: HourMods = { insa: false, polu: false, noct: false };
+
+const createEmptyOT = (): OTEntry => ({
+  id: Math.random().toString(36).substr(2, 9),
+  motivo: "",
+  ot: "",
+  horasNormales: "",
+  horas50: "",
+  horas100: "",
+});
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
@@ -44,27 +62,17 @@ export function useCargaForm() {
   // Form fields
   const [fecha, setFechaRaw] = useState(new Date().toISOString().split("T")[0]);
   const [contrato, setContrato] = useState("");
-  const [motivo, setMotivo] = useState("");
-  const [ot, setOt] = useState("");
   const [sector, setSector] = useState("");
   const [horarioDesde, setHorarioDesde] = useState("");
   const [horarioHasta, setHorarioHasta] = useState("");
   const [notas, setNotas] = useState("");
 
-  // Split OT feature
-  const [splitOT, setSplitOT] = useState(false);
-  const [motivo2, setMotivo2] = useState("");
-  const [ot2, setOt2] = useState("");
-  const [horasNormales2, setHorasNormales2] = useState("");
-  const [horas502, setHoras502] = useState("");
-  const [horas1002, setHoras1002] = useState("");
+  // Multiple OTs feature
+  const [ots, setOts] = useState<OTEntry[]>([createEmptyOT()]);
 
-  // Hour details
-  const [horasNormales, setHorasNormales] = useState("");
+  // Hour mods (shared across all OTs for the day)
   const [hsNormalesMods, setHsNormalesMods] = useState<HourMods>(DEFAULT_MODS);
-  const [horas50, setHoras50] = useState("");
   const [hs50Mods, setHs50Mods] = useState<HourMods>(DEFAULT_MODS);
-  const [horas100, setHoras100] = useState("");
   const [hs100Mods, setHs100Mods] = useState<HourMods>(DEFAULT_MODS);
 
   // ─── Init: restore working date from session ──────────────────────────────
@@ -160,6 +168,20 @@ export function useCargaForm() {
     setLegajoManual("");
   }, []);
 
+  // ─── OT Management ────────────────────────────────────────────────────────
+  const addOT = useCallback(() => {
+    setOts((prev) => [...prev, createEmptyOT()]);
+  }, []);
+
+  const removeOT = useCallback((id: string) => {
+    if (ots.length <= 1) return;
+    setOts((prev) => prev.filter((o) => o.id !== id));
+  }, [ots.length]);
+
+  const updateOT = useCallback((id: string, updates: Partial<OTEntry>) => {
+    setOts((prev) => prev.map((o) => (o.id === id ? { ...o, ...updates } : o)));
+  }, []);
+
   // ─── Validation ───────────────────────────────────────────────────────────
   const validate = useCallback((): boolean => {
     const newErrors: FormErrors = {};
@@ -170,59 +192,45 @@ export function useCargaForm() {
     if (!hasEmpleado) newErrors.empleado = "Debe ingresar o seleccionar al menos un empleado.";
     if (!hasLegajo) newErrors.legajo = "El legajo es requerido.";
     if (!contrato) newErrors.contrato = "Debe seleccionar un contrato.";
-    if (!motivo) newErrors.motivo = "Debe seleccionar el motivo del error.";
     if (!sector.trim()) newErrors.sector = "El sector es requerido.";
-
-    if (motivo && motivo !== "OT Inexistente") {
-      if (!ot.trim()) {
-        newErrors.ot = "El número de OT es requerido para este motivo.";
-      } else if (!/^\d{8,12}$/.test(ot.trim())) {
-        newErrors.ot = "La OT debe tener entre 8 y 12 dígitos.";
-      }
-    } else if (ot.trim() && !/^\d{8,12}$/.test(ot.trim())) {
-      newErrors.ot = "La OT debe tener entre 8 y 12 dígitos.";
-    }
 
     if (!horarioDesde) newErrors.horarioDesde = "La hora de entrada es requerida.";
     if (!horarioHasta) newErrors.horarioHasta = "La hora de salida es requerida.";
 
-    if (splitOT) {
-      if (!motivo2) newErrors.motivo2 = "Seleccione motivo para la 2da OT.";
-      if (!ot2.trim() && motivo2 !== "OT Inexistente") {
-        newErrors.ot2 = "La 2da OT es requerida.";
-      } else if (ot2.trim() && !/^\d{8,12}$/.test(ot2.trim())) {
-        newErrors.ot2 = "La 2da OT debe tener entre 8 y 12 dígitos.";
+    ots.forEach((otEntry, idx) => {
+      if (!otEntry.motivo) {
+        newErrors[`motivo_${idx}`] = "Debe seleccionar el motivo.";
       }
-    }
+      
+      if (otEntry.motivo && otEntry.motivo !== "OT Inexistente") {
+        if (!otEntry.ot.trim()) {
+          newErrors[`ot_${idx}`] = "El número de OT es requerido.";
+        } else if (!/^\d{8,12}$/.test(otEntry.ot.trim())) {
+          newErrors[`ot_${idx}`] = "La OT debe tener entre 8 y 12 dígitos.";
+        }
+      } else if (otEntry.ot.trim() && !/^\d{8,12}$/.test(otEntry.ot.trim())) {
+        newErrors[`ot_${idx}`] = "La OT debe tener entre 8 y 12 dígitos.";
+      }
+    });
 
     setErrors(newErrors);
-    return Object.values(newErrors).every((v) => !v);
-  }, [selectedEmpleados, searchQuery, legajoManual, contrato, motivo, sector, ot, horarioDesde, horarioHasta, splitOT, motivo2, ot2]);
+    return Object.keys(newErrors).length === 0;
+  }, [selectedEmpleados, searchQuery, legajoManual, contrato, sector, horarioDesde, horarioHasta, ots]);
 
   // ─── Reset form ───────────────────────────────────────────────────────────
   const resetForm = useCallback(() => {
     setSelectedEmpleados([]);
     setSearchQuery("");
     setContrato("");
-    setMotivo("");
-    setOt("");
     setSector("");
     setHorarioDesde("");
     setHorarioHasta("");
     setNotas("");
     setLegajoManual("");
-    setHorasNormales("");
     setHsNormalesMods(DEFAULT_MODS);
-    setHoras50("");
     setHs50Mods(DEFAULT_MODS);
-    setHoras100("");
     setHs100Mods(DEFAULT_MODS);
-    setSplitOT(false);
-    setMotivo2("");
-    setOt2("");
-    setHorasNormales2("");
-    setHoras502("");
-    setHoras1002("");
+    setOts([createEmptyOT()]);
     setErrors({});
   }, []);
 
@@ -276,61 +284,35 @@ export function useCargaForm() {
     }
 
     const records: any[] = [];
+    const multiOT = ots.length > 1;
     
     employeesToSave.forEach((emp) => {
-      // Record 1
-      records.push({
-        fecha: fechaISO,
-        legajo: emp.legajo,
-        nombre_apellido: emp.nombre_apellido,
-        motivo_error: motivo,
-        ot: ot.trim() || null,
-        sector: sector.trim(),
-        horario: horarioStr,
-        notas: splitOT ? `[OT 1/2] ${notas.trim()}` : (notas.trim() || null),
-        contrato,
-        dia_semana: DIAS[selectedDate.getDay()],
-        horas_normales: horasNormales ? parseFloat(horasNormales) : null,
-        hs_normales_insa: hsNormalesMods.insa,
-        hs_normales_polu: hsNormalesMods.polu,
-        hs_normales_noct: hsNormalesMods.noct,
-        horas_50: horas50 ? parseFloat(horas50) : null,
-        hs_50_insa: hs50Mods.insa,
-        hs_50_polu: hs50Mods.polu,
-        hs_50_noct: hs50Mods.noct,
-        horas_100: horas100 ? parseFloat(horas100) : null,
-        hs_100_insa: hs100Mods.insa,
-        hs_100_polu: hs100Mods.polu,
-        hs_100_noct: hs100Mods.noct,
-      });
-
-      // Optional Record 2
-      if (splitOT) {
+      ots.forEach((otEntry, idx) => {
         records.push({
           fecha: fechaISO,
           legajo: emp.legajo,
           nombre_apellido: emp.nombre_apellido,
-          motivo_error: motivo2,
-          ot: ot2.trim() || null,
+          motivo_error: otEntry.motivo,
+          ot: otEntry.ot.trim() || null,
           sector: sector.trim(),
           horario: horarioStr,
-          notas: `[OT 2/2] ${notas.trim()}`,
+          notas: multiOT ? `[OT ${idx + 1}/${ots.length}] ${notas.trim()}` : (notas.trim() || null),
           contrato,
           dia_semana: DIAS[selectedDate.getDay()],
-          horas_normales: horasNormales2 ? parseFloat(horasNormales2) : null,
-          hs_normales_insa: hsNormalesMods.insa, // Re-use mods or set default?
+          horas_normales: otEntry.horasNormales ? parseFloat(otEntry.horasNormales) : null,
+          hs_normales_insa: hsNormalesMods.insa,
           hs_normales_polu: hsNormalesMods.polu,
           hs_normales_noct: hsNormalesMods.noct,
-          horas_50: horas502 ? parseFloat(horas502) : null,
+          horas_50: otEntry.horas50 ? parseFloat(otEntry.horas50) : null,
           hs_50_insa: hs50Mods.insa,
           hs_50_polu: hs50Mods.polu,
           hs_50_noct: hs50Mods.noct,
-          horas_100: horas1002 ? parseFloat(horas1002) : null,
+          horas_100: otEntry.horas100 ? parseFloat(otEntry.horas100) : null,
           hs_100_insa: hs100Mods.insa,
           hs_100_polu: hs100Mods.polu,
           hs_100_noct: hs100Mods.noct,
         });
-      }
+      });
     });
 
     const { error } = await supabase.from("error_carga").insert(records);
@@ -356,8 +338,7 @@ export function useCargaForm() {
     resetForm();
     setLoading(false);
   }, [validate, fecha, horarioDesde, horarioHasta, selectedEmpleados, searchQuery, legajoManual,
-      contrato, motivo, ot, sector, notas, horasNormales, hsNormalesMods,
-      horas50, hs50Mods, horas100, hs100Mods, resetForm]);
+      contrato, sector, notas, ots, hsNormalesMods, hs50Mods, hs100Mods, resetForm]);
 
   return {
     // Refs
@@ -385,10 +366,6 @@ export function useCargaForm() {
     setFecha,
     contrato,
     setContrato,
-    motivo,
-    setMotivo,
-    ot,
-    setOt,
     sector,
     setSector,
     horarioDesde,
@@ -397,34 +374,21 @@ export function useCargaForm() {
     setHorarioHasta,
     notas,
     setNotas,
-    // Hours
-    horasNormales,
-    setHorasNormales,
+    // OT Array Management
+    ots,
+    addOT,
+    removeOT,
+    updateOT,
+    // Hour Mods (shared)
     hsNormalesMods,
     setHsNormalesMods,
-    horas50,
-    setHoras50,
     hs50Mods,
     setHs50Mods,
-    horas100,
-    setHoras100,
     hs100Mods,
     setHs100Mods,
-    // Split OT
-    splitOT,
-    setSplitOT,
-    motivo2,
-    setMotivo2,
-    ot2,
-    setOt2,
-    horasNormales2,
-    setHorasNormales2,
-    horas502,
-    setHoras502,
-    horas1002,
-    setHoras1002,
     // Actions
     handleSubmit,
     router,
   };
 }
+

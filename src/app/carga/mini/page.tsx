@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Save, AlertCircle, CheckCircle2, Loader2, Search, X, Maximize2 } from "lucide-react";
+import { Save, AlertCircle, CheckCircle2, Loader2, Search, X, Maximize2, Plus, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -17,6 +17,24 @@ type Empleado = {
 
 type FormErrors = Partial<Record<string, string>>;
 type HourMods = { insa: boolean; polu: boolean; noct: boolean };
+
+type OTEntry = {
+  id: string;
+  motivo: string;
+  ot: string;
+  horasNormales: string;
+  horas50: string;
+  horas100: string;
+};
+
+const createEmptyOT = (): OTEntry => ({
+  id: Math.random().toString(36).substr(2, 9),
+  motivo: "",
+  ot: "",
+  horasNormales: "",
+  horas50: "",
+  horas100: "",
+});
 
 function HourInputRow({ label, val, setVal, mods, setMods }: { label: string, val: string, setVal: (v: string) => void, mods: HourMods, setMods: (m: HourMods) => void }) {
   return (
@@ -66,29 +84,19 @@ export default function MiniCargaPage() {
 
   // Form fields
   const [fecha, setFecha] = useState("");
-  const [motivo, setMotivo] = useState("");
-  const [ot, setOt] = useState("");
   const [sector, setSector] = useState("");
   const [horarioDesde, setHorarioDesde] = useState("");
   const [horarioHasta, setHorarioHasta] = useState("");
   const [notas, setNotas] = useState("");
   const [legajoManual, setLegajoManual] = useState("");
 
-  // Hours details
-  const [horasNormales, setHorasNormales] = useState("");
-  const [hsNormalesMods, setHsNormalesMods] = useState<HourMods>({ insa: false, polu: false, noct: false });
-  const [horas50, setHoras50] = useState("");
-  const [hs50Mods, setHs50Mods] = useState<HourMods>({ insa: false, polu: false, noct: false });
-  const [horas100, setHoras100] = useState("");
-  const [hs100Mods, setHs100Mods] = useState<HourMods>({ insa: false, polu: false, noct: false });
+  // OTs state
+  const [ots, setOts] = useState<OTEntry[]>([createEmptyOT()]);
 
-  // Split OT feature
-  const [splitOT, setSplitOT] = useState(false);
-  const [motivo2, setMotivo2] = useState("");
-  const [ot2, setOt2] = useState("");
-  const [horasNormales2, setHorasNormales2] = useState("");
-  const [horas502, setHoras502] = useState("");
-  const [horas1002, setHoras1002] = useState("");
+  // Shared mods
+  const [hsNormalesMods, setHsNormalesMods] = useState<HourMods>({ insa: false, polu: false, noct: false });
+  const [hs50Mods, setHs50Mods] = useState<HourMods>({ insa: false, polu: false, noct: false });
+  const [hs100Mods, setHs100Mods] = useState<HourMods>({ insa: false, polu: false, noct: false });
 
   // Validation errors
   const [errors, setErrors] = useState<FormErrors>({});
@@ -178,12 +186,9 @@ export default function MiniCargaPage() {
     setSelectedEmpleados(prev => prev.filter(e => e.legajo !== legajo));
   };
 
-  const clearEmpleado = () => {
-    setSelectedEmpleados([]);
-    setSearchQuery("");
-    setContrato("");
-    setLegajoManual("");
-  };
+  const addOT = () => setOts([...ots, createEmptyOT()]);
+  const removeOT = (id: string) => ots.length > 1 && setOts(ots.filter(o => o.id !== id));
+  const updateOT = (id: string, updates: Partial<OTEntry>) => setOts(ots.map(o => o.id === id ? { ...o, ...updates } : o));
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -193,24 +198,24 @@ export default function MiniCargaPage() {
     if (!hasNames) newErrors.empleado = "Requerido";
     if (!hasLegajos) newErrors.legajo = "Requerido";
     if (!contrato) newErrors.contrato = "Requerido";
-    if (!motivo) newErrors.motivo = "Requerido";
     if (!sector.trim()) newErrors.sector = "Requerido";
 
-    if (motivo && motivo !== "OT Inexistente") {
-      if (!ot.trim()) {
-        newErrors.ot = "Requerido";
-      } else if (!/^\d{8,12}$/.test(ot.trim())) {
-        newErrors.ot = "8-12 dígitos";
+    ots.forEach((otEntry, idx) => {
+      if (!otEntry.motivo) newErrors[`motivo_${idx}`] = "Requerido";
+      if (otEntry.motivo && otEntry.motivo !== "OT Inexistente") {
+        if (!otEntry.ot.trim()) {
+          newErrors[`ot_${idx}`] = "Requerido";
+        } else if (!/^\d{8,12}$/.test(otEntry.ot.trim())) {
+          newErrors[`ot_${idx}`] = "8-12 dígitos";
+        }
       }
-    } else if (ot.trim() && !/^\d{8,12}$/.test(ot.trim())) {
-      newErrors.ot = "8-12 dígitos";
-    }
+    });
 
     if (!horarioDesde) newErrors.horarioDesde = "Requerido";
     if (!horarioHasta) newErrors.horarioHasta = "Requerido";
 
     setErrors(newErrors);
-    return Object.keys(newErrors).filter((k) => newErrors[k]).length === 0;
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -225,79 +230,51 @@ export default function MiniCargaPage() {
     const dias = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"];
     const horarioStr = horarioDesde && horarioHasta ? `${horarioDesde} a ${horarioHasta}` : null;
 
-    const employeesToSave = selectedEmpleados;
+    const employeesToSave = [...selectedEmpleados];
+    if (employeesToSave.length === 0 && searchQuery.trim() && legajoManual.trim()) {
+      employeesToSave.push({
+        nombre_apellido: searchQuery.trim(),
+        legajo: legajoManual.trim(),
+        contrato: contrato || "S/C",
+        categoria: null
+      });
+    }
 
     if (employeesToSave.length === 0) {
-      if (searchQuery.trim() && legajoManual.trim()) {
-        employeesToSave.push({
-          nombre_apellido: searchQuery.trim(),
-          legajo: legajoManual.trim(),
-          contrato: contrato || "S/C",
-          categoria: null
-        });
-      } else {
-        toast.error("Agregue al menos un empleado");
-        setLoading(false);
-        return;
-      }
+      toast.error("Agregue al menos un empleado");
+      setLoading(false);
+      return;
     }
 
     const recordsToInsert: any[] = [];
 
     employeesToSave.forEach((emp) => {
-      // Record 1
-      recordsToInsert.push({
-        fecha: fechaISO,
-        legajo: emp.legajo,
-        nombre_apellido: emp.nombre_apellido,
-        motivo_error: motivo,
-        ot: ot.trim() || null,
-        sector: sector.trim(),
-        horario: horarioStr,
-        notas: splitOT ? `[1/2] ${notas.trim()}` : (notas.trim() || null),
-        contrato: contrato,
-        dia_semana: dias[selectedDate.getDay()],
-        horas_normales: horasNormales ? parseFloat(horasNormales) : null,
-        hs_normales_insa: hsNormalesMods.insa,
-        hs_normales_polu: hsNormalesMods.polu,
-        hs_normales_noct: hsNormalesMods.noct,
-        horas_50: horas50 ? parseFloat(horas50) : null,
-        hs_50_insa: hs50Mods.insa,
-        hs_50_polu: hs50Mods.polu,
-        hs_50_noct: hs50Mods.noct,
-        horas_100: horas100 ? parseFloat(horas100) : null,
-        hs_100_insa: hs100Mods.insa,
-        hs_100_polu: hs100Mods.polu,
-        hs_100_noct: hs100Mods.noct,
-      });
-
-      // Flexible Record 2
-      if (splitOT) {
+      ots.forEach((otEntry, idx) => {
         recordsToInsert.push({
           fecha: fechaISO,
           legajo: emp.legajo,
           nombre_apellido: emp.nombre_apellido,
-          motivo_error: motivo2,
-          ot: ot2.trim() || null,
+          motivo_error: otEntry.motivo,
+          ot: otEntry.ot.trim() || null,
           sector: sector.trim(),
           horario: horarioStr,
-          notas: `[2/2] ${notas.trim()}`,
+          notas: ots.length > 1 ? `[OT ${idx + 1}/${ots.length}] ${notas.trim()}` : (notas.trim() || null),
           contrato: contrato,
           dia_semana: dias[selectedDate.getDay()],
-          horas_normales: horasNormales2 ? parseFloat(horasNormales2) : null,
+          horas_normales: otEntry.horasNormales ? parseFloat(otEntry.horasNormales) : null,
           hs_normales_insa: hsNormalesMods.insa,
           hs_normales_polu: hsNormalesMods.polu,
           hs_normales_noct: hsNormalesMods.noct,
-          horas_50: horas502 ? parseFloat(horas502) : null,
+          horas_50: otEntry.horas50 ? parseFloat(otEntry.horas50) : null,
           hs_50_insa: hs50Mods.insa,
           hs_50_polu: hs50Mods.polu,
           hs_50_noct: hs50Mods.noct,
-          horas_100: horas1002 ? parseFloat(horas1002) : null,
+          horas_100: otEntry.horas100 ? parseFloat(otEntry.horas100) : null,
           hs_100_insa: hs100Mods.insa,
           hs_100_polu: hs100Mods.polu,
           hs_100_noct: hs100Mods.noct,
         });
-      }
+      });
     });
 
     const { error } = await supabase.from("error_carga").insert(recordsToInsert);
@@ -318,29 +295,21 @@ export default function MiniCargaPage() {
       }
     }
 
-    toast.success(`✅ ${recordsToInsert.length} ${recordsToInsert.length > 1 ? 'registros guardados' : 'registro guardado'}.`);
+    toast.success(`✅ ${recordsToInsert.length} registros guardados.`);
     setLoading(false);
     
-    // Reset fields but keep state relevant for multiple loads
+    // Reset but keep date
     setSelectedEmpleados([]);
     setSearchQuery("");
     setContrato("");
-    setMotivo("");
-    setOt("");
     setSector("");
     setHorarioDesde("");
     setHorarioHasta("");
     setNotas("");
     setLegajoManual("");
-    setSplitOT(false);
-    setOt2("");
-    setMotivo2("");
-    setHorasNormales2("");
-    setHorasNormales("");
+    setOts([createEmptyOT()]);
     setHsNormalesMods({ insa: false, polu: false, noct: false });
-    setHoras50("");
     setHs50Mods({ insa: false, polu: false, noct: false });
-    setHoras100("");
     setHs100Mods({ insa: false, polu: false, noct: false });
     setErrors({});
   };
@@ -367,7 +336,7 @@ export default function MiniCargaPage() {
           <div className="w-1 h-6 bg-accent-gold rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
           <div>
             <h1 className="text-xs font-black text-foreground tracking-tight uppercase">Mini Omisiones</h1>
-            <p className="text-[9px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-[0.15em] mt-0.5">SJG Gestión</p>
+            <p className="text-[9px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-[0.15em] mt-0.5">SJG Gestión Multi-OT</p>
           </div>
         </div>
         <button 
@@ -384,7 +353,7 @@ export default function MiniCargaPage() {
           
           {/* Empleado */}
           <div ref={searchRef} className="space-y-1.5 relative">
-            <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+            <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5 font-black uppercase tracking-widest">
               <Search className="w-3 h-3 group-hover:text-accent-gold transition-colors" /> Empleado*
             </label>
             <div className="relative group/input">
@@ -393,7 +362,7 @@ export default function MiniCargaPage() {
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                className={`w-full bg-background border rounded-2xl pl-10 pr-10 py-3 text-xs font-medium text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all shadow-inner ${errors.empleado ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
+                className={`w-full bg-background border rounded-2xl pl-10 pr-10 py-3 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none transition-all shadow-inner ${errors.empleado ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
                 placeholder="Nombre o legajo..."
                 autoComplete="off"
               />
@@ -404,11 +373,6 @@ export default function MiniCargaPage() {
                   <Search className="w-4 h-4 text-slate-400 dark:text-slate-700 group-focus-within/input:text-accent-gold transition-colors" />
                 )}
               </div>
-              {searchQuery && !searchLoading && (
-                <button type="button" onClick={() => { setSearchQuery(""); setSelectedEmpleados([]); setSuggestions([]); setShowSuggestions(false); }} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-foreground transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
             </div>
             {errors.empleado && <p className="text-red-500 text-[9px] ml-1 font-black uppercase tracking-widest leading-none mt-1">{errors.empleado}</p>}
 
@@ -437,40 +401,18 @@ export default function MiniCargaPage() {
                 ))}
               </div>
             )}
-
-            {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && !searchLoading && (
-              <div className="p-4 bg-accent-gold/5 rounded-2xl border border-dashed border-accent-gold/20 space-y-3 animate-in fade-in zoom-in duration-300">
-                <p className="text-[9px] text-accent-gold/80 font-black uppercase tracking-widest leading-none">Empleado no encontrado. Ingrese legajo manual:</p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={legajoManual}
-                    onChange={(e) => setLegajoManual(e.target.value)}
-                    className="flex-1 bg-background border border-border rounded-xl px-3 py-2 text-[11px] font-bold text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all font-black"
-                    placeholder="Legajo SAP..."
-                  />
-                  <button 
-                    type="button" 
-                    onClick={addManualEmpleado}
-                    className="px-3 rounded-xl bg-accent-gold text-black font-black text-[10px] uppercase tracking-widest active:scale-95 transition-transform"
-                  >
-                    Agregar
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Fecha*</label>
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5 font-black uppercase tracking-widest">Fecha*</label>
               <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)}
-                className="w-full bg-background border border-border rounded-2xl px-3 py-3 text-xs font-medium text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]" />
+                className="w-full bg-background border border-border rounded-2xl px-3 py-3 text-xs font-black uppercase tracking-widest text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Contrato*</label>
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5 font-black uppercase tracking-widest">Contrato*</label>
               <select value={contrato} onChange={(e) => setContrato(e.target.value)}
-                className={`w-full bg-background border rounded-2xl px-3 py-3 text-xs font-black uppercase tracking-widest text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all appearance-none cursor-pointer ${errors.contrato ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
+                className={`w-full bg-background border rounded-2xl px-3 py-3 text-xs font-black uppercase tracking-widest text-foreground outline-none transition-all appearance-none cursor-pointer ${errors.contrato ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
               >
                 <option value="" className="bg-card text-slate-500">Contrato...</option>
                 {CONTRATOS.map(c => <option key={c} value={c} className="bg-card text-foreground">{c}</option>)}
@@ -478,128 +420,95 @@ export default function MiniCargaPage() {
             </div>
           </div>
 
-          <div className="space-y-4 pt-2 pb-4 px-4 bg-accent-gold/5 rounded-3xl border border-accent-gold/10">
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={splitOT}
-                onChange={(e) => setSplitOT(e.target.checked)}
-                className="w-5 h-5 rounded-lg border-border bg-background text-accent-gold focus:ring-accent-gold/20"
-              />
-              <span className="text-[10px] font-black uppercase tracking-widest text-foreground group-hover:text-accent-gold transition-colors">
-                Dividir registro en 2 OTs
-              </span>
-            </label>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                Motivo {splitOT ? "(OT 1)" : ""}*
-              </label>
-              <select value={motivo} onChange={(e) => setMotivo(e.target.value)}
-                className={`w-full bg-background border rounded-2xl px-3 py-3 text-xs font-black uppercase tracking-widest text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all appearance-none cursor-pointer ${errors.motivo ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
-              >
-                <option value="" className="bg-card text-slate-500">Seleccione motivo...</option>
-                {MOTIVOS.map(m => <option key={m} value={m} className="bg-card text-foreground">{m}</option>)}
-              </select>
-            </div>
-
-            {splitOT && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-1.5 pt-2 border-t border-accent-gold/10">
-                <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">Motivo (OT 2)*</label>
-                <select value={motivo2} onChange={(e) => setMotivo2(e.target.value)}
-                  className="w-full bg-emerald-500/5 border border-emerald-500/10 rounded-2xl px-3 py-3 text-xs font-black uppercase tracking-widest text-foreground outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all appearance-none"
-                >
-                  <option value="" className="bg-card text-slate-500">Seleccione motivo...</option>
-                  {MOTIVOS.map(m => <option key={m} value={m} className="bg-card text-foreground">{m}</option>)}
-                </select>
-              </motion.div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Sector*</label>
+          <div className="grid grid-cols-1 gap-4">
+             <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5 font-black uppercase tracking-widest">Sector*</label>
               <input type="text" value={sector} onChange={(e) => setSector(e.target.value)}
-                className={`w-full bg-background border rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner ${errors.sector ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
+                className={`w-full bg-background border rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none transition-all shadow-inner ${errors.sector ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
                 placeholder="Ej: Planta A" />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                {splitOT ? "OT 1*" : "OT"}
-              </label>
-              <input type="text" value={ot} onChange={(e) => setOt(e.target.value.replace(/\D/g, "").slice(0, 12))}
-                disabled={motivo === "OT Inexistente" && !splitOT}
-                className={`w-full bg-background border rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner disabled:opacity-20 ${errors.ot ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
-                placeholder="8 - 12 dígitos" maxLength={12} />
-            </div>
           </div>
 
-          {splitOT && (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-3 p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
-              <div>
-                <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">OT 2*</label>
-                <input 
-                  type="text" 
-                  value={ot2} 
-                  onChange={(e) => setOt2(e.target.value.replace(/\D/g, "").slice(0, 12))}
-                  className="w-full bg-background border border-emerald-500/20 rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
-                  placeholder="OT con 8-12 dígitos" 
-                  maxLength={12} 
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">Horas Normales (OT 2)</label>
-                <input 
-                  type="number" step="0.5"
-                  value={horasNormales2} 
-                  onChange={(e) => setHorasNormales2(e.target.value)}
-                  className="w-full bg-background border border-emerald-500/20 rounded-xl px-4 py-2 text-xs font-black text-foreground outline-none"
-                  placeholder="Ej: 1" 
-                />
-              </div>
-            </motion.div>
-          )}
+          {/* OTs Array */}
+          <div className="space-y-4 pt-4 border-t border-border">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 font-black uppercase tracking-widest">Ordenes de Trabajo</p>
+              <button type="button" onClick={addOT} className="flex items-center gap-1 px-2 py-1 rounded-xl bg-accent-gold/10 text-accent-gold text-[9px] font-black uppercase tracking-widest border border-accent-gold/20 active:scale-95">
+                <Plus className="w-3 h-3" /> Agregar OT
+              </button>
+            </div>
+
+            <AnimatePresence mode="popLayout">
+              {ots.map((o, idx) => (
+                <motion.div 
+                  key={o.id} 
+                  initial={{ opacity: 0, x: -10 }} 
+                  animate={{ opacity: 1, x: 0 }} 
+                  exit={{ opacity: 0, x: 10 }}
+                  className={`p-4 rounded-3xl border ${idx % 2 === 0 ? 'bg-slate-500/5 border-slate-500/10' : 'bg-emerald-500/5 border-emerald-500/10'}`}
+                >
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">OT {idx + 1}</span>
+                    {ots.length > 1 && <button type="button" onClick={() => removeOT(o.id)} className="text-red-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>}
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 gap-2">
+                       <select value={o.motivo} onChange={(e) => updateOT(o.id, { motivo: e.target.value })}
+                        className={`w-full bg-background border rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-foreground outline-none ${errors[`motivo_${idx}`] ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
+                      >
+                        <option value="">Motivo...</option>
+                        {MOTIVOS.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                       <input type="text" value={o.ot} onChange={(e) => updateOT(o.id, { ot: e.target.value.replace(/\D/g, "").slice(0, 12) })}
+                        disabled={o.motivo === "OT Inexistente"}
+                        className={`w-full bg-background border rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest text-foreground outline-none disabled:opacity-20 ${errors[`ot_${idx}`] ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
+                        placeholder="Número OT (8-12 dígitos)" maxLength={12} />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2 space-y-2">
+                      <HourInputRow label="Normales" val={o.horasNormales} setVal={(v) => updateOT(o.id, { horasNormales: v })} mods={hsNormalesMods} setMods={setHsNormalesMods} />
+                      <div className="grid grid-cols-2 gap-2">
+                         <HourInputRow label="Al 50%" val={o.horas50} setVal={(v) => updateOT(o.id, { horas50: v })} mods={hs50Mods} setMods={setHs50Mods} />
+                         <HourInputRow label="Al 100%" val={o.horas100} setVal={(v) => updateOT(o.id, { horas100: v })} mods={hs100Mods} setMods={setHs100Mods} />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">Horario*</label>
+            <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-1.5 font-black uppercase tracking-widest">Horario*</label>
             <div className="flex items-center gap-3">
               <input type="time" value={horarioDesde} onChange={(e) => setHorarioDesde(e.target.value)}
-                className="flex-1 bg-background border border-border rounded-2xl px-4 py-3 text-xs font-medium text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner [color-scheme:light] dark:[color-scheme:dark]" />
+                className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 transition-all [color-scheme:light] dark:[color-scheme:dark]" />
               <div className="w-4 h-[1px] bg-border" />
               <input type="time" value={horarioHasta} onChange={(e) => setHorarioHasta(e.target.value)}
-                className="flex-1 bg-background border border-border rounded-2xl px-4 py-3 text-xs font-medium text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all shadow-inner [color-scheme:light] dark:[color-scheme:dark]" />
-            </div>
-          </div>
-
-          <div className="space-y-3 pt-4 border-t border-border">
-            <p className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] text-center mb-1">Horas y Detalles</p>
-            <div className="grid grid-cols-1 gap-3">
-              <HourInputRow label="Normales" val={horasNormales} setVal={setHorasNormales} mods={hsNormalesMods} setMods={setHsNormalesMods} />
-              <div className="grid grid-cols-2 gap-3">
-                <HourInputRow label="Al 50%" val={horas50} setVal={setHoras50} mods={hs50Mods} setMods={setHs50Mods} />
-                <HourInputRow label="Al 100%" val={horas100} setVal={setHoras100} mods={hs100Mods} setMods={setHs100Mods} />
-              </div>
+                className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 transition-all [color-scheme:light] dark:[color-scheme:dark]" />
             </div>
           </div>
 
           <div className="pt-2">
             <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2}
-              className="w-full bg-background/50 border border-border rounded-2xl px-4 py-3 text-xs font-medium text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all resize-none shadow-inner placeholder:text-slate-400 dark:placeholder:text-slate-700"
+              className="w-full bg-background border border-border rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest text-foreground outline-none focus:ring-4 focus:ring-accent-gold/10 transition-all resize-none shadow-inner placeholder:text-slate-400 dark:placeholder:text-slate-700"
               placeholder="Notas u observaciones adicionales..." />
           </div>
 
           <button type="submit" disabled={loading}
-            className="w-full h-14 rounded-2xl bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black font-black text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl transition-all hover:from-accent-gold-dark hover:to-accent-gold active:scale-95 disabled:opacity-50 shadow-accent-gold/20 relative overflow-hidden group focus:ring-4 focus:ring-accent-gold/30"
+            className="w-full h-14 rounded-2xl bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black font-black text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl transition-all hover:from-accent-gold-dark hover:to-accent-gold active:scale-95 disabled:opacity-50"
           >
-            <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700 skew-x-12" />
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 opacity-70" />}
-            <span className="relative z-10">{loading ? "Guardando..." : `Guardar ${selectedEmpleados.length > 1 ? `(${selectedEmpleados.length})` : "Registro"}`}</span>
+            <span>{loading ? "Guardando..." : `Guardar ${selectedEmpleados.length > 1 ? `(${selectedEmpleados.length})` : "Registro"}`}</span>
           </button>
         </form>
       </div>
       
-      <p className="text-center text-[9px] text-slate-600 dark:text-slate-500 mt-6 font-black uppercase tracking-[0.3em] opacity-80">
-        SJG Management Hub · v2.0
+      <p className="text-center text-[9px] text-slate-600 dark:text-slate-500 mt-6 font-black uppercase tracking-[0.3em] opacity-80 font-black uppercase tracking-widest">
+        SJG Management Hub · v2.1 (Multi-OT)
       </p>
     </div>
     )}
