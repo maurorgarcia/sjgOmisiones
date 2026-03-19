@@ -11,20 +11,52 @@ import { supabase } from "@/lib/supabase";
 import { ErrorCarga } from "@/types";
 
 // Shared aesthetics
-const inputCls = (hasError?: boolean) =>
-  `w-full h-14 bg-background border rounded-2xl px-5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground shadow-inner ${
+const wrapperCls = (hasError?: boolean) =>
+  `relative h-14 bg-background border rounded-2xl flex items-center shadow-inner transition-all focus-within:ring-4 focus-within:ring-accent-gold/10 focus-within:border-accent-gold/50 ${
     hasError ? "border-red-500/50 bg-red-500/5 shadow-red-500/5" : "border-border shadow-black/5"
   }`;
 
-const selectCls = (hasError?: boolean) =>
-  `w-full h-14 bg-background border rounded-2xl px-5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black uppercase tracking-widest text-foreground appearance-none cursor-pointer shadow-inner ${
-    hasError ? "border-red-500/50 bg-red-500/5 shadow-red-500/5" : "border-border shadow-black/5"
-  }`;
+const baseInputCls = "w-full h-full bg-transparent border-none px-5 outline-none text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground";
 
 const labelCls = "block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-600 dark:text-slate-500 ml-1";
 
 const FieldError = ({ msg }: { msg?: string }) =>
   msg ? <p className="text-red-500 text-[10px] mt-1.5 font-black uppercase tracking-widest ml-1">{msg}</p> : null;
+
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  hasError?: boolean;
+}
+
+const Input = ({ hasError, className, ...props }: InputProps) => (
+  <div className={wrapperCls(hasError)}>
+    <input {...props} className={`${baseInputCls} ${className || ""}`} />
+  </div>
+);
+
+interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  hasError?: boolean;
+}
+
+const Select = ({ hasError, className, children, ...props }: SelectProps) => (
+  <div className={wrapperCls(hasError)}>
+    <select {...props} className={`${baseInputCls} uppercase tracking-widest appearance-none cursor-pointer ${className || ""}`}>
+      {children}
+    </select>
+    <div className="absolute right-5 pointer-events-none text-slate-400">
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </div>
+);
+
+interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  hasError?: boolean;
+}
+
+const Textarea = ({ hasError, className, ...props }: TextareaProps) => (
+  <div className={`${wrapperCls(hasError)} h-auto min-h-[80px] items-start py-3`}>
+    <textarea {...props} className={`${baseInputCls} h-full resize-none ${className || ""}`} />
+  </div>
+);
 
 export default function CargaPage() {
   const f = useCargaForm();
@@ -105,43 +137,42 @@ export default function CargaPage() {
                 onLegajoChange={f.setLegajoManual}
               />
 
-              <div className="space-y-6">
-                <div>
-                  <label className={labelCls}>Fecha del Registro</label>
-                  <input
-                    type="date"
-                    required
-                    value={f.fecha}
-                    onChange={(e) => f.setFecha(e.target.value)}
-                    className={inputCls()}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelCls}>Contrato</label>
-                    <select
-                      required
-                      value={f.contrato}
-                      onChange={(e) => { f.setContrato(e.target.value); f.setErrors((err) => ({ ...err, contrato: "" })); }}
-                      className={selectCls(!!f.errors.contrato)}
-                    >
-                      <option value="">Seleccionar...</option>
-                      {CONTRATOS.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                    <FieldError msg={f.errors.contrato} />
+                  <div className="space-y-6">
+                    <div>
+                      <label className={labelCls}>Fecha del Registro</label>
+                      <Input
+                        type="date"
+                        required
+                        value={f.fecha}
+                        onChange={(e) => f.setFecha(e.target.value)}
+                      />
+                    </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={labelCls}>Contrato</label>
+                      <Select
+                        required
+                        value={f.contrato}
+                        onChange={(e) => { f.setContrato(e.target.value); f.setErrors((err) => ({ ...err, contrato: "" })); }}
+                        hasError={!!f.errors.contrato}
+                      >
+                        <option value="">Seleccionar...</option>
+                        {CONTRATOS.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </Select>
+                      <FieldError msg={f.errors.contrato} />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Sector</label>
+                      <Input
+                        type="text"
+                        value={f.sector}
+                        onChange={(e) => { f.setSector(e.target.value); f.setErrors((err) => ({ ...err, sector: "" })); }}
+                        hasError={!!f.errors.sector}
+                        placeholder="Ej: Planta A"
+                      />
+                      <FieldError msg={f.errors.sector} />
+                    </div>
                   </div>
-                  <div>
-                    <label className={labelCls}>Sector</label>
-                    <input
-                      type="text"
-                      value={f.sector}
-                      onChange={(e) => { f.setSector(e.target.value); f.setErrors((err) => ({ ...err, sector: "" })); }}
-                      className={inputCls(!!f.errors.sector)}
-                      placeholder="Ej: Planta A"
-                    />
-                    <FieldError msg={f.errors.sector} />
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -207,26 +238,27 @@ export default function CargaPage() {
                     <div className="space-y-6">
                       <div>
                         <label className={labelCls}>Motivo Seleccionado</label>
-                        <select
+                        <Select
                           required
                           value={activeOT.motivo}
                           onChange={(e) => f.updateOT(activeOT.id, { motivo: e.target.value })}
-                          className={selectCls(!!f.errors[`motivo_${f.activeOTIndex}`])}
+                          hasError={!!f.errors[`motivo_${f.activeOTIndex}`]}
                         >
                           <option value="">Seleccionar motivo...</option>
                           {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
-                        </select>
+                        </Select>
                         <FieldError msg={f.errors[`motivo_${f.activeOTIndex}`]} />
                       </div>
 
                       <div>
                         <label className={labelCls}>Número de OT {activeOT.motivo === "OT Inexistente" ? "(No aplica)" : ""}</label>
-                        <input
+                        <Input
                           type="text"
                           value={activeOT.ot}
                           onChange={(e) => f.updateOT(activeOT.id, { ot: e.target.value.replace(/\D/g, "").slice(0, 12) })}
                           disabled={activeOT.motivo === "OT Inexistente"}
-                          className={`${inputCls(!!f.errors[`ot_${f.activeOTIndex}`])} disabled:opacity-30 disabled:grayscale`}
+                          hasError={!!f.errors[`ot_${f.activeOTIndex}`]}
+                          className="disabled:opacity-30 disabled:grayscale"
                           placeholder="Ej: 0012300456"
                           maxLength={12}
                         />
@@ -237,20 +269,20 @@ export default function CargaPage() {
                         <label className={labelCls}>Horario del Error (OT {f.activeOTIndex + 1})</label>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <input
+                            <Input
                               type="time"
                               value={activeOT.horarioDesde}
                               onChange={(e) => f.updateOT(activeOT.id, { horarioDesde: e.target.value })}
-                              className={inputCls(!!f.errors[`horarioDesde_${f.activeOTIndex}`])}
+                              hasError={!!f.errors[`horarioDesde_${f.activeOTIndex}`]}
                             />
                             <FieldError msg={f.errors[`horarioDesde_${f.activeOTIndex}`]} />
                           </div>
                           <div className="space-y-1">
-                            <input
+                            <Input
                               type="time"
                               value={activeOT.horarioHasta}
                               onChange={(e) => f.updateOT(activeOT.id, { horarioHasta: e.target.value })}
-                              className={inputCls(!!f.errors[`horarioHasta_${f.activeOTIndex}`])}
+                              hasError={!!f.errors[`horarioHasta_${f.activeOTIndex}`]}
                             />
                             <FieldError msg={f.errors[`horarioHasta_${f.activeOTIndex}`]} />
                           </div>
@@ -303,11 +335,10 @@ export default function CargaPage() {
           <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl p-8 backdrop-blur-3xl space-y-8">
             <div>
               <label className={labelCls}>Notas Adicionales (Global)</label>
-              <textarea
+              <Textarea
                 value={f.notas}
                 onChange={(e) => f.setNotas(e.target.value)}
                 rows={2}
-                className={inputCls()}
                 placeholder="Obs. relevantes para el cierre..."
               />
             </div>

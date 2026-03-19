@@ -48,6 +48,38 @@ const createEmptyOT = (): OTEntry => ({
   hs100Mods: { ...DEFAULT_MODS },
 });
 
+const wrapperCls = (hasError?: boolean) =>
+  `relative h-14 bg-background border rounded-2xl flex items-center shadow-inner transition-all focus-within:ring-4 focus-within:ring-accent-gold/10 focus-within:border-accent-gold/50 ${
+    hasError ? "border-red-500/50 bg-red-500/5 shadow-red-500/5" : "border-border shadow-black/5"
+  }`;
+
+const baseInputCls = "w-full h-full bg-transparent border-none px-5 outline-none text-[10px] font-black placeholder:text-slate-500 text-foreground";
+
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  hasError?: boolean;
+}
+
+const Input = ({ hasError, className, ...props }: InputProps) => (
+  <div className={wrapperCls(hasError)}>
+    <input {...props} className={`${baseInputCls} ${className || ""}`} />
+  </div>
+);
+
+interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  hasError?: boolean;
+}
+
+const Select = ({ hasError, className, children, ...props }: SelectProps) => (
+  <div className={wrapperCls(hasError)}>
+    <select {...props} className={`${baseInputCls} uppercase tracking-widest appearance-none cursor-pointer ${className || ""}`}>
+      {children}
+    </select>
+    <div className="absolute right-5 pointer-events-none text-slate-400">
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" /></svg>
+    </div>
+  </div>
+);
+
 function HourInputRow({ label, val, setVal, mods, setMods }: { label: string, val: string, setVal: (v: string) => void, mods: HourMods, setMods: (m: HourMods) => void }) {
   return (
     <div className="bg-background/20 p-3 rounded-2xl border border-border/50 space-y-2 shadow-inner group transition-all hover:border-accent-gold/20 backdrop-blur-3xl">
@@ -56,7 +88,7 @@ function HourInputRow({ label, val, setVal, mods, setMods }: { label: string, va
         <input 
           type="number" step="0.5" min="0" 
           value={val} onChange={(e) => setVal(e.target.value)} 
-          className="w-16 bg-background border border-border rounded-xl px-2 py-1.5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none text-[10px] font-black text-foreground text-right appearance-none" 
+          className="w-16 h-10 bg-background border border-border rounded-xl px-2 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none text-[10px] font-black text-foreground text-right appearance-none" 
           placeholder="0" 
         />
       </div>
@@ -303,14 +335,15 @@ export default function MiniCargaPage() {
             {/* Empleado Section */}
             <div ref={searchRef} className="space-y-2 relative">
               <div className="relative group/input">
-                <input
+                <Input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => handleSearch(e.target.value)}
                   onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                  className={`w-full h-14 bg-background border rounded-2xl pl-10 pr-5 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-500 outline-none transition-all shadow-inner ${errors.empleado ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
+                  hasError={!!errors.empleado}
                   placeholder="Nombre o legajo..."
                   autoComplete="off"
+                  className="pl-10 pr-10"
                 />
                 <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
                   {searchLoading ? <Loader2 className="w-4 h-4 text-accent-gold animate-spin" /> : <Search className="w-4 h-4 text-slate-500" />}
@@ -344,14 +377,14 @@ export default function MiniCargaPage() {
             <div className="grid grid-cols-2 gap-4">
                <div>
                   <label className="text-[9px] font-black uppercase text-slate-500 block mb-1.5 ml-1 tracking-widest">Fecha</label>
-                  <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="w-full h-14 bg-background border border-border rounded-2xl px-5 text-[10px] font-black uppercase tracking-widest text-foreground [color-scheme:light] dark:[color-scheme:dark] shadow-inner" />
+                  <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="[color-scheme:light] dark:[color-scheme:dark]" />
                </div>
                <div>
                   <label className="text-[9px] font-black uppercase text-slate-500 block mb-1.5 ml-1 tracking-widest">Contrato</label>
-                  <select value={contrato} onChange={(e) => setContrato(e.target.value)} className="w-full h-14 bg-background border border-border rounded-2xl px-5 text-[10px] font-black uppercase tracking-widest text-foreground appearance-none shadow-inner">
+                  <Select value={contrato} onChange={(e) => setContrato(e.target.value)}>
                     <option value="">Contrato...</option>
                     {CONTRATOS.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  </Select>
                </div>
             </div>
 
@@ -378,14 +411,14 @@ export default function MiniCargaPage() {
                     <div className="grid grid-cols-2 gap-3">
                        <div className="col-span-1">
                           <label className="text-[9px] font-black uppercase text-accent-gold block mb-1.5 ml-1 tracking-widest">Motivo</label>
-                          <select value={activeOT.motivo} onChange={(e) => updateOT(activeOT.id, { motivo: e.target.value })} className={`w-full bg-background border rounded-xl px-2 py-2.5 text-[9px] font-black uppercase tracking-widest text-foreground appearance-none shadow-inner ${errors[`motivo_${activeOTIndex}`] ? "border-red-500/50" : "border-border"}`}>
+                          <Select value={activeOT.motivo} onChange={(e) => updateOT(activeOT.id, { motivo: e.target.value })} hasError={!!errors[`motivo_${activeOTIndex}`]}>
                             <option value="">Motivo...</option>
                             {MOTIVOS.map(m => <option key={m} value={m}>{m}</option>)}
-                          </select>
+                          </Select>
                        </div>
                        <div className="col-span-1">
                           <label className="text-[9px] font-black uppercase text-accent-gold block mb-1.5 ml-1 tracking-widest">OT #</label>
-                          <input type="text" value={activeOT.ot} onChange={(e) => updateOT(activeOT.id, { ot: e.target.value.replace(/\D/g, "").slice(0, 12) })} disabled={activeOT.motivo === "OT Inexistente"} className={`w-full bg-background border rounded-xl px-2 py-2.5 text-[10px] font-black text-foreground placeholder:text-slate-600 outline-none disabled:opacity-30 shadow-inner ${errors[`ot_${activeOTIndex}`] ? "border-red-500/50" : "border-border"}`} placeholder="00123..." maxLength={12} />
+                          <Input type="text" value={activeOT.ot} onChange={(e) => updateOT(activeOT.id, { ot: e.target.value.replace(/\D/g, "").slice(0, 12) })} disabled={activeOT.motivo === "OT Inexistente"} hasError={!!errors[`ot_${activeOTIndex}`]} className="disabled:opacity-30 shadow-inner" placeholder="00123..." maxLength={12} />
                        </div>
                     </div>
 
@@ -393,9 +426,9 @@ export default function MiniCargaPage() {
                     <div className="bg-background/40 p-3 rounded-2xl border border-border/30">
                        <label className="text-[9px] font-black uppercase text-accent-gold block mb-2 ml-1 tracking-widest">Horario OT {activeOTIndex + 1}</label>
                        <div className="flex items-center gap-2">
-                          <input type="time" value={activeOT.horarioDesde} onChange={(e) => updateOT(activeOT.id, { horarioDesde: e.target.value })} className={`flex-1 bg-background border rounded-xl px-2 py-2 text-[10px] font-black shadow-inner ${errors[`horarioDesde_${activeOTIndex}`] ? "border-red-500/50" : "border-border"}`} />
+                          <Input type="time" value={activeOT.horarioDesde} onChange={(e) => updateOT(activeOT.id, { horarioDesde: e.target.value })} hasError={!!errors[`horarioDesde_${activeOTIndex}`]} />
                           <span className="text-slate-500">-</span>
-                          <input type="time" value={activeOT.horarioHasta} onChange={(e) => updateOT(activeOT.id, { horarioHasta: e.target.value })} className={`flex-1 bg-background border rounded-xl px-2 py-2 text-[10px] font-black shadow-inner ${errors[`horarioHasta_${activeOTIndex}`] ? "border-red-500/50" : "border-border"}`} />
+                          <Input type="time" value={activeOT.horarioHasta} onChange={(e) => updateOT(activeOT.id, { horarioHasta: e.target.value })} hasError={!!errors[`horarioHasta_${activeOTIndex}`]} />
                        </div>
                     </div>
                     
@@ -415,7 +448,7 @@ export default function MiniCargaPage() {
             <div className="grid grid-cols-1 gap-4 pt-4 border-t border-border">
                <div>
                   <label className="text-[9px] font-black uppercase text-slate-500 block mb-1.5 ml-1 tracking-widest">Sector</label>
-                  <input type="text" value={sector} onChange={(e) => setSector(e.target.value.toUpperCase())} className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-[10px] font-black uppercase tracking-widest text-foreground outline-none shadow-inner" placeholder="Ej: Puesto Fijo..." />
+                  <Input type="text" value={sector} onChange={(e) => setSector(e.target.value.toUpperCase())} placeholder="Ej: Puesto Fijo..." />
                </div>
                <div>
                   <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} className="w-full bg-background border border-border rounded-2xl px-4 py-3 text-[10px] font-medium text-foreground outline-none shadow-inner resize-none placeholder:text-slate-600" placeholder="Observaciones globales..." />

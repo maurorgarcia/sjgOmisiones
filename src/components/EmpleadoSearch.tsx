@@ -48,28 +48,28 @@ export function EmpleadoSearch({
         Empleado <span className="text-accent-gold ml-1 font-bold">*</span>
       </label>
 
-      <div className="relative group/input">
+      <div className={`relative h-14 bg-background border rounded-2xl flex items-center shadow-inner transition-all focus-within:ring-4 focus-within:ring-accent-gold/10 focus-within:border-accent-gold/50 ${
+        hasError ? "border-red-500/50 bg-red-500/5" : "border-border"
+      }`}>
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => onSearch(e.target.value)}
           onFocus={onFocus}
           placeholder="Buscar por nombre o legajo..."
-          className={`w-full h-14 bg-background border rounded-2xl px-5 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground pr-12 ${
-            hasError ? "border-red-500/50 bg-red-500/5" : "border-border"
-          }`}
+          className="w-full h-full bg-transparent border-none px-5 outline-none text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground pr-12"
         />
         {searchQuery && (
           <button
             type="button"
             onClick={() => onSearch("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-accent-gold transition-colors hover:bg-black/5 dark:hover:bg-white/5 rounded-lg"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-accent-gold transition-colors hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
           >
             <X className="w-4 h-4" />
           </button>
         )}
         {searchLoading && (
-          <Loader2 className="absolute right-10 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-gold animate-spin" />
+          <Loader2 className="absolute right-12 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-gold animate-spin" />
         )}
       </div>
 

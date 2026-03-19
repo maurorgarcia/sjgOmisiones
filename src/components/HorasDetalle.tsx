@@ -95,45 +95,51 @@ export function HorasDetalle({
       {/* Horas Normales */}
       <div>
         <label className={labelCls}>Horas Normales</label>
+      <div className="h-14 bg-background border border-border rounded-xl flex items-center shadow-inner focus-within:ring-4 focus-within:ring-accent-gold/10 focus-within:border-accent-gold/50 transition-all">
         <input
           type="number"
           min="0"
           step="0.5"
           value={horasNormales}
           onChange={(e) => setHorasNormales(e.target.value)}
-          className={inputCls}
+          className="w-full h-full bg-transparent border-none px-5 outline-none text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground"
           placeholder="Ej: 8"
         />
+      </div>
         <ModCheckboxes mods={hsNormalesMods} onChange={setHsNormalesMods} />
       </div>
 
       {/* Horas 50% */}
       <div>
         <label className={labelCls}>Horas 50%</label>
+      <div className="h-14 bg-background border border-border rounded-xl flex items-center shadow-inner focus-within:ring-4 focus-within:ring-accent-gold/10 focus-within:border-accent-gold/50 transition-all">
         <input
           type="number"
           min="0"
           step="0.5"
           value={horas50}
           onChange={(e) => setHoras50(e.target.value)}
-          className={inputCls}
+          className="w-full h-full bg-transparent border-none px-5 outline-none text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground"
           placeholder="Ej: 2"
         />
+      </div>
         <ModCheckboxes mods={hs50Mods} onChange={setHs50Mods} />
       </div>
 
       {/* Horas 100% */}
       <div>
         <label className={labelCls}>Horas 100%</label>
+      <div className="h-14 bg-background border border-border rounded-xl flex items-center shadow-inner focus-within:ring-4 focus-within:ring-accent-gold/10 focus-within:border-accent-gold/50 transition-all">
         <input
           type="number"
           min="0"
           step="0.5"
           value={horas100}
           onChange={(e) => setHoras100(e.target.value)}
-          className={inputCls}
+          className="w-full h-full bg-transparent border-none px-5 outline-none text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground"
           placeholder="Ej: 4"
         />
+      </div>
         <ModCheckboxes mods={hs100Mods} onChange={setHs100Mods} />
       </div>
     </div>
