@@ -4,19 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
-  LayoutDashboard,
-  PlusCircle,
-  FileSpreadsheet,
-  LogOut,
-  Upload,
-  Maximize2,
-  Users2,
-  ClipboardList,
-  Menu,
-  X,
-  Wifi,
-  WifiOff,
-  UserSquare2,
+  LayoutDashboard, PlusCircle, FileSpreadsheet, LogOut,
+  Upload, Maximize2, Users2, ClipboardList, Menu, X,
+  Wifi, WifiOff, UserSquare2,
 } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,7 +17,6 @@ import { supabase } from "@/lib/supabase";
 
 function useRealtimeStatus() {
   const [status, setStatus] = useState<"connecting" | "connected" | "disconnected">("connecting");
-
   useEffect(() => {
     const channel = supabase
       .channel("sidebar-health")
@@ -37,10 +26,8 @@ function useRealtimeStatus() {
         else if (s === "CHANNEL_ERROR" || s === "TIMED_OUT" || s === "CLOSED") setStatus("disconnected");
         else setStatus("connecting");
       });
-
     return () => { supabase.removeChannel(channel); };
   }, []);
-
   return status;
 }
 
@@ -69,139 +56,127 @@ export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const realtimeStatus = useRealtimeStatus();
 
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
 
   if (!session) return null;
 
   const sidebarContent = (
-    <aside className="h-full w-64 bg-sidebar text-foreground flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.5)] border-r border-border transition-colors duration-300">
+    <aside className="h-full w-64 bg-sidebar text-foreground flex flex-col border-r border-border">
+
       {/* Logo */}
-      <div className="px-5 py-6 border-b border-border flex items-center justify-between">
+      <div className="px-6 py-5 border-b border-border flex items-center justify-between">
         <Image
           src="/logo-sjg.png"
           alt="SJG Montajes Industriales"
-          width={180}
-          height={60}
-          className={`w-full max-w-[150px] object-contain transition-all duration-300 ${theme === "dark" ? "invert brightness-0" : ""}`}
+          width={160}
+          height={50}
+          className={`w-full max-w-[130px] object-contain ${theme === "dark" ? "invert brightness-0" : ""}`}
         />
         <button
           onClick={() => setMobileOpen(false)}
-          className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-all"
-          aria-label="Cerrar menú"
+          className="lg:hidden p-1.5 rounded-md text-muted hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <p className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-80">
-          Gestión Errores
-        </p>
-        <div className="space-y-1 mb-6">
-          {navItems.map((item) => (
-            <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />
-          ))}
+      <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-6">
+
+        <div>
+          <p className="text-[10px] font-medium text-muted uppercase tracking-wider px-3 mb-1">
+            Gestión Errores
+          </p>
+          <div className="space-y-0.5">
+            {navItems.map((item) => (
+              <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />
+            ))}
+          </div>
         </div>
 
-        <p className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-80">
-          Sección Faltantes
-        </p>
-        <div className="space-y-1 mb-6">
-          {faltantesItems.map((item) => (
-            <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />
-          ))}
+        <div>
+          <p className="text-[10px] font-medium text-muted uppercase tracking-wider px-3 mb-1">
+            Faltantes
+          </p>
+          <div className="space-y-0.5">
+            {faltantesItems.map((item) => (
+              <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />
+            ))}
+          </div>
         </div>
 
-        <p className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] px-3 mb-2 opacity-80">
-          Sistema
-        </p>
-        <div className="space-y-1">
-          {adminItems.map((item) => (
-            <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />
-          ))}
+        <div>
+          <p className="text-[10px] font-medium text-muted uppercase tracking-wider px-3 mb-1">
+            Sistema
+          </p>
+          <div className="space-y-0.5">
+            {adminItems.map((item) => (
+              <NavItem key={item.href} item={item} isAdmin={isAdmin} pathname={pathname} />
+            ))}
+          </div>
         </div>
       </nav>
 
       {/* GDAI Credit */}
-      <div className="px-4 py-4 border-t border-border">
+      <div className="px-4 py-3 border-t border-border">
         <a
           href="https://www.godreamai.com/"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-col items-center justify-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity"
-          title="Desarrollado por GDAI"
+          className="flex flex-col items-center justify-center gap-1 opacity-40 hover:opacity-70 transition-opacity"
         >
-          <span className="text-[9px] text-slate-500 tracking-widest uppercase font-black opacity-70">
-            Desarrollado por
-          </span>
+          <span className="text-[9px] text-muted tracking-wider uppercase font-medium">Desarrollado por</span>
           <Image
             src="/logo-gdai.png"
             alt="GDAI"
-            width={80}
-            height={22}
-            className={`h-[22px] w-auto object-contain transition-all duration-300 ${theme === "dark" ? "invert brightness-0" : ""}`}
+            width={60}
+            height={18}
+            className={`h-[18px] w-auto object-contain ${theme === "dark" ? "invert brightness-0" : ""}`}
           />
         </a>
       </div>
 
-      {/* User info + Logout */}
-      <div className="px-3 py-4 border-t border-border bg-sidebar/50">
-        {/* Realtime status */}
-        <div className="flex items-center gap-2 px-3 mb-3">
-          {realtimeStatus === "connected" ? (
-            <Wifi className="w-3 h-3 text-emerald-500" />
-          ) : realtimeStatus === "connecting" ? (
-            <Wifi className="w-3 h-3 text-amber-400 animate-pulse" />
-          ) : (
-            <WifiOff className="w-3 h-3 text-red-400" />
-          )}
-          <span
-            className={`text-[9px] font-black uppercase tracking-widest ${
-              realtimeStatus === "connected"
-                ? "text-emerald-500"
-                : realtimeStatus === "connecting"
-                  ? "text-amber-400"
-                  : "text-red-400"
-            }`}
-          >
-            {realtimeStatus === "connected"
-              ? "En vivo"
-              : realtimeStatus === "connecting"
-                ? "Conectando…"
-                : "Sin conexión"}
+      {/* User + Status */}
+      <div className="px-3 py-3 border-t border-border">
+        {/* Realtime status — más discreto */}
+        <div className="flex items-center gap-1.5 px-3 mb-2">
+          <div className={`w-1.5 h-1.5 rounded-full ${
+            realtimeStatus === "connected" ? "bg-emerald-500" :
+            realtimeStatus === "connecting" ? "bg-amber-400 animate-pulse" :
+            "bg-red-400"
+          }`} />
+          <span className="text-[10px] font-medium text-muted">
+            {realtimeStatus === "connected" ? "En vivo" :
+             realtimeStatus === "connecting" ? "Conectando…" : "Sin conexión"}
           </span>
         </div>
-        <div className="flex items-center gap-3 px-3 py-2.5 mb-2 rounded-xl bg-card border border-border shadow-sm">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-xs font-bold text-black uppercase flex-shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+
+        {/* User card */}
+        <div className="flex items-center gap-3 px-3 py-2 mb-1 rounded-lg bg-black/[0.03] dark:bg-white/[0.03] border border-border">
+          <div className="w-8 h-8 rounded-lg bg-accent-gold/10 border border-accent-gold/20 flex items-center justify-center text-xs font-semibold text-accent-gold uppercase flex-shrink-0">
             {(session.user?.name || session.user?.email || "U")[0]}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-foreground truncate tracking-tight">
+            <p className="text-sm font-medium text-foreground truncate">
               {session.user?.name || "Usuario"}
             </p>
-            <p className="text-[10px] text-slate-500 truncate font-medium uppercase tracking-wider">
+            <p className="text-[10px] text-muted truncate">
               {session.user?.role === "admin" ? "Administrador" : "Visualizador"}
             </p>
           </div>
           <ThemeToggle />
         </div>
+
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400 transition-all font-medium"
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted hover:bg-red-500/8 hover:text-red-500 dark:hover:text-red-400 transition-colors font-medium"
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-3.5 h-3.5" />
           Cerrar sesión
         </button>
       </div>
@@ -210,13 +185,12 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile hamburger button */}
+      {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-card border border-border shadow-lg text-foreground hover:bg-accent-gold hover:text-black hover:border-transparent transition-all active:scale-95"
-        aria-label="Abrir menú"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-card border border-border shadow-sm text-foreground hover:bg-accent-gold hover:text-black hover:border-transparent transition-all"
       >
-        <Menu className="w-5 h-5" />
+        <Menu className="w-4 h-4" />
       </button>
 
       {/* Desktop sidebar */}
@@ -233,8 +207,7 @@ export function Sidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 lg:hidden"
               onClick={() => setMobileOpen(false)}
             />
             <motion.div
@@ -267,38 +240,32 @@ function NavItem({
   if (adminOnly && !isAdmin) return null;
 
   const active = pathname === href;
-  const isCarga = href === "/carga";
+  const isCarga = href === "/carga" || href === "/faltantes/carga";
 
   return (
     <div className="group relative">
       <Link
         href={href}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 relative group/link ${
+        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all ${
           active
-            ? "bg-gradient-to-r from-accent-gold to-accent-gold-dark text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]"
-            : "text-slate-600 dark:text-slate-500 hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground"
+            ? "bg-accent-gold/10 text-accent-gold font-semibold border border-accent-gold/20"
+            : "text-muted hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:text-foreground font-medium"
         }`}
       >
-        <div className="absolute inset-0 rounded-xl transition-opacity duration-500 opacity-0 group-hover/link:opacity-100 bg-gradient-to-r from-amber-500/10 to-transparent pointer-events-none" />
-        <Icon
-          className={`w-4 h-4 flex-shrink-0 relative z-10 ${
-            active
-              ? "text-black"
-              : "text-slate-600 dark:text-slate-500 group-hover/link:text-accent-gold group-hover/link:scale-110 transition-all"
-          }`}
-        />
-        <span className="relative z-10 tracking-tight font-black uppercase text-[11px]">{label}</span>
+        <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-accent-gold" : "text-muted group-hover:text-foreground transition-colors"}`} />
+        <span className="truncate">{label}</span>
+        {/* Indicador activo — línea lateral sutil */}
         {active && (
           <motion.div
             layoutId="activeNav"
-            className="absolute left-[-12px] w-1.5 h-6 bg-amber-400 rounded-r-full shadow-[0_0_12px_rgba(251,191,36,0.8)]"
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-accent-gold rounded-r-full"
             initial={false}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={{ type: "spring", stiffness: 400, damping: 35 }}
           />
         )}
       </Link>
 
-      {(isCarga || href === "/faltantes/carga") && isAdmin && (
+      {isCarga && isAdmin && (
         <button
           onClick={() =>
             window.open(
@@ -307,11 +274,10 @@ function NavItem({
               "width=450,height=800,menubar=no,toolbar=no,location=no,status=no"
             )
           }
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-md transition-all opacity-0 group-hover:opacity-100 flex items-center gap-1"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted hover:text-accent-gold hover:bg-accent-gold/10 rounded transition-all opacity-0 group-hover:opacity-100"
           title="Abrir en ventana flotante"
         >
-          <div className="h-3 w-[1px] bg-border mr-1" />
-          <Maximize2 className="w-3.5 h-3.5" />
+          <Maximize2 className="w-3 h-3" />
         </button>
       )}
     </div>

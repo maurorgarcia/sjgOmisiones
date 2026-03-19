@@ -23,150 +23,118 @@ interface EmpleadoSearchProps {
 }
 
 export function EmpleadoSearch({
-  searchRef,
-  searchQuery,
-  suggestions,
-  selectedEmpleados,
-  searchLoading,
-  showSuggestions,
-  legajoManual,
-  errors,
-  onSearch,
-  onFocus,
-  onSelect,
-  onAddManual,
-  onRemove,
-  onClear,
-  onLegajoChange,
+  searchRef, searchQuery, suggestions, selectedEmpleados,
+  searchLoading, showSuggestions, legajoManual, errors,
+  onSearch, onFocus, onSelect, onAddManual, onRemove, onClear, onLegajoChange,
 }: EmpleadoSearchProps) {
   const hasError = !!errors.empleado || !!errors.legajo;
 
   return (
-    // ✅ FIX: `relative` removido de acá — ya no engloba el label ni los errores
-    <div className="space-y-2" ref={searchRef}>
-      <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-2 text-slate-600 dark:text-slate-500 ml-1 flex items-center gap-2 group">
-        <Search className="w-3.5 h-3.5 group-hover:text-accent-gold transition-colors" />
-        Empleado <span className="text-accent-gold ml-1 font-bold">*</span>
+    <div className="space-y-1.5" ref={searchRef}>
+      <label className="block text-[11px] font-medium uppercase tracking-wide text-muted mb-1.5">
+        Empleado <span className="text-red-400 ml-0.5">*</span>
       </label>
 
-      {/* ✅ FIX: `relative` movido acá, justo al padre del dropdown */}
+      {/* Input wrapper — relative solo acá para el dropdown */}
       <div className="relative">
-        <div
-          className={`relative h-14 bg-background border rounded-2xl flex items-center shadow-inner transition-all focus-within:ring-4 focus-within:ring-accent-gold/10 focus-within:border-accent-gold/50 ${
-            hasError ? "border-red-500/50 bg-red-500/5" : "border-border"
-          }`}
-        >
+        <div className={`relative h-10 bg-background border rounded-lg flex items-center transition-all focus-within:ring-2 focus-within:ring-accent-gold/30 focus-within:border-accent-gold ${
+          hasError ? "border-red-400 bg-red-500/[0.03]" : "border-border"
+        }`}>
+          <Search className="absolute left-3 w-3.5 h-3.5 text-muted pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearch(e.target.value)}
             onFocus={onFocus}
             placeholder="Buscar por nombre o legajo..."
-            className="w-full h-10 bg-transparent border-none px-5 outline-none text-sm font-black placeholder:text-slate-400 dark:placeholder:text-slate-700 text-foreground pr-12 self-center"
+            className="w-full h-full bg-transparent border-none pl-9 pr-10 outline-none text-sm font-normal placeholder:text-muted text-foreground"
           />
-          {searchQuery && (
+          {searchLoading && (
+            <Loader2 className="absolute right-3 w-3.5 h-3.5 text-accent-gold animate-spin" />
+          )}
+          {searchQuery && !searchLoading && (
             <button
               type="button"
               onClick={() => onSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-accent-gold transition-colors hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
+              className="absolute right-3 p-0.5 text-muted hover:text-foreground transition-colors"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
-          )}
-          {searchLoading && (
-            <Loader2 className="absolute right-12 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-gold animate-spin" />
           )}
         </div>
 
-        {/* ✅ Suggestions dropdown — se posiciona relativo al input, no al label */}
+        {/* Suggestions dropdown */}
         {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute z-50 left-0 right-0 top-[calc(100%+8px)] bg-card rounded-[2rem] border border-border shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-            <div className="max-h-[250px] overflow-y-auto">
+          <div className="absolute z-50 left-0 right-0 top-[calc(100%+4px)] bg-card border border-border rounded-lg shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="max-h-[220px] overflow-y-auto">
               {suggestions.map((emp) => (
                 <button
                   key={emp.legajo}
                   type="button"
                   onClick={() => onSelect(emp)}
-                  className="w-full text-left px-5 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-all flex items-start justify-between group border-b border-border last:border-0"
+                  className="w-full text-left px-4 py-2.5 hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-colors flex items-center justify-between border-b border-border last:border-0"
                 >
-                  <div className="flex flex-col gap-0.5">
-                    <p className="text-sm font-bold text-foreground group-hover:text-accent-gold transition-colors uppercase tracking-tight">
-                      {emp.nombre_apellido}
-                    </p>
-                    <p className="text-[10px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-widest">
-                      Legajo: {emp.legajo}
-                    </p>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{emp.nombre_apellido}</p>
+                    <p className="text-[10px] text-muted mt-0.5">Legajo: {emp.legajo}</p>
                   </div>
-                  <div className="text-[10px] font-black text-accent-gold/70 uppercase bg-accent-gold/5 px-2.5 py-1.5 rounded-xl border border-accent-gold/10 group-hover:bg-accent-gold group-hover:text-black group-hover:border-transparent transition-all">
+                  <span className="text-[10px] font-medium text-muted bg-black/[0.05] dark:bg-white/[0.05] px-2 py-1 rounded-md ml-3 flex-shrink-0">
                     {emp.contrato}
-                  </div>
+                  </span>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* ✅ No results — manual entry fallback */}
-        {showSuggestions &&
-          suggestions.length === 0 &&
-          searchQuery.length >= 2 &&
-          !searchLoading && (
-            <div className="absolute z-50 left-0 right-0 top-[calc(100%+8px)] bg-card rounded-[2rem] border border-border shadow-2xl p-6 animate-in fade-in slide-in-from-top-4 duration-300">
-              <p className="text-[10px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-widest mb-3">
-                Empleado no encontrado. Ingrese legajo manual:
-              </p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={legajoManual}
-                  onChange={(e) => onLegajoChange(e.target.value)}
-                  className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm font-black outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all"
-                  placeholder="Legajo SAP..."
-                />
-                <button
-                  type="button"
-                  onClick={onAddManual}
-                  className="px-6 rounded-xl bg-accent-gold text-black font-black text-[10px] uppercase tracking-[0.2em] active:scale-95 transition-all shadow-lg shadow-accent-gold/10"
-                >
-                  Agregar
-                </button>
-              </div>
+        {/* No results — manual entry */}
+        {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && !searchLoading && (
+          <div className="absolute z-50 left-0 right-0 top-[calc(100%+4px)] bg-card border border-border rounded-lg shadow-lg p-4 animate-in fade-in duration-150">
+            <p className="text-xs text-muted mb-3">Empleado no encontrado. Ingresá el legajo manualmente:</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={legajoManual}
+                onChange={(e) => onLegajoChange(e.target.value)}
+                className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent-gold/30 focus:border-accent-gold transition-all"
+                placeholder="Legajo SAP..."
+              />
+              <button
+                type="button"
+                onClick={onAddManual}
+                className="px-4 rounded-lg bg-accent-gold hover:bg-accent-gold-dark text-white font-medium text-xs transition-colors"
+              >
+                Agregar
+              </button>
             </div>
-          )}
+          </div>
+        )}
       </div>
 
-      {/* Errors — fuera del relative para no afectar el posicionamiento */}
-      {errors.empleado && (
-        <p className="text-red-500 text-xs mt-1 font-bold">{errors.empleado}</p>
-      )}
-      {errors.legajo && (
-        <p className="text-red-500 text-xs mt-1 font-bold">{errors.legajo}</p>
-      )}
+      {/* Errors */}
+      {errors.empleado && <p className="text-red-500 text-[11px] font-medium">{errors.empleado}</p>}
+      {errors.legajo && <p className="text-red-500 text-[11px] font-medium">{errors.legajo}</p>}
 
-      {/* Selected employees list */}
+      {/* Selected employees */}
       {selectedEmpleados.length > 0 && (
-        <div className="flex flex-wrap gap-2.5 mt-4 pt-4 border-t border-border">
+        <div className="flex flex-wrap gap-1.5 pt-2">
           {selectedEmpleados.map((emp) => (
             <div
               key={emp.legajo}
-              className="inline-flex items-center gap-2.5 bg-accent-gold/10 border border-accent-gold/20 text-accent-gold px-3.5 py-2 rounded-[0.9rem] text-[11px] font-black uppercase tracking-tight shadow-lg"
+              className="inline-flex items-center gap-1.5 bg-accent-gold/10 border border-accent-gold/20 text-accent-gold px-2.5 py-1 rounded-md text-xs font-medium"
             >
               {emp.nombre_apellido}
-              <button
-                type="button"
-                onClick={() => onRemove(emp.legajo)}
-                className="hover:text-foreground p-0.5 transition-colors"
-              >
-                <X className="w-3.5 h-3.5 stroke-[3px]" />
+              <button type="button" onClick={() => onRemove(emp.legajo)} className="hover:text-foreground transition-colors ml-0.5">
+                <X className="w-3 h-3" />
               </button>
             </div>
           ))}
           <button
             type="button"
             onClick={onClear}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[0.9rem] border border-border text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-500/5 transition-all"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-border text-xs font-medium text-muted hover:text-red-500 hover:border-red-300 hover:bg-red-500/[0.04] transition-all"
           >
-            <X className="w-3 h-3 stroke-[3px]" />
+            <X className="w-3 h-3" />
             Limpiar
           </button>
         </div>

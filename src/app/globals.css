@@ -1,31 +1,41 @@
 @import "tailwindcss";
 
+/* ─── Design Tokens ───────────────────────────────────────────────────────── */
+
 :root {
-  /* ✅ MEJORA DE COLOR: light mode más cálido y con más contraste
-     Antes era slate-100 puro (#f1f5f9), ahora tiene un tinte cálido crema
-     que complementa mejor el accent-gold */
-  --background: #f5f3ef;
-  --foreground: #1a1208;
-  --accent-gold: #c96a00;
-  --accent-gold-dark: #a85500;
-  --sidebar-bg: #fdfcf9;
-  --card-bg: #fdfcf9;
-  --border-color: #e2d9cc;
-  --muted: #7a6a55;
+  --background: #f8f7f5;
+  --foreground: #1c1917;
+  --accent-gold: #b45309;
+  --accent-gold-dark: #92400e;
+  --accent-gold-subtle: rgba(180, 83, 9, 0.08);
+  --sidebar-bg: #ffffff;
+  --card-bg: #ffffff;
+  --border-color: #e7e5e0;
+  --border-subtle: #f0ede8;
+  --muted: #78716c;
+  --muted-foreground: #a8a29e;
+  --success: #15803d;
+  --success-bg: rgba(21, 128, 61, 0.08);
+  --danger: #b91c1c;
+  --danger-bg: rgba(185, 28, 28, 0.07);
 }
 
 .dark {
-  /* ✅ MEJORA DE COLOR: dark mode más profundo y sofisticado
-     Antes era casi negro puro, ahora tiene un tinte azul-carbón muy sutil
-     que da más profundidad y hace resaltar mejor el gold */
-  --background: #0c0e14;
-  --foreground: #edeae4;
-  --accent-gold: #f5a623;
-  --accent-gold-dark: #e08800;
-  --sidebar-bg: #10121a;
-  --card-bg: #13161f;
-  --border-color: #1e2235;
-  --muted: #8892b0;
+  --background: #0f1117;
+  --foreground: #e8e6e1;
+  --accent-gold: #d97706;
+  --accent-gold-dark: #b45309;
+  --accent-gold-subtle: rgba(217, 119, 6, 0.1);
+  --sidebar-bg: #13151c;
+  --card-bg: #16181f;
+  --border-color: #23262f;
+  --border-subtle: #1c1f28;
+  --muted: #6b7280;
+  --muted-foreground: #4b5563;
+  --success: #16a34a;
+  --success-bg: rgba(22, 163, 74, 0.1);
+  --danger: #dc2626;
+  --danger-bg: rgba(220, 38, 38, 0.08);
 }
 
 @theme inline {
@@ -40,47 +50,79 @@
   --color-muted: var(--muted);
 }
 
-/* ✅ FIX FLASH DE TEMA: script inline que aplica la clase ANTES del primer render
-   Esto evita el parpadeo light→dark al cargar la página */
-:root[data-theme-resolved="dark"] {
-  color-scheme: dark;
-}
-:root[data-theme-resolved="light"] {
-  color-scheme: light;
-}
+/* ─── Base ────────────────────────────────────────────────────────────────── */
 
 body {
-  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
   background-color: var(--background);
   color: var(--foreground);
-  background-image:
-    radial-gradient(ellipse at 0% 0%, rgba(201, 106, 0, 0.06) 0, transparent 55%),
-    radial-gradient(ellipse at 100% 100%, rgba(168, 85, 0, 0.04) 0, transparent 55%);
-  background-attachment: fixed;
-  transition: background-color 0.3s ease, color 0.3s ease;
   min-height: 100vh;
-  /* ✅ FIX: evita scroll horizontal en mobile causado por dropdowns absolutos */
   overflow-x: hidden;
+  /* Fondo limpio sin gradientes — más profesional */
+  background-image: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  /* Mejor rendering de texto */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.dark body {
-  background-image:
-    radial-gradient(ellipse at 0% 0%, rgba(245, 166, 35, 0.07) 0, transparent 50%),
-    radial-gradient(ellipse at 100% 100%, rgba(20, 40, 100, 0.07) 0, transparent 50%);
+/* ─── Tipografía profesional ──────────────────────────────────────────────── */
+
+/*
+  SISTEMA DE JERARQUÍA:
+  - Títulos de página: font-bold text-xl/2xl tracking-tight
+  - Labels de campo: font-medium text-xs text-muted uppercase tracking-wider (NO tracking-widest)
+  - Valores: font-semibold text-sm
+  - Texto secundario: font-normal text-xs text-muted
+  - Badges/pills: font-medium text-[11px] (NO font-black)
+  - Botones primarios: font-semibold text-sm
+*/
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
+
+/* ─── Utility clases globales ─────────────────────────────────────────────── */
+
+/* Label de campo profesional — reemplaza el tracking-[0.2em] font-black */
+.field-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Input base profesional */
+.input-base {
+  width: 100%;
+  background-color: var(--background);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--foreground);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+
+.input-base:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px var(--accent-gold-subtle);
 }
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 10px;
+
+/* Card profesional */
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-gold);
+
+.dark .card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
