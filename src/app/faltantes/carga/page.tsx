@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { Save, Loader2, ArrowLeft, Calendar, Building2, FileText, Hash, Search, X, Maximize2, CheckCircle2 } from "lucide-react";
+import { Loader2, ArrowLeft, Calendar, Building2, FileText, Hash, Search, X, Maximize2, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { CONTRATOS, SECTORES_FALTANTES, MOTIVOS_FALTANTES } from "@/types";
@@ -24,6 +24,13 @@ type RecentFaltante = {
   sector: string | null;
   motivo: string | null;
 };
+
+const fieldLabel = "block text-[11px] font-medium uppercase tracking-wide mb-1.5 text-muted";
+
+const inputBase = (hasError?: boolean) =>
+  `w-full bg-background border rounded-lg px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-accent-gold/30 focus:border-accent-gold outline-none transition-all ${
+    hasError ? "border-red-400 bg-red-500/[0.03]" : "border-border"
+  }`;
 
 export default function CargaFaltantePage() {
   const router = useRouter();
@@ -217,284 +224,254 @@ export default function CargaFaltantePage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto">
-      <div className="mb-8 flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-1.5 h-10 bg-accent-gold rounded-full shadow-[0_0_20px_rgba(245,158,11,0.5)]" />
-          <div>
-            <h1 className="text-2xl font-black text-foreground tracking-tight uppercase">Registrar Faltante</h1>
-            <p className="text-slate-600 dark:text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">Anote personas que faltan en la planilla o sistema.</p>
-          </div>
-        </div>
+    <div className="max-w-xl mx-auto space-y-5">
+      {/* Header */}
+      <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => window.open("/faltantes/mini", "MiniFaltantes", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-accent-gold/20 bg-accent-gold/5 text-accent-gold text-[10px] font-black uppercase tracking-widest hover:bg-accent-gold/10 transition-all active:scale-95 shadow-xl"
-          >
-            <Maximize2 className="w-4 h-4" />
-            <span>VENTANA</span>
-          </button>
-          <button
             onClick={() => router.back()}
-            className="p-2.5 text-slate-500 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-2xl transition-all border border-transparent hover:border-border"
+            className="p-1.5 text-muted hover:text-foreground hover:bg-black/[0.05] dark:hover:bg-white/[0.05] rounded-lg transition-all"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-4 h-4" />
           </button>
+          <div>
+            <h1 className="text-xl font-semibold text-foreground tracking-tight">Registrar Faltante</h1>
+            <p className="text-sm text-muted mt-0.5">Anote personas que faltan en la planilla o sistema.</p>
+          </div>
         </div>
+        <button
+          onClick={() => window.open("/faltantes/mini", "MiniFaltantes", "width=450,height=800,menubar=no,toolbar=no,location=no,status=no")}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm text-muted hover:text-foreground hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-colors"
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline text-xs">Modo Ventana</span>
+        </button>
       </div>
 
-      <div className="bg-card/40 rounded-[2.5rem] border border-border shadow-2xl overflow-hidden backdrop-blur-xl">
-        <form onSubmit={handleSubmit} className="p-8 space-y-6" noValidate>
-          <div className="space-y-4">
-            {/* Fecha */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
-                <Calendar className="w-3.5 h-3.5 group-hover:text-accent-gold transition-colors" /> Fecha
-              </label>
-              <input
-                type="date"
-                value={fecha}
-                onChange={(e) => updateFecha(e.target.value)}
-                className="w-full bg-background border border-border rounded-2xl px-5 py-4 text-xs font-medium text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]"
-              />
-            </div>
+      {/* Form card */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
 
-            {/* ✅ FIX: Búsqueda de Empleado — mismo fix que EmpleadoSearch:
-                `relative` movido al wrapper del input, no al div que incluye el label */}
-            <div className="space-y-2" ref={searchRef}>
-              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
-                <Search className="w-3.5 h-3.5 group-hover:text-accent-gold transition-colors" /> Empleado
-              </label>
-
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
-                  placeholder="Buscar por nombre o legajo..."
-                  className={`w-full bg-background border rounded-2xl px-5 py-4 text-xs font-medium text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all pr-12 shadow-inner ${errors.nombre ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => { setSearchQuery(""); setSuggestions([]); }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-slate-600 hover:text-accent-gold transition-colors hover:bg-black/5 dark:hover:bg-white/5 rounded-lg"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-                {searchLoading && (
-                  <Loader2 className="absolute right-12 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-gold animate-spin" />
-                )}
-
-                {/* Suggestions dropdown */}
-                {showSuggestions && suggestions.length > 0 && (
-                  <div className="absolute z-50 left-0 right-0 top-[calc(100%+8px)] bg-card rounded-[2rem] border border-border shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                    <div className="max-h-[250px] overflow-y-auto">
-                      {suggestions.map((emp) => (
-                        <button
-                          key={emp.legajo}
-                          type="button"
-                          onClick={() => selectEmpleado(emp)}
-                          className="w-full text-left px-5 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-all flex items-center justify-between group border-b border-border last:border-0"
-                        >
-                          <div>
-                            <p className="text-sm font-bold text-foreground group-hover:text-accent-gold transition-colors uppercase tracking-tight">{emp.nombre_apellido}</p>
-                            <p className="text-[10px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-widest mt-0.5">Legajo: {emp.legajo}</p>
-                          </div>
-                          <div className="text-[10px] font-black text-accent-gold/70 uppercase bg-accent-gold/5 px-2.5 py-1.5 rounded-xl border border-accent-gold/10 group-hover:bg-accent-gold group-hover:text-black group-hover:border-transparent transition-all">
-                            {emp.contrato}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && !searchLoading && (
-                  <div className="absolute z-50 left-0 right-0 top-[calc(100%+8px)] bg-card rounded-[2rem] border border-border shadow-2xl p-6 animate-in fade-in slide-in-from-top-4 duration-300">
-                    <p className="text-[10px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-widest mb-3">Empleado no encontrado. Ingrese legajo manual:</p>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={legajoManual}
-                        onChange={(e) => setLegajoManual(e.target.value)}
-                        className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-sm font-black outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 transition-all"
-                        placeholder="Legajo SAP..."
-                      />
-                      <button
-                        type="button"
-                        onClick={addManualEmpleado}
-                        className="px-6 rounded-xl bg-accent-gold text-black font-black text-[10px] uppercase tracking-[0.2em] active:scale-95 transition-all shadow-lg shadow-accent-gold/10"
-                      >
-                        Agregar
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {errors.nombre && (
-                <p className="text-red-500 text-xs mt-1 font-bold">{errors.nombre}</p>
-              )}
-
-              {/* Selected List */}
-              <AnimatePresence mode="popLayout">
-                {selectedEmpleados.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="flex flex-wrap gap-2.5 mt-4 pt-4 border-t border-border"
-                  >
-                    {selectedEmpleados.map((emp) => (
-                      <motion.div
-                        key={emp.legajo}
-                        layout
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.5, opacity: 0 }}
-                        className="inline-flex items-center gap-2.5 bg-accent-gold/10 border border-accent-gold/20 text-accent-gold px-3.5 py-2 rounded-[0.9rem] text-[11px] font-black uppercase tracking-tight shadow-lg"
-                      >
-                        {emp.nombre_apellido}
-                        <button type="button" onClick={() => removeEmpleado(emp.legajo)} className="hover:text-foreground p-0.5 transition-colors">
-                          <X className="w-3.5 h-3.5 stroke-[3px]" />
-                        </button>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Contrato */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
-                <Hash className="w-3.5 h-3.5 group-hover:text-accent-gold transition-colors" /> Contrato
-              </label>
-              <select
-                value={contrato}
-                onChange={(e) => setContrato(e.target.value)}
-                className={`w-full bg-background border rounded-2xl px-5 py-4 text-xs font-black uppercase tracking-widest text-foreground focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all appearance-none cursor-pointer ${errors.contrato ? "border-red-500/50 bg-red-500/5" : "border-border"}`}
-              >
-                <option value="" className="bg-card">Seleccione contrato...</option>
-                {CONTRATOS.map((c) => <option key={c} value={c} className="bg-card">{c}</option>)}
-              </select>
-              {errors.contrato && (
-                <p className="text-red-500 text-xs mt-1 font-bold">{errors.contrato}</p>
-              )}
-            </div>
-
-            {/* Sector */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
-                <Building2 className="w-3.5 h-3.5 group-hover:text-accent-gold transition-colors" /> Sector
-              </label>
-              <input
-                type="text"
-                value={sector}
-                onChange={(e) => setSector(e.target.value)}
-                placeholder="Ej: Pañol/Logistica"
-                list="sectores-faltantes"
-                className="w-full bg-background border border-border rounded-2xl px-5 py-4 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all shadow-inner"
-              />
-              <datalist id="sectores-faltantes">
-                {SECTORES_FALTANTES.map((s) => <option key={s} value={s} />)}
-              </datalist>
-            </div>
-
-            {/* Motivo */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-600 dark:text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center gap-2 group">
-                <FileText className="w-3.5 h-3.5 group-hover:text-accent-gold transition-colors" /> Motivo
-              </label>
-              <input
-                type="text"
-                value={motivo}
-                onChange={(e) => setMotivo(e.target.value)}
-                placeholder="Ej: Falta cargar"
-                list="motivos-faltantes"
-                className="w-full bg-background border border-border rounded-2xl px-5 py-4 text-xs font-black uppercase tracking-widest text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-700 focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold/50 outline-none transition-all shadow-inner"
-              />
-              <datalist id="motivos-faltantes">
-                {MOTIVOS_FALTANTES.map((m) => <option key={m} value={m} />)}
-              </datalist>
-            </div>
+          {/* Fecha */}
+          <div>
+            <label className={fieldLabel + " flex items-center gap-1.5"}>
+              <Calendar className="w-3 h-3" /> Fecha
+            </label>
+            <input
+              type="date"
+              value={fecha}
+              onChange={(e) => updateFecha(e.target.value)}
+              className={inputBase(!!errors.fecha) + " [color-scheme:light] dark:[color-scheme:dark]"}
+            />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-5 px-6 rounded-2xl bg-gradient-to-r from-accent-gold to-accent-gold-dark hover:from-accent-gold-dark hover:to-accent-gold text-black font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-[0_12px_24px_-8px_rgba(245,158,11,0.2)] disabled:opacity-50 disabled:cursor-not-allowed group active:scale-[0.98] outline-none focus:ring-4 focus:ring-accent-gold/30"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Guardando...</span>
-              </>
-            ) : (
-              <>
-                <span>Guardar {selectedEmpleados.length > 1 ? `(${selectedEmpleados.length}) Registros` : "Registro"}</span>
-                <CheckCircle2 className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity" />
-              </>
-            )}
-          </button>
+          {/* Empleado Search */}
+          <div ref={searchRef}>
+            <label className={fieldLabel + " flex items-center gap-1.5"}>
+              <Search className="w-3 h-3" /> Empleado
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+                placeholder="Buscar por nombre o legajo..."
+                className={inputBase(!!errors.nombre) + " pr-9"}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchQuery(""); setSuggestions([]); }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted hover:text-foreground transition-colors rounded"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {searchLoading && (
+                <Loader2 className="absolute right-9 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-accent-gold animate-spin" />
+              )}
+
+              {/* Suggestions dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-50 left-0 right-0 top-[calc(100%+4px)] bg-card rounded-xl border border-border shadow-xl overflow-hidden">
+                  <div className="max-h-[220px] overflow-y-auto">
+                    {suggestions.map((emp) => (
+                      <button
+                        key={emp.legajo}
+                        type="button"
+                        onClick={() => selectEmpleado(emp)}
+                        className="w-full text-left px-4 py-3 hover:bg-black/[0.04] dark:hover:bg-white/[0.04] transition-all flex items-center justify-between group border-b border-border last:border-0"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-foreground group-hover:text-accent-gold transition-colors">{emp.nombre_apellido}</p>
+                          <p className="text-xs text-muted mt-0.5">Legajo: {emp.legajo}</p>
+                        </div>
+                        <span className="text-[11px] font-medium bg-background border border-border px-2 py-1 rounded-md text-muted">
+                          {emp.contrato}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {showSuggestions && suggestions.length === 0 && searchQuery.length >= 2 && !searchLoading && (
+                <div className="absolute z-50 left-0 right-0 top-[calc(100%+4px)] bg-card rounded-xl border border-border shadow-xl p-4">
+                  <p className="text-xs text-muted mb-3">Empleado no encontrado. Ingrese legajo manual:</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={legajoManual}
+                      onChange={(e) => setLegajoManual(e.target.value)}
+                      className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-accent-gold/30 focus:border-accent-gold transition-all"
+                      placeholder="Legajo SAP..."
+                    />
+                    <button
+                      type="button"
+                      onClick={addManualEmpleado}
+                      className="px-4 rounded-lg bg-accent-gold hover:bg-accent-gold-dark text-white font-semibold text-sm transition-colors"
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {errors.nombre && <p className="text-red-500 text-[11px] mt-1 font-medium">{errors.nombre}</p>}
+
+            {/* Selected List */}
+            <AnimatePresence mode="popLayout">
+              {selectedEmpleados.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border"
+                >
+                  {selectedEmpleados.map((emp) => (
+                    <motion.div
+                      key={emp.legajo}
+                      layout
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      className="inline-flex items-center gap-2 bg-accent-gold/10 border border-accent-gold/20 text-accent-gold px-3 py-1.5 rounded-md text-xs font-medium"
+                    >
+                      {emp.nombre_apellido}
+                      <button type="button" onClick={() => removeEmpleado(emp.legajo)} className="hover:text-foreground transition-colors">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Contrato */}
+          <div>
+            <label className={fieldLabel + " flex items-center gap-1.5"}>
+              <Hash className="w-3 h-3" /> Contrato
+            </label>
+            <select
+              value={contrato}
+              onChange={(e) => setContrato(e.target.value)}
+              className={inputBase(!!errors.contrato) + " appearance-none cursor-pointer"}
+            >
+              <option value="">Seleccione contrato...</option>
+              {CONTRATOS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            {errors.contrato && <p className="text-red-500 text-[11px] mt-1 font-medium">{errors.contrato}</p>}
+          </div>
+
+          {/* Sector */}
+          <div>
+            <label className={fieldLabel + " flex items-center gap-1.5"}>
+              <Building2 className="w-3 h-3" /> Sector
+            </label>
+            <input
+              type="text"
+              value={sector}
+              onChange={(e) => setSector(e.target.value)}
+              placeholder="Ej: Pañol/Logistica"
+              list="sectores-faltantes"
+              className={inputBase()}
+            />
+            <datalist id="sectores-faltantes">
+              {SECTORES_FALTANTES.map((s) => <option key={s} value={s} />)}
+            </datalist>
+          </div>
+
+          {/* Motivo */}
+          <div>
+            <label className={fieldLabel + " flex items-center gap-1.5"}>
+              <FileText className="w-3 h-3" /> Motivo
+            </label>
+            <input
+              type="text"
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder="Ej: Falta cargar"
+              list="motivos-faltantes"
+              className={inputBase()}
+            />
+            <datalist id="motivos-faltantes">
+              {MOTIVOS_FALTANTES.map((m) => <option key={m} value={m} />)}
+            </datalist>
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-accent-gold hover:bg-accent-gold-dark text-white font-semibold py-2.5 px-6 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm shadow-sm"
+            >
+              {loading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /><span>Guardando...</span></>
+              ) : (
+                <><CheckCircle2 className="w-4 h-4 opacity-80" /><span>Guardar {selectedEmpleados.length > 1 ? `(${selectedEmpleados.length}) Registros` : "Registro"}</span></>
+              )}
+            </button>
+          </div>
         </form>
       </div>
 
-      <div className="mt-12 space-y-4">
-        <div className="flex items-center gap-3 ml-2">
-          <div className="w-1.5 h-4 bg-accent-gold/40 rounded-full" />
-          <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Últimos cargados</h3>
-        </div>
-
-        <div className="space-y-3">
-          {fetchingRecent ? (
-            <div className="h-20 bg-card/20 rounded-3xl border border-border/50 animate-pulse" />
-          ) : recentFaltantes.length === 0 ? (
-            <div className="p-8 text-center bg-card/20 rounded-3xl border border-border/50 border-dashed">
-              <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">Aún no hay registros recientes</p>
-            </div>
-          ) : (
-            recentFaltantes.map((f, i) => (
+      {/* Últimos cargados */}
+      <div className="space-y-3">
+        <h2 className="text-xs font-medium text-muted uppercase tracking-wide">Últimos cargados</h2>
+        {fetchingRecent ? (
+          <div className="h-12 bg-card border border-border rounded-lg animate-pulse" />
+        ) : recentFaltantes.length === 0 ? (
+          <p className="text-xs text-muted text-center py-4">Sin registros recientes</p>
+        ) : (
+          <div className="space-y-2">
+            {recentFaltantes.map((f, i) => (
               <motion.div
                 key={f.id}
-                initial={{ opacity: 0, x: -10 }}
+                initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="group bg-card/40 hover:bg-card/60 rounded-2xl border border-border p-4 flex items-center justify-between transition-all backdrop-blur-sm"
+                transition={{ delay: i * 0.05 }}
+                className="bg-card border border-border rounded-lg px-4 py-3 flex items-center justify-between hover:border-accent-gold/30 transition-colors"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-background flex flex-col items-center justify-center text-[8px] font-black text-slate-500 border border-border">
-                    <span className="text-accent-gold">{format(new Date(f.fecha), "dd")}</span>
-                    <span className="opacity-50 uppercase">{format(new Date(f.fecha), "MMM", { locale: es })}</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-md bg-accent-gold/10 flex items-center justify-center text-[10px] font-semibold text-accent-gold uppercase">
+                    {f.nombre_apellido.slice(0, 2)}
                   </div>
                   <div>
-                    <p className="text-xs font-black text-foreground uppercase tracking-tight group-hover:text-accent-gold transition-colors">{f.nombre_apellido}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{f.sector || "S/Sector"}</span>
-                      {f.motivo && (
-                        <>
-                          <span className="w-1 h-1 rounded-full bg-slate-700" />
-                          <span className="text-[9px] font-bold text-accent-gold/60 uppercase tracking-widest">{f.motivo}</span>
-                        </>
-                      )}
-                    </div>
+                    <p className="text-xs font-medium text-foreground">{f.nombre_apellido}</p>
+                    <p className="text-[10px] text-muted">{f.sector || "Sin sector"}{f.motivo ? ` · ${f.motivo}` : ""}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500/50" />
-                </div>
+                <span className="text-[10px] text-muted font-mono">
+                  {format(new Date(f.fecha), "dd MMM", { locale: es })}
+                </span>
               </motion.div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
-
-      <p className="mt-8 text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500 opacity-60">
-        SJG Montajes Industriales · Sistema de Gestión
-      </p>
     </div>
   );
 }
