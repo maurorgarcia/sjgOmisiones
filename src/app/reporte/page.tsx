@@ -342,7 +342,7 @@ export default function ReportePage() {
                     )}
                   </td>
                   <td className="px-5 py-3.5 whitespace-nowrap">
-                    <div className="font-medium text-foreground">{format(new Date(err.fecha), "dd MMM yyyy", { locale: es })}</div>
+                    <div className="font-medium text-foreground">{format(new Date(err.fecha.split("T")[0] + "T12:00:00"), "dd MMM yyyy", { locale: es })}</div>
                     <div className="text-xs text-muted mt-0.5">{err.dia_semana}</div>
                   </td>
                   <td className="px-5 py-3.5">
@@ -384,7 +384,7 @@ export default function ReportePage() {
             <div key={err.id} className={`p-4 space-y-3 ${err.resuelto ? "opacity-60" : ""}`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-xs text-muted">{format(new Date(err.fecha), "dd MMM yyyy", { locale: es })}</p>
+                  <p className="text-xs text-muted">{format(new Date(err.fecha.split("T")[0] + "T12:00:00"), "dd MMM yyyy", { locale: es })}</p>
                   <h4 className={`font-medium text-sm mt-0.5 cursor-pointer ${checkedNames.has(err.nombre_apellido) ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"}`}
                     onClick={() => toggleNameHighlight(err.nombre_apellido)}>
                     {err.nombre_apellido}

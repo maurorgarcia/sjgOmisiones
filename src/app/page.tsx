@@ -28,6 +28,8 @@ import { Skeleton, TableSkeleton } from "@/components/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { useErrores } from "./useErrores";
 
+const DIAS = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"];
+
 function getMotivoBadge(motivo: string) {
   const classes =
     MOTIVO_COLORS[motivo] ??
@@ -142,8 +144,18 @@ export default function Dashboard() {
   const saveEdit = useCallback(async () => {
     if (!editForm || !editForm.id) return;
     setEditLoading(true);
+
+    // Calcular dia_semana si la fecha cambió
+    let dia_semana = editForm.dia_semana;
+    if (editForm.fecha) {
+      const [year, month, day] = editForm.fecha.split("T")[0].split("-").map(Number);
+      const d = new Date(year, month - 1, day);
+      dia_semana = DIAS[d.getDay()];
+    }
+
     const { error } = await supabase.from("error_carga").update({
       fecha: editForm.fecha,
+      dia_semana,
       nombre_apellido: editForm.nombre_apellido?.toUpperCase(),
       legajo: editForm.legajo,
       motivo_error: editForm.motivo_error,
@@ -379,7 +391,7 @@ export default function Dashboard() {
                       {err.resuelto ? "Resuelto" : "Pendiente"}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 font-medium text-xs whitespace-nowrap">{format(new Date(err.fecha), "dd MMM yyyy")}</td>
+                  <td className="px-5 py-3.5 font-medium text-xs whitespace-nowrap">{format(new Date(err.fecha.split("T")[0] + "T12:00:00"), "dd MMM yyyy")}</td>
                   <td className="px-5 py-3.5 font-medium text-sm">{err.nombre_apellido}</td>
                   <td className="px-5 py-3.5">{getMotivoBadge(err.motivo_error)}</td>
                   <td className="px-5 py-3.5 text-right">
@@ -411,7 +423,7 @@ export default function Dashboard() {
             <div key={err.id} className={`p-4 space-y-3 ${err.resuelto ? "opacity-60" : ""}`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-xs text-muted">{format(new Date(err.fecha), "dd MMM yyyy")}</p>
+                  <p className="text-xs text-muted">{format(new Date(err.fecha.split("T")[0] + "T12:00:00"), "dd MMM yyyy")}</p>
                   <h4 className="font-medium text-sm mt-0.5">{err.nombre_apellido}</h4>
                 </div>
                 <button onClick={() => toggleResuelto(err.id, err.resuelto)} className={`text-[10px] font-medium border rounded-lg px-2 py-1 ${err.resuelto ? "text-emerald-500 border-emerald-500/20" : "text-accent-gold border-accent-gold/20"}`}>

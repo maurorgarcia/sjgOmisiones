@@ -162,7 +162,7 @@ export default function FaltantesReporte() {
                 filtered.map((f) => (
                   <tr key={f.id} className="hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors group">
                     <td className="px-5 py-3.5 font-medium whitespace-nowrap">
-                      {format(new Date(f.fecha), "dd MMM yyyy", { locale: es })}
+                      {format(new Date(f.fecha.split("T")[0] + "T12:00:00"), "dd MMM yyyy", { locale: es })}
                     </td>
                     <td className="px-5 py-3.5">
                       <span className="text-[11px] font-medium px-2 py-1 bg-background border border-border text-muted rounded-md">{f.contrato}</span>

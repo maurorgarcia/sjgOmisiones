@@ -28,11 +28,7 @@ export async function generateExcelBuffer(errores: ErrorRow[]): Promise<Buffer> 
   // 1. Armar las filas planas (exactamente el formato que pidió el usuario)
   const rows = errores.map((err) => {
     return {
-      Fecha: new Date(err.fecha).toLocaleDateString("es-AR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-      }),
+      Fecha: new Date(err.fecha.split("T")[0] + "T12:00:00").toLocaleDateString("es-AR"),
       Día: err.dia_semana,
       Legajo: err.legajo,
       "Nombre y Apellido": err.nombre_apellido,

@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     if (!data || data.length === 0) return NextResponse.json({ error: "No hay datos" }, { status: 404 });
 
     const rows = data.map(f => ({
-      Fecha: new Date(f.fecha).toLocaleDateString("es-AR"),
+      Fecha: new Date(f.fecha.split("T")[0] + "T12:00:00").toLocaleDateString("es-AR"),
       Contrato: f.contrato,
       Empleado: f.nombre_apellido,
       Sector: f.sector || "-",

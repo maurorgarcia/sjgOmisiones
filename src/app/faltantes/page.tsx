@@ -140,7 +140,7 @@ export default function FaltantesDashboard() {
                 <tr><td colSpan={6} className="py-16 text-center text-sm text-muted">Sin registros en este rango</td></tr>
               ) : filtered.map((f) => (
                 <tr key={f.id} className="hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors group">
-                  <td className="px-5 py-3.5 font-medium whitespace-nowrap">{format(new Date(f.fecha), "dd MMM yyyy", { locale: es })}</td>
+                  <td className="px-5 py-3.5 font-medium whitespace-nowrap">{format(new Date(f.fecha.split("T")[0] + "T12:00:00"), "dd MMM yyyy", { locale: es })}</td>
                   <td className="px-5 py-3.5">
                     <span className="text-[11px] font-medium px-2 py-1 bg-background border border-border text-muted rounded-md">{f.contrato}</span>
                   </td>
@@ -184,7 +184,7 @@ export default function FaltantesDashboard() {
             <div key={f.id} className="p-4 space-y-2">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-xs text-muted">{format(new Date(f.fecha), "dd MMM yyyy", { locale: es })}</p>
+                  <p className="text-xs text-muted">{format(new Date(f.fecha.split("T")[0] + "T12:00:00"), "dd MMM yyyy", { locale: es })}</p>
                   <h4 onClick={() => toggleNameHighlight(f.nombre_apellido)}
                     className={`font-medium text-sm cursor-pointer mt-0.5 ${checkedNames.has(f.nombre_apellido) ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"}`}>
                     {f.nombre_apellido}
